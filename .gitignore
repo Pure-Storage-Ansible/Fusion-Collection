@@ -1,0 +1,3 @@
+*.tar.gz
+.pylintrc
+collections/ansible_collections/purestorage/fusion/tests/output/*
