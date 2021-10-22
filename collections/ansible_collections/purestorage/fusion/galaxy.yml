@@ -1,0 +1,17 @@
+namespace: purestorage
+name: fusion
+version: 0.0.1
+readme: README.md
+authors:
+- Pure Storage Ansible Team <pure-ansible-team@purestorage.com>
+description: Collection of modules to manage Pure Fusion
+license:
+ - GPL-3.0-or-later
+tags:
+  - purestorage
+  - fusion
+  - storage
+dependencies: {}
+repository: https://github.com/Pure-Storage-Ansible/Fusion-Collection
+documentation: https://github.com/Pure-Storage-Ansible/Fusion-Collection
+issues: https://github.com/Pure-Storage-Ansible/Fusion-Collection/issues
