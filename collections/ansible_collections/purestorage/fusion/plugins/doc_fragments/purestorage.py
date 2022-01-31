@@ -36,12 +36,6 @@ options:
       - Defaults to the set environment variable under FUSION_APP_ID
     type: str
     required: true
-  password:
-    description:
-      - The password of the private key, if encrypted.
-      - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
-    type: str
-    required: true
 notes:
   - This module requires the C(fusion) Python library
   - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables

@@ -34,7 +34,14 @@ options:
     - The human name of the volume.
     - If not provided, defaults to `name`
     type: str
-    required: true
+  state:
+    description:
+    - Define whether the host access policy should exist or not.
+    - When removing host access policy all connected volumes must
+      have been previously disconnected.
+    type: str
+    default: present
+    choices: [ absent, present ]
   tenant:
     description:
     - The name of the tenant.
@@ -504,20 +511,20 @@ def update_volume(module, fusion):
                         changed = True
                     except purefusion.rest.ApiException as err:
                         module.fail_json(msg="Changing hosts failed: {0}".format(err))
-#            if module.params["rename"]:
-#                volume = purefusion.VolumePatch(
-#                    name=purefusion.NullableString(module.params["rename"])
-#                )
-#                try:
-#                    res = vol_api_instance.update_volume(
-#                        volume,
-#                        volume_name=module.params["name"],
-#                        tenant_name=module.params["tenant"],
-#                        tenant_space_name=module.params["tenant_space"],
-#                    )
-#                    changed = True
-#                except purefusion.rest.ApiException as err:
-#                    module.fail_json(msg="Rename volume failed: {0}".format(err))
+    #            if module.params["rename"]:
+    #                volume = purefusion.VolumePatch(
+    #                    name=purefusion.NullableString(module.params["rename"])
+    #                )
+    #                try:
+    #                    res = vol_api_instance.update_volume(
+    #                        volume,
+    #                        volume_name=module.params["name"],
+    #                        tenant_name=module.params["tenant"],
+    #                        tenant_space_name=module.params["tenant_space"],
+    #                    )
+    #                    changed = True
+    #                except purefusion.rest.ApiException as err:
+    #                    module.fail_json(msg="Rename volume failed: {0}".format(err))
 
     module.exit_json(changed=changed)
 
