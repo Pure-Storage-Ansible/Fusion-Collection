@@ -31,7 +31,8 @@ options:
   gather_subset:
     description:
       - When supplied, this argument will define the information to be collected.
-        Possible values for this include all, minimum, hardware, volumes
+        Possible values for this include all, minimum, appliances, subscriptions,
+        contracts
     type: list
     elements: str
     required: false
@@ -83,6 +84,8 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+import datetime
+import time
 
 
 def generate_default_dict(fusion):
