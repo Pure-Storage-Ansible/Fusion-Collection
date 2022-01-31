@@ -26,27 +26,27 @@ options:
   key_file:
     description:
       - Path to the private key file
-      - Defaults to the set environment variable under PURE1_PRIVATE_KEY_FILE.
+      - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
     required: true
   app_id:
     description:
       - Application ID from Pure1 Registration page
       - eg. pure1:apikey:dssf2331sd
-      - Defaults to the set environment variable under PURE1_APP_ID
+      - Defaults to the set environment variable under FUSION_APP_ID
     type: str
     required: true
   password:
     description:
       - The password of the private key, if encrypted.
-      - Defaults to the set environment variable under PURE1_PRIVATE_KEY_FILE.
+      - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
     required: true
 notes:
-  - This module requires the C(py-pure-client) Python library
-  - You must set C(PURE1_APP_ID) and C(PURE1_PRIVATE_KEY_FILE) environment variables
+  - This module requires the C(fusion) Python library
+  - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
     if I(app_id) and I(key_file) arguments are not passed to the module directly
 requirements:
-  - python >= 3.4
-  - hmrest
+  - python >= 3.8
+  - fusion
 """

@@ -9,13 +9,16 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - Ansible 2.11 or later
 - Authorized API Application ID for Pure Storage Pure1 and associated Private Key
   Refer to Pure Storage documentation on how to create these. 
-- hmrest
+- fusion
 - time
 - datetime
 
 ## Available Modules
 
+ - fusion_hap - Manage host access policies in Pure Storage Fusion
  - fusion_info - Get information on the Fusion deployment
+ - fusion_sc - Manage storage classes in Pure Storage Fusion
+ - fusion_volume - Manage volumes in Pure Storage Fusion
 
 ## Instructions
 
@@ -29,15 +32,12 @@ ansible-galaxy collection install purestorage.fusion -p ~/.ansible/collections
 ## Example Playbook
 ```yaml
 - hosts: localhost
-  collections:
-    - purestorage.fusion
   tasks:
   - name: Collect information for Pure Storage fleet in Pure1
-    fusion_info:
+    purestorage.fusion.fusion_info:
       gather_subset: all
       app_id: <Pure1 API Application ID>
       key_file: <private key file name>
-      password: <private key password>
 ```
 
 ## License

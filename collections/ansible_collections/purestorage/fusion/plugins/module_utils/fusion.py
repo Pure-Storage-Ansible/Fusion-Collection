@@ -32,11 +32,11 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-HAS_HMREST = True
+HAS_FUSION = True
 try:
-    import hmrest
+    import fusion
 except ImportError:
-    HAS_HMREST = False
+    HAS_FUSION = False
 
 from os import environ
 import platform
@@ -56,39 +56,37 @@ def get_fusion(module):
     }
     app_id = module.params["app_id"]
     key_file = module.params["key_file"]
-    if HAS_HMREST:
+    if HAS_FUSION:
+        config = fusion.Configuration()
         if app_id and key_file:
             try:
-                fusion = hmrest.Client(
-                    app_id=app_id,
-                    private_key_file=key_file,
-                    private_key_password=module.params["password"],
-                )
-                fusion._api_client.set_default_header("User-Agent", user_agent)
+                config.issuer_id = app_id
+                config.private_key_file = key_file
+                client = fusion.ApiClient(config)
+            #                client._api_client.set_default_header("User-Agent", user_agent)
             except Exception:
                 module.fail_json(msg="Unknown failure. Please contact Pure Support")
-        elif environ.get("PURE1_APP_ID") and environ.get("PURE1_PRIVATE_KEY_FILE"):
+        elif environ.get("FUSION_APP_ID") and environ.get("FUSION_PRIVATE_KEY_FILE"):
             try:
-                fusion = pure1.Client()
-                fusion._api_client.set_default_header("User-Agent", user_agent)
+                config.issuer_id = environ.get("FUSION_APP_ID")
+                config.private_key_file = environ.get("FUSION_PRIVATE_KEY_FILE")
+                client = fusion.ApiClient(config)
+            #                client._api_client.set_default_header("User-Agent", user_agent)
             except Exception:
                 module.fail_json(msg="Unknown failure. Please contact Pure Support")
         else:
             module.fail_json(
-                msg="You must set PURE1_APP_ID and PURE1_PRIVATE_KEY_FILE environment variables "
+                msg="You must set FUSION_APP_ID and FUSION_PRIVATE_KEY_FILE environment variables "
                 "or the app_id and key_file module arguments"
             )
         try:
-            res = pure_1.get_arrays()
-            if res.status_code != 200:
-                module.fail_json(
-                    msg="Pure1 authentication failed. Check your credentials"
-                )
-        except Exception:
-            module.fail_json(msg="Pure1 authentication failed. Check your credentials")
+            api_instance = fusion.DefaultApi(client)
+            api_instance.get_version()
+        except Exception as err:
+            module.fail_json(msg="Fusion authentication failed: {0}".format(err))
     else:
-        module.fail_json(msg="py-pure-client and/or requests are not installed.")
-    return pure_1
+        module.fail_json(msg="fusion SDK is not installed.")
+    return client
 
 
 def fusion_argument_spec():
@@ -97,5 +95,4 @@ def fusion_argument_spec():
     return dict(
         app_id=dict(no_log=True, required=True),
         key_file=dict(no_log=False, required=True),
-        password=dict(no_log=True, required=True),
     )
