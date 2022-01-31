@@ -44,6 +44,8 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: collect default set of information
   fusion_info:
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
     register: fusion_info
 
 - name: show default information
@@ -54,6 +56,9 @@ EXAMPLES = r"""
   fusion_info:
     gather_subset:
       - all
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
 - name: show all information
   debug:
     msg: "{{ fusion_info['fusion_info'] }}"
@@ -65,96 +70,19 @@ fusion_info:
   returned: always
   type: complex
   sample: {
-        "appliances": {
-            "FlashArray": {
-                "CBS-AZURE": {
-                    "bandwidth (read) [MB/s]": 0.0,
-                    "bandwidth (write) [MB/s]": 0.0,
-                    "fqdn": "",
-                    "iops (read)": 0,
-                    "iops (write)": 0,
-                    "latency (read) [ms]": 0.0,
-                    "latency (write) [ms]": 0.0,
-                    "model": "CBS-V10MUR1",
-                    "os_version": "6.1.4"
-                },
-                "pure-fa1": {
-                    "bandwidth (read) [MB/s]": 2.525,
-                    "bandwidth (write) [MB/s]": 0.156,
-                    "fqdn": "pure-fa1.acme.com",
-                    "iops (read)": 587,
-                    "iops (write)": 844,
-                    "latency (read) [ms]": 1.17,
-                    "latency (write) [ms]": 0.55,
-                    "load [%]": 35.88,
-                    "model": "FA-405",
-                    "os_version": "5.3.12"
-                },
-                "pure-fa2": {
-                    "bandwidth (read) [MB/s]": 11.324,
-                    "bandwidth (write) [MB/s]": 7.349,
-                    "fqdn": "pure-fa2.acme.com",
-                    "iops (read)": 1019,
-                    "iops (write)": 2313,
-                    "latency (read) [ms]": 0.06,
-                    "latency (write) [ms]": 0.32,
-                    "load [%]": 13.67,
-                    "model": "FA-C60",
-                    "os_version": "6.1.6"
-                }
-            },
-            "FlashBlade": {
-                "pure-fb1": {
-                    "bandwidth (read) [MB/s]": 0.313,
-                    "bandwidth (write) [MB/s]": 0.001,
-                    "fqdn": "pure-fb1.acme.com",
-                    "iops (read)": 209,
-                    "iops (write)": 447,
-                    "latency (read) [ms]": 0.6,
-                    "latency (write) [ms]": 0.59,
-                    "model": "FlashBlade",
-                    "os_version": "3.2.3"
-                }
-            }
-        },
-        "contracts": {
-            "pure-fa1": {
-                "contract_end": "2024-10-12",
-                "contract_start": "2019-10-13",
-                "contract_state": "Active"
-            },
-            "pure-fa2": {
-                "contract_end": "2021-02-17",
-                "contract_start": "2015-01-06",
-                "contract_state": "Expired"
-            },
-            "pure-fa3": {
-                "contract_end": "2021-10-07",
-                "contract_start": "2015-01-06",
-                "contract_state": "Grace Period"
-            }
-        },
-        "default": {
-            "FlashArrays": 3,
-            "FlashBlades": 1,
-            "ObjectEngines": 0,
-            "buckets": 45,
-            "directories": 7,
-            "filesystem_snapshots": 272,
-            "filesystems": 295,
-            "object_store_accounts": 25,
-            "pods": 30,
-            "volume_snapshots": 20501,
-            "volumes": 1748
-        }
     }
 """
 
+HAS_FUSION = True
+try:
+    import fusion as purefusion
+except ImportError:
+    HAS_FUSION = False
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
-    pure1_argument_spec,
+    fusion_argument_spec,
 )
 import datetime
 import time
@@ -162,341 +90,276 @@ import time
 
 def generate_default_dict(fusion):
     default_info = {}
-    fb_count = fa_count = os_count = 0
-    appliances = list(fusion.list_arrays().items)
-    for appliance in range(0, len(appliances)):
-        if appliances[appliance].os in ["Purity//FA", "Purity"]:
-            fa_count += 1
-        elif appliances[appliance].os == "Purity//FB":
-            fb_count += 1
-        elif appliances[appliance].os == "Elasticity":
-            os_count += 1
-    default_info["FlashArrays"] = fa_count
-    default_info["FlashBlades"] = fb_count
-    default_info["ObjectEngines"] = os_count
-    default_info["volumes"] = pure_1.get_volumes().total_item_count
-    default_info["volume_snapshots"] = pure_1.get_volume_snapshots().total_item_count
-    default_info["filesystems"] = pure_1.get_file_systems().total_item_count
-    default_info[
-        "filesystem_snapshots"
-    ] = pure_1.get_file_system_snapshots().total_item_count
-    default_info["buckets"] = pure_1.get_buckets().total_item_count
-    default_info["directories"] = pure_1.get_directories().total_item_count
-    default_info["pods"] = pure_1.get_pods().total_item_count
-    default_info[
-        "object_store_accounts"
-    ] = pure_1.get_object_store_accounts().total_item_count
+
+    arrays_api_instance = purefusion.ArraysApi(fusion)
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    default_api_instance = purefusion.DefaultApi(fusion)
+    hw_api_instance = purefusion.HardwareTypesApi(fusion)
+    host_access_api_instance = purefusion.HostAccessPoliciesApi(fusion)
+    id_api_instance = purefusion.IdentityManagerApi(fusion)
+    nic_api_instance = purefusion.NetworkInterfacesApi(fusion)
+    plgrp_api_instance = purefusion.PlacementGroupsApi(fusion)
+    placement_api_instance = purefusion.PlacementsApi(fusion)
+    protpol_api_instance = purefusion.ProtectionPoliciesApi(fusion)
+    subnet_api_instance = purefusion.ProviderSubnetsApi(fusion)
+    role_assign_api_instance = purefusion.RoleAssignmentsApi(fusion)
+    roles_api_instance = purefusion.RolesApi(fusion)
+    snapshot_api_instance = purefusion.SnapshotsApi(fusion)
+    storage_api_instance = purefusion.StorageClassesApi(fusion)
+    tenantnetwork_api_instance = purefusion.TenantNetworksApi(fusion)
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
+    vol_api_instance = purefusion.VolumesApi(fusion)
+    volsnap_api_instance = purefusion.VolumeSnapshotsApi(fusion)
+
+    default_info["version"] = default_api_instance.get_version().version
+
+    storage_classes = storage_api_instance.list_storage_classes()
+    default_info["storage_classes"] = len(storage_classes.items)
+
+    protection_policies = protpol_api_instance.list_protection_policies()
+    default_info["protection_policies"] = len(protection_policies.items)
+
+    users = id_api_instance.list_users()
+    default_info["users"] = len(users)
+
+    host_access_policies = host_access_api_instance.list_host_access_policies()
+    default_info["host_access_policies"] = len(host_access_policies.items)
+
+    hw_types = hw_api_instance.list_hardware_types()
+    default_info["hardware_types"] = len(hw_types.items)
+
+    tenants = tenant_api_instance.list_tenants()
+    default_info["tenants"] = len(tenants.items)
+    tenant_spaces = 0
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenant_spaces + len(
+            tenantspace_api_instance.list_tenant_spaces(
+                tenant_name=tenants.items[tenant].name
+            ).items
+        )
+    default_info["tenant_spaces"] = tenant_spaces
+
+    roles = roles_api_instance.list_roles()
+    assignments = 0
+    default_info["roles"] = len(roles)
+    for role in range(0, len(roles)):
+        assignments = assignments + len(
+            role_assign_api_instance.list_role_assignments(role_name=roles[role].name)
+        )
+    default_info["role_assignments"] = assignments
+
+    azs = az_api_instance.list_availability_zones()
+    default_info["availability_zones"] = len(azs.items)
+
+    arrays = subnets = networks = nics = 0
+    for count in range(0, len(azs.items)):
+        array_details = arrays_api_instance.list_arrays(
+            availability_zone_name=azs.items[count].name
+        )
+        for array_detail in range(0, len(array_details.items)):
+            nics = nics + len(
+                nic_api_instance.list_network_interfaces(
+                    availability_zone_name=azs.items[count].name,
+                    array_name=array_details.items[array_detail].name,
+                ).items
+            )
+        arrays = arrays + len(array_details.items)
+        subnets = subnets + len(
+            subnet_api_instance.list_provider_subnets(
+                availability_zone_name=azs.items[count].name
+            ).items
+        )
+        networks = networks + len(
+            tenantnetwork_api_instance.list_tenant_networks(
+                availability_zone_name=azs.items[count].name
+            ).items
+        )
+    default_info["appiiances"] = arrays
+    default_info["network_interfaces"] = nics
+
+    default_info["provider_subnets"] = subnets
+    default_info["tenant_networks"] = networks
+
+    volumes = placement_grps = placements = snapshots = 0
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            volumes = volumes + len(
+                vol_api_instance.list_volumes(
+                    tenant_name=tenants.items[tenant].name,
+                    tenant_space_name=tenant_spaces[tenant_space].name,
+                ).items
+            )
+            placement_grps = placement_grps + len(
+                plgrp_api_instance.list_placement_groups(
+                    tenant_name=tenants.items[tenant].name,
+                    tenant_space_name=tenant_spaces[tenant_space].name,
+                ).items
+            )
+            placements = placements + len(
+                placement_api_instance.list_placements(
+                    tenant_name=tenants.items[tenant].name,
+                    tenant_space_name=tenant_spaces[tenant_space].name,
+                ).items
+            )
+            snapshots = snapshots + len(
+                snapshot_api_instance.list_snapshots(
+                    tenant_name=tenants.items[tenant].name,
+                    tenant_space_name=tenant_spaces[tenant_space].name,
+                ).items
+            )
+    default_info["volumes"] = volumes
+    default_info["placements"] = placements
+    default_info["placements_groups"] = placement_grps
+    default_info["snapshots"] = snapshots
+
     return default_info
 
 
-def generate_subscriptions_dict(pure_1):
-    subscriptions_info = {}
-    subscriptions = list(pure_1.get_subscriptions().items)
-    if subscriptions:
-        for subscription in range(0, len(subscriptions)):
-            name = subscriptions[subscription].name
-            start_time = time.strftime(
-                "%Y-%m-%d %H:%M:%S UTC",
-                time.gmtime(subscriptions[subscription].start_date / 1000),
-            )
-            end_time = time.strftime(
-                "%Y-%m-%d %H:%M:%S UTC",
-                time.gmtime(subscriptions[subscription].expiration_date / 1000),
-            )
-            subscriptions_info[name] = {
-                "start_date": start_time,
-                "expiration_date": end_time,
-                "service": subscriptions[subscription].service,
-                "status": subscriptions[subscription].status,
-            }
-    return subscriptions_info
+def generate_nics_dict(fusion):
+    nics_info = {}
+    nic_api_instance = purefusion.NetworkInterfacesApi(fusion)
+    arrays_api_instance = purefusion.ArraysApi(fusion)
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
 
-
-def generate_contract_dict(pure_1):
-    contract_info = {}
-    grace_period = 2592000000  # 30 days in ms
-    contract_start_epoch = None
-    contract_end_epoch = None
-    current_date = int(time.time() * 1000)
-    appliances = list(pure_1.get_arrays().items)
-    for appliance in range(0, len(appliances)):
-        contract_state = "Expired"
-        name = appliances[appliance].name
-        contract_info[name] = {}
-        contract_data = list(
-            pure_1.get_arrays_support_contracts(
-                filter="resource.name='" + name + "'"
-            ).items
+    azs = az_api_instance.list_availability_zones()
+    for count in range(0, len(azs.items)):
+        array_details = arrays_api_instance.list_arrays(
+            availability_zone_name=azs.items[count].name
         )
-        if contract_data:
-            contract_start_epoch = getattr(contract_data[0], "start_date", None)
-            contract_end_epoch = getattr(contract_data[0], "end_date", None)
-            if contract_start_epoch:
-                contract_start = datetime.datetime.fromtimestamp(
-                    int(contract_start_epoch / 1000)
-                ).strftime("%Y-%m-%d")
-            if contract_end_epoch:
-                contract_end = datetime.datetime.fromtimestamp(
-                    int(contract_end_epoch / 1000)
-                ).strftime("%Y-%m-%d")
-            contract_info[name]["contract_start"] = contract_start
-            contract_info[name]["contract_end"] = contract_end
-            if contract_end_epoch:
-                if current_date <= contract_end_epoch:
-                    contract_state = "Active"
-                elif contract_end_epoch + grace_period >= current_date:
-                    contract_state = "Grace Period"
-        contract_info[name]["contract_state"] = contract_state
-    return contract_info
-
-
-def generate_appliances_dict(module, pure_1):
-    names_info = {"FlashArray": {}, "FlashBlade": {}, "ObjectEngine": {}}
-    appliances = list(pure_1.get_arrays().items)
-    for appliance in range(0, len(appliances)):
-        name = appliances[appliance].name
-        try:
-            fqdn = appliances[appliance].fqdn
-        except AttributeError:
-            fqdn = ""
-        if appliances[appliance].os in ["Purity//FA", "Purity"]:
-            names_info["FlashArray"][name] = {
-                "os_version": appliances[appliance].version,
-                "model": appliances[appliance].model,
-                "fqdn": fqdn,
-            }
-            try:
-                names_info["FlashArray"][name]["bandwidth (read) [MB/s]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_bandwidth"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 104857600,
-                    3,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["bandwidth (write) [MB/s]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_bandwidth"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 104857600,
-                    3,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["latency (read) [ms]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_latency_us"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 1000,
-                    2,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["latency (write) [ms]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_latency_us"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 1000,
-                    2,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["iops (read)"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_iops"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["iops (write)"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_iops"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashArray"][name]["load [%]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_total_load"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    * 100,
-                    3,
-                )
-            except IndexError:
-                pass
-        elif appliances[appliance].os == "Elasticity":
-            names_info["ObjectEngine"][name] = {
-                "os_version": appliances[appliance].version,
-                "model": appliances[appliance].model,
-                "fqdn": fqdn,
-            }
-        elif appliances[appliance].os == "Purity//FB":
-            names_info["FlashBlade"][name] = {
-                "os_version": appliances[appliance].version,
-                "model": appliances[appliance].model,
-                "fqdn": fqdn,
-            }
-            try:
-                names_info["FlashBlade"][name]["bandwidth (read) [MB/s]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_bandwidth"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 104857600,
-                    3,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashBlade"][name]["bandwidth (write) [MB/s]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_bandwidth"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 104857600,
-                    3,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashBlade"][name]["iops (read)"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_iops"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashBlade"][name]["iops (write)"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_iops"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashBlade"][name]["latency (read) [ms]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_read_latency_us"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 1000,
-                    2,
-                )
-            except IndexError:
-                pass
-            try:
-                names_info["FlashBlade"][name]["latency (write) [ms]"] = round(
-                    list(
-                        pure_1.get_metrics_history(
-                            names=["array_write_latency_us"],
-                            resource_names=[name],
-                            aggregation="max",
-                            resolution=180000,
-                            end_time=int(time.time()) * 1000,
-                            start_time=(int(time.time()) * 1000) - 18000000,
-                        ).items
-                    )[0].data[-1][1]
-                    / 1000,
-                    2,
-                )
-            except IndexError:
-                pass
-        else:
-            module.warning(
-                "Unknown operating system detected: {0}.".format(
-                    appliances[appliance].os
-                )
+        for array_detail in range(0, len(array_details.items)):
+            array_name = (
+                azs.items[count].name + "/" + array_details.items[array_detail].name
             )
-    return names_info
+            nics_info[array_name] = {}
+            nics = nic_api_instance.list_network_interfaces(
+                availability_zone_name=azs.items[count].name,
+                array_name=array_details.items[array_detail].name,
+            )
+
+            for nic in range(0, len(nics.items)):
+                nics_info[array_name][nics.items[nic].name] = {
+                    "enabled": nics.items[nic].enabled,
+                    "display_name": nics.items[nic].display_name,
+                    "interface_type": nics.items[nic].interface_type,
+                    "services": nics.items[nic].services,
+                    "speed": nics.items[nic].speed,
+                    "vlan": nics.items[nic].eth.vlan,
+                    "address": nics.items[nic].eth.address,
+                    "mac_address": nics.items[nic].eth.mac_address,
+                    "gateway": nics.items[nic].eth.gateway,
+                    "mtu": nics.items[nic].eth.mtu,
+                    "provider_subnet": nics.items[nic].eth.provider_subnet.name,
+                }
+    return nics_info
+
+
+def generate_hap_dict(fusion):
+    hap_info = {}
+    api_instance = purefusion.HostAccessPoliciesApi(fusion)
+    hosts = api_instance.list_host_access_policies()
+    for host in range(0, len(hosts.items)):
+        name = hosts.items[host].name
+        hap_info[name] = {
+            "personality": hosts.items[host].personality,
+            "display_name": hosts.items[host].display_name,
+            "iqn": hosts.items[host].iqn,
+        }
+    return hap_info
+
+
+def generate_hardware_dict(fusion):
+    hardware_info = {}
+    api_instance = purefusion.HardwareTypesApi(fusion)
+    hw_types = api_instance.list_hardware_types()
+    for hw_type in range(0, len(hw_types.items)):
+        type_name = hw_types.items[hw_type].name
+        hardware_info[type_name] = {
+            "array_type": hw_types.items[hw_type].array_type,
+            "display_name": hw_types.items[hw_type].display_name,
+            "media_type": hw_types.items[hw_type].media_type,
+        }
+    return hardware_info
+
+
+def generate_storageclass_dict(fusion):
+    sc_info = {}
+    api_instance = purefusion.StorageClassesApi(fusion)
+    classes = api_instance.list_storage_classes()
+    for s_class in range(0, len(classes.items)):
+        sc_name = classes.items[s_class].name
+        sc_info[sc_name] = {
+            "bandwidth_limit": getattr(classes.items[s_class], "bandwidth_limit", None),
+            "iops_limit": getattr(classes.items[s_class], "iops_limit", None),
+            "size_limit": getattr(classes.items[s_class], "size_limit", None),
+            "display_name": classes.items[s_class].display_name,
+            "hardware_type": classes.items[s_class].hardware_type.name,
+        }
+    return sc_info
+
+
+def generate_volumes_dict(module, fusion):
+    volume_info = {}
+
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    vol_api_instance = purefusion.VolumesApi(fusion)
+    tenant_space_api_instance = purefusion.TenantSpacesApi(fusion)
+
+    tenants = tenant_api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenant_space_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            volumes = vol_api_instance.list_volumes(
+                tenant_name=tenants.items[tenant].name,
+                tenant_space_name=tenant_spaces[tenant_space].name,
+            )
+            for volume in range(0, len(volumes.items)):
+                vol_name = (
+                    tenants.items[tenant].name
+                    + "/"
+                    + tenant_spaces[tenant_space].name
+                    + "/"
+                    + volumes.items[volume].name
+                )
+                volume_info[vol_name] = {
+                    "tenant": tenants.items[tenant].name,
+                    "tenant_space": tenant_spaces[tenant_space].name,
+                    "name": volumes.items[volume].name,
+                    "size": volumes.items[volume].size,
+                    "display_name": volumes.items[volume].display_name,
+                    "array": volumes.items[volume].array.name,
+                    "placement": volumes.items[volume].placement.name,
+                    "placement_group": volumes.items[volume].placement_group.name,
+                    "source_volume_snapshot": getattr(
+                        volumes.items[volume].source_volume_snapshot, "name", None
+                    ),
+                    "protection_policy": getattr(
+                        volumes.items[volume].protection_policy, "name", None
+                    ),
+                    "storage_class": volumes.items[volume].storage_class.name,
+                    "serial_number": volumes.items[volume].serial_number,
+                    "target": {},
+                }
+                volume_info[vol_name]["target"] = {
+                    "iscsi": {
+                        "addresses": volumes.items[volume].target.iscsi.addresses,
+                        "iqn": volumes.items[volume].target.iscsi.iqn,
+                    },
+                    "nvme": {
+                        "addresses": None,
+                        "nqn": None,
+                    },
+                    "fc": {
+                        "addresses": None,
+                        "wwns": None,
+                    },
+                }
+    return volume_info
 
 
 def main():
@@ -506,15 +369,23 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    if not HAS_FUSION:
+        module.fail_json(msg="fusion SDK required for this module")
+
     fusion = get_fusion(module)
 
     subset = [test.lower() for test in module.params["gather_subset"]]
     valid_subsets = (
         "all",
         "minimum",
-        "appliances",
-        "subscriptions",
-        "contracts",
+        "hardware",
+        "volumes",
+        "hosts",
+        "storageclass",
+        "nics",
+        "azs",
+        "snapshots",
+        "tenants",
     )
     subset_test = (test in valid_subsets for test in subset)
     if not all(subset_test):
@@ -527,12 +398,16 @@ def main():
 
     if "minimum" in subset or "all" in subset:
         info["default"] = generate_default_dict(fusion)
-    if "appliances" in subset or "all" in subset:
-        info["appliances"] = generate_appliances_dict(module, fusion)
-    if "subscriptions" in subset or "all" in subset:
-        info["subscriptions"] = generate_subscriptions_dict(fusion)
-    if "contracts" in subset or "all" in subset:
-        info["contracts"] = generate_contract_dict(fusion)
+    if "hardware" in subset or "all" in subset:
+        info["hardware"] = generate_hardware_dict(fusion)
+    if "volumes" in subset or "all" in subset:
+        info["volumes"] = generate_volumes_dict(module, fusion)
+    if "storageclass" in subset or "all" in subset:
+        info["storageclass"] = generate_storageclass_dict(fusion)
+    if "nics" in subset or "all" in subset:
+        info["nics"] = generate_nics_dict(fusion)
+    if "hosts" in subset or "all" in subset:
+        info["hosts"] = generate_hap_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 
