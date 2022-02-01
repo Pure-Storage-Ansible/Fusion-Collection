@@ -69,8 +69,6 @@ fusion_info:
   description: Returns the information collected from Fusion
   returned: always
   type: complex
-  sample: {
-    }
 """
 
 HAS_FUSION = True
@@ -271,6 +269,45 @@ def generate_hap_dict(fusion):
     return hap_info
 
 
+def generate_array_dict(fusion):
+    array_info = {}
+    array_api_instance = purefusion.ArraysApi(fusion)
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    azs = az_api_instance.list_availability_zones()
+    for az in range(0, len(azs.items)):
+        arrays = array_api_instance.list_arrays(
+            availability_zone_name=azs.items[az].name
+        )
+        for array in range(0, len(arrays.items)):
+            array_name = arrays.items[array].name
+            array_space = array_api_instance.get_array_space(
+                availability_zone_name=azs.items[az].name, array_name=array_name
+            )
+            array_perf = array_api_instance.get_array_performance(
+                availability_zone_name=azs.items[az].name, array_name=array_name
+            )
+            array_info[array_name] = {
+                "availability_zone": azs.items[az].name,
+                "host_name": arrays.items[array].host_name,
+                "display_name": arrays.items[array].display_name,
+                "hardware_type": arrays.items[array].hardware_type.name,
+                "appliance_id": arrays.items[array].appliance_id,
+                "apartment_id": getattr(arrays.items[array], "apartment_id", None),
+                "space": {
+                    "total_physical_space": array_space.space_data.total_physical_space,
+                },
+                "performance": {
+                    "read_bandwidth": array_perf.perf_data.read_bandwidth,
+                    "read_latency": array_perf.perf_data.read_latency,
+                    "reads_per_sec": array_perf.perf_data.reads_per_sec,
+                    "write_bandwidth": array_perf.perf_data.write_bandwidth,
+                    "write_latency": array_perf.perf_data.write_latency,
+                    "writes_per_sec": array_perf.perf_data.writes_per_sec,
+                },
+            }
+    return array_info
+
+
 def generate_hardware_dict(fusion):
     hardware_info = {}
     api_instance = purefusion.HardwareTypesApi(fusion)
@@ -301,7 +338,7 @@ def generate_storageclass_dict(fusion):
     return sc_info
 
 
-def generate_volumes_dict(module, fusion):
+def generate_volumes_dict(fusion):
     volume_info = {}
 
     tenant_api_instance = purefusion.TenantsApi(fusion)
@@ -378,6 +415,7 @@ def main():
     valid_subsets = (
         "all",
         "minimum",
+        "arrays",
         "hardware",
         "volumes",
         "hosts",
@@ -401,13 +439,15 @@ def main():
     if "hardware" in subset or "all" in subset:
         info["hardware"] = generate_hardware_dict(fusion)
     if "volumes" in subset or "all" in subset:
-        info["volumes"] = generate_volumes_dict(module, fusion)
+        info["volumes"] = generate_volumes_dict(fusion)
     if "storageclass" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
     if "nics" in subset or "all" in subset:
         info["nics"] = generate_nics_dict(fusion)
     if "hosts" in subset or "all" in subset:
         info["hosts"] = generate_hap_dict(fusion)
+    if "arrays" in subset or "all" in subset:
+        info["arrays"] = generate_array_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 
