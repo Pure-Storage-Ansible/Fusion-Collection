@@ -36,7 +36,7 @@ options:
     type: str
   state:
     description:
-    - Define whether the protection group should exist or not.
+    - Define whether the placement group should exist or not.
     type: str
     default: present
     choices: [ absent, present ]
@@ -66,7 +66,7 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
-- name: Create new protection group named foo
+- name: Create new placement group named foo
   purestorage.fusion.fusion_pg:
     name: foo
     tenant: test
