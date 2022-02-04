@@ -308,6 +308,20 @@ def generate_array_dict(fusion):
     return array_info
 
 
+def generate_pp_dict(fusion):
+    pp_info = {}
+    api_instance = purefusion.ProtectionPoliciesApi(fusion)
+    policies = api_instance.list_protection_policies()
+    for policy in range(0, len(policies.items)):
+        type_name = policies.items[policy].name
+        pp_info[type_name] = {
+            "local_rpo": policies.items[policy].local_rpo,
+            "display_name": policies.items[policy].display_name,
+            "local_retention": policies.items[policy].local_retention,
+        }
+    return pp_info
+
+
 def generate_hardware_dict(fusion):
     hardware_info = {}
     api_instance = purefusion.HardwareTypesApi(fusion)
@@ -420,6 +434,7 @@ def main():
         "volumes",
         "hosts",
         "storageclass",
+        "protection_policies",
         "nics",
         "azs",
         "snapshots",
@@ -440,6 +455,8 @@ def main():
         info["hardware"] = generate_hardware_dict(fusion)
     if "volumes" in subset or "all" in subset:
         info["volumes"] = generate_volumes_dict(fusion)
+    if "protection_policies" in subset or "all" in subset:
+        info["protection_policies"] = generate_pp_dict(fusion)
     if "storageclass" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
     if "nics" in subset or "all" in subset:
