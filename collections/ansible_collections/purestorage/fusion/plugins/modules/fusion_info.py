@@ -308,13 +308,47 @@ def generate_array_dict(fusion):
     return array_info
 
 
+def generate_pg_dict(fusion):
+    pg_info = {}
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
+    pg_api_instance = purefusion.PlacementGroupsApi(fusion)
+    tenants = tenant_api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            groups = pg_api_instance.list_placement_groups(
+                tenant_name=tenants.items[tenant].name,
+                tenant_space_name=tenant_spaces[tenant_space].name,
+            )
+            for group in range(0, len(groups.items)):
+                group_name = (
+                    tenants.items[tenant].name
+                    + "/"
+                    + tenant_spaces[tenant_space].name
+                    + "/"
+                    + groups.items[group].name
+                )
+                pg_info[group_name] = {
+                    "tenant": groups.items[group].tenant.name,
+                    "display_name": groups.items[group].display_name,
+                    "placement_engine": groups.items[group].placement_engine,
+                    "tenant_space": groups.items[group].tenant_space.name,
+                    "az": groups.items[group].availability_zone.name,
+                    "array": getattr(groups.items[group].array, "name", None),
+                }
+    return pg_info
+
+
 def generate_pp_dict(fusion):
     pp_info = {}
     api_instance = purefusion.ProtectionPoliciesApi(fusion)
     policies = api_instance.list_protection_policies()
     for policy in range(0, len(policies.items)):
-        type_name = policies.items[policy].name
-        pp_info[type_name] = {
+        policy_name = policies.items[policy].name
+        pp_info[policy_name] = {
             "local_rpo": policies.items[policy].local_rpo,
             "display_name": policies.items[policy].display_name,
             "local_retention": policies.items[policy].local_retention,
@@ -435,6 +469,7 @@ def main():
         "hosts",
         "storageclass",
         "protection_policies",
+        "placement_groups",
         "nics",
         "azs",
         "snapshots",
@@ -457,6 +492,8 @@ def main():
         info["volumes"] = generate_volumes_dict(fusion)
     if "protection_policies" in subset or "all" in subset:
         info["protection_policies"] = generate_pp_dict(fusion)
+    if "placement_groups" in subset or "all" in subset:
+        info["placement_groups"] = generate_pg_dict(fusion)
     if "storageclass" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
     if "nics" in subset or "all" in subset:
