@@ -18,6 +18,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
  - fusion_array - Manage arrays in Pure Storage Fusion
  - fusion_hap - Manage host access policies in Pure Storage Fusion
  - fusion_info - Get information on the Fusion deployment
+ - fusion_pp - Manage protection policies in Pure Storage Fusion
  - fusion_sc - Manage storage classes in Pure Storage Fusion
  - fusion_volume - Manage volumes in Pure Storage Fusion
 
