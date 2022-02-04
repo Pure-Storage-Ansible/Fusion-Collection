@@ -36,9 +36,7 @@ options:
     type: str
   state:
     description:
-    - Define whether the host access policy should exist or not.
-    - When removing host access policy all connected volumes must
-      have been previously disconnected.
+    - Define whether the volume should exist or not.
     type: str
     default: present
     choices: [ absent, present ]
