@@ -21,6 +21,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
  - fusion_pg - Manage placement groups in Pure Storage Fusion
  - fusion_pp - Manage protection policies in Pure Storage Fusion
  - fusion_sc - Manage storage classes in Pure Storage Fusion
+ - fusion_ts - Manage tenant spaces in Pure Storage Fusion
  - fusion_volume - Manage volumes in Pure Storage Fusion
 
 ## Instructions

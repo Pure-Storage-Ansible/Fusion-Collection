@@ -342,6 +342,26 @@ def generate_pg_dict(fusion):
     return pg_info
 
 
+def generate_ts_dict(fusion):
+    ts_info = {}
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
+    tenants = tenant_api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            ts_name = (
+                tenants.items[tenant].name + "/" + tenant_spaces[tenant_space].name
+            )
+            ts_info[ts_name] = {
+                "tenant": tenants.items[tenant].name,
+                "display_name": tenant_spaces[tenant_space].display_name,
+            }
+    return ts_info
+
+
 def generate_pp_dict(fusion):
     pp_info = {}
     api_instance = purefusion.ProtectionPoliciesApi(fusion)
@@ -474,6 +494,7 @@ def main():
         "azs",
         "snapshots",
         "tenants",
+        "tenant_spaces",
     )
     subset_test = (test in valid_subsets for test in subset)
     if not all(subset_test):
@@ -502,6 +523,8 @@ def main():
         info["hosts"] = generate_hap_dict(fusion)
     if "arrays" in subset or "all" in subset:
         info["arrays"] = generate_array_dict(fusion)
+    if "tenant_spaces" in subset or "all" in subset:
+        info["tenant_spaces"] = generate_ts_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 
