@@ -342,6 +342,46 @@ def generate_pg_dict(fusion):
     return pg_info
 
 
+def generate_tn_dict(fusion):
+    tn_info = {}
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    tn_api_instance = purefusion.TenantNetworksApi(fusion)
+    zones = az_api_instance.list_availability_zones()
+    for zone in range(0, len(zones.items)):
+        networks = tn_api_instance.list_tenant_networks(
+            availability_zone_name=zones.items[zone].name
+        ).items
+        for network in range(0, len(networks)):
+            tn_name = zones.items[zone].name + "/" + networks[network].name
+            tn_info[tn_name] = {
+                "availability_zone": zones.items[zone].name,
+                "display_name": networks[network].display_name,
+                "tenant_subnets": [],
+            }
+            for subnet in range(0, len(networks[network].tenant_subnets)):
+                tn_info[tn_name]["tenant_subnets"].append(
+                    {
+                        "addresses": networks[network].tenant_subnets[subnet].addresses,
+                        "gateway": networks[network].tenant_subnets[subnet].gateway,
+                        "mtu": networks[network].tenant_subnets[subnet].mtu,
+                        "prefix": networks[network].tenant_subnets[subnet].prefix,
+                        "provider_subnets": [],
+                    }
+                )
+                for psubnet in range(
+                    0, len(networks[network].tenant_subnets[subnet].provider_subnets)
+                ):
+                    tn_info[tn_name]["tenant_subnets"][subnet][
+                        "provider_subnets"
+                    ].append(
+                        networks[network]
+                        .tenant_subnets[subnet]
+                        .provider_subnets[psubnet]
+                        .name
+                    )
+    return tn_info
+
+
 def generate_ts_dict(fusion):
     ts_info = {}
     tenant_api_instance = purefusion.TenantsApi(fusion)
@@ -495,6 +535,7 @@ def main():
         "snapshots",
         "tenants",
         "tenant_spaces",
+        "tenant_networks",
     )
     subset_test = (test in valid_subsets for test in subset)
     if not all(subset_test):
@@ -525,6 +566,8 @@ def main():
         info["arrays"] = generate_array_dict(fusion)
     if "tenant_spaces" in subset or "all" in subset:
         info["tenant_spaces"] = generate_ts_dict(fusion)
+    if "tenant_networks" in subset or "all" in subset:
+        info["tenant_networks"] = generate_tn_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 
