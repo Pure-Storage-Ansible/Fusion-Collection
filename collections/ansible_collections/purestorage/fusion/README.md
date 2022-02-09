@@ -18,6 +18,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 
  - fusion_api_client - Manage API Clients in Pure Storage Fusion
  - fusion_array - Manage arrays in Pure Storage Fusion
+ - fusion_az - Manage availability zones in Pure Storage Fusion
  - fusion_hap - Manage host access policies in Pure Storage Fusion
  - fusion_hap - Manage hardware types in Pure Storage Fusion
  - fusion_info - Get information on the Fusion deployment
