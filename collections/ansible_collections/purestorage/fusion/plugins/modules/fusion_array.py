@@ -139,7 +139,8 @@ def get_array(module, fusion):
     array_api_instance = purefusion.ArraysApi(fusion)
     try:
         return array_api_instance.get_array(
-            array_name=module.params["name"], availability_zone_name=module.params["az"]
+            array_name=module.params["name"],
+            availability_zone_name=module.params["availability_zone"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -165,7 +166,7 @@ def create_array(module, fusion):
                 appliance_id=module.params["appliance_id"],
             )
             res = array_api_instance.create_array(
-                array, availability_zone_name=module.params["az"]
+                array, availability_zone_name=module.params["availability_zone"]
             )
             wait_operation_succeeded(module, res.id, fusion)
         except purefusion.rest.ApiException as err:
