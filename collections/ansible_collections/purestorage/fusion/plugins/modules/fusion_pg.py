@@ -51,6 +51,7 @@ options:
     type: str
     required: true
   availability_zone:
+    aliases: [ az ]
     description:
     - The name of the availability zone to create the placement group in.
     type: str
@@ -208,7 +209,7 @@ def main():
             display_name=dict(type="str"),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
-            availability_zone=dict(type="str"),
+            availability_zone=dict(type="str", aliases=["az"]),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             placement_engine=dict(
                 type="str", default="heuristics", choices=["heuristics", "pure1meta"]
