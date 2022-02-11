@@ -382,6 +382,28 @@ def generate_tn_dict(fusion):
     return tn_info
 
 
+def generate_ps_dict(fusion):
+    ps_info = {}
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    ps_api_instance = purefusion.ProviderSubnetsApi(fusion)
+    zones = az_api_instance.list_availability_zones()
+    for zone in range(0, len(zones.items)):
+        subnets = ps_api_instance.list_provider_subnets(
+            availability_zone_name=zones.items[zone].name
+        ).items
+        for subnet in range(0, len(subnets)):
+            name = zones.items[zone].name + "/" + subnets[subnet].name
+            ps_info[name] = {
+                "availability_zone": zones.items[zone].name,
+                "display_name": subnets[subnet].display_name,
+                "gateway": subnets[subnet].gateway,
+                "mtu": subnets[subnet].mtu,
+                "vlan": subnets[subnet].vlan,
+                "prefix": subnets[subnet].prefix,
+            }
+    return ps_info
+
+
 def generate_placements_dict(fusion):
     pl_info = {}
     tenant_api_instance = purefusion.TenantsApi(fusion)
@@ -633,6 +655,7 @@ def main():
         "placement_groups",
         "interfaces",
         "zones",
+        "subnets",
         "snapshots",
         "tenants",
         "tenant_spaces",
@@ -653,6 +676,8 @@ def main():
         info["hardware"] = generate_hardware_dict(fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(fusion)
+    if "subnets" in subset or "all" in subset:
+        info["subnets"] = generate_ps_dict(fusion)
     if "zones" in subset or "all" in subset:
         info["zones"] = generate_zones_dict(fusion)
     if "roles" in subset or "all" in subset:
