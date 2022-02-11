@@ -382,6 +382,52 @@ def generate_tn_dict(fusion):
     return tn_info
 
 
+def generate_placements_dict(fusion):
+    pl_info = {}
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
+    pl_api_instance = purefusion.PlacementsApi(fusion)
+    tenants = tenant_api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            placements = pl_api_instance.list_placements(
+                tenant_name=tenants.items[tenant].name,
+                tenant_space_name=tenant_spaces[tenant_space].name,
+            )
+            for placement in range(0, len(placements.items)):
+                pl_name = (
+                    tenants.items[tenant].name
+                    + "/"
+                    + tenant_spaces[tenant_space].name
+                    + "/"
+                    + placements.items[placement].name
+                )
+                pl_info[pl_name] = {
+                    "tenant": tenants.items[tenant].name,
+                    "tenant_space": tenant_spaces[tenant_space].name,
+                    "display_name": placements.items[placement].display_name,
+                    "placement_group": placements.items[placement].placement_group.name,
+                    "storage_class": placements.items[placement].storage_class.name,
+                    "array": placements.items[placement].array.name,
+                    "protocols": {
+                        "iscsi": {},
+                        "fc": {},
+                        "nvme": {},
+                    },
+                }
+                if placements.items[placement].protocols.iscsi:
+                    pl_info[pl_name]["protocols"]["iscsi"] = {
+                        "iqn": placements.items[placement].protocols.iscsi.iqn,
+                        "addresses": placements.items[
+                            placement
+                        ].protocols.iscsi.addresses,
+                    }
+    return pl_info
+
+
 def generate_ts_dict(fusion):
     ts_info = {}
     tenant_api_instance = purefusion.TenantsApi(fusion)
@@ -439,6 +485,19 @@ def generate_zones_dict(fusion):
             "region": zones.items[zone].region.name,
         }
     return zones_info
+
+
+def generate_roles_dict(fusion):
+    roles_info = {}
+    api_instance = purefusion.RolesApi(fusion)
+    roles = api_instance.list_roles()
+    for role in range(0, len(roles)):
+        name = roles[role].name
+        roles_info[name] = {
+            "display_name": roles[role].display_name,
+            "scopes": roles[role].assignable_scopes,
+        }
+    return roles_info
 
 
 def generate_users_dict(fusion):
@@ -562,7 +621,9 @@ def main():
     valid_subsets = (
         "all",
         "minimum",
+        "roles",
         "users",
+        "placements",
         "arrays",
         "hardware",
         "volumes",
@@ -594,6 +655,10 @@ def main():
         info["users"] = generate_users_dict(fusion)
     if "zones" in subset or "all" in subset:
         info["zones"] = generate_zones_dict(fusion)
+    if "roles" in subset or "all" in subset:
+        info["roles"] = generate_roles_dict(fusion)
+    if "placements" in subset or "all" in subset:
+        info["placements"] = generate_placements_dict(fusion)
     if "volumes" in subset or "all" in subset:
         info["volumes"] = generate_volumes_dict(fusion)
     if "protection_policies" in subset or "all" in subset:
