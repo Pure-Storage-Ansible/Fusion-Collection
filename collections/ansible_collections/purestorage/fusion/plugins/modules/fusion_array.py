@@ -41,7 +41,8 @@ options:
     - The human name of the array.
     - If not provided, defaults to `name`
     type: str
-  az:
+  availability_zone:
+    aliases: [ az ]
     description:
     - The availability zone the array is located in.
     type: str
@@ -190,7 +191,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
-            az=dict(type="str", required=True),
+            availability_zone=dict(type="str", required=True, aliases=["az"]),
             display_name=dict(type="str"),
             appliance_id=dict(type="str", required=True),
             host_name=dict(type="str", required=True),

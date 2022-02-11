@@ -42,6 +42,7 @@ options:
     default: present
     choices: [ absent, present ]
   availability_zone:
+    aliases: [ az ]
     description:
     - The name of the availability zone for the tenant network.
     type: str
@@ -243,7 +244,7 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            availability_zone=dict(type="str", required=True),
+            availability_zone=dict(type="str", required=True, aliases=["az"]),
             prefix=dict(type="str"),
             gateway=dict(type="str"),
             mtu=dict(type="int", default=1500),
