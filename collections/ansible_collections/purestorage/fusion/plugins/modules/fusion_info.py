@@ -416,6 +416,45 @@ def generate_pp_dict(fusion):
     return pp_info
 
 
+def generate_tenant_dict(fusion):
+    tenant_info = {}
+    api_instance = purefusion.TenantsApi(fusion)
+    tenants = api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        name = tenants.items[tenant].name
+        tenant_info[name] = {
+            "display_name": tenants.items[tenant].display_name,
+        }
+    return tenant_info
+
+
+def generate_zones_dict(fusion):
+    zones_info = {}
+    api_instance = purefusion.AvailabilityZonesApi(fusion)
+    zones = api_instance.list_availability_zones()
+    for zone in range(0, len(zones.items)):
+        az_name = zones.items[zone].name
+        zones_info[az_name] = {
+            "display_name": zones.items[zone].display_name,
+            "region": zones.items[zone].region.name,
+        }
+    return zones_info
+
+
+def generate_users_dict(fusion):
+    users_info = {}
+    api_instance = purefusion.IdentityManagerApi(fusion)
+    users = api_instance.list_users()
+    for user in range(0, len(users)):
+        name = users[user].name
+        users_info[name] = {
+            "display_name": users[user].display_name,
+            "email": users[user].email,
+            "id": users[user].id,
+        }
+    return users_info
+
+
 def generate_hardware_dict(fusion):
     hardware_info = {}
     api_instance = purefusion.HardwareTypesApi(fusion)
@@ -523,6 +562,7 @@ def main():
     valid_subsets = (
         "all",
         "minimum",
+        "users",
         "arrays",
         "hardware",
         "volumes",
@@ -530,8 +570,8 @@ def main():
         "storageclass",
         "protection_policies",
         "placement_groups",
-        "nics",
-        "azs",
+        "interfaces",
+        "zones",
         "snapshots",
         "tenants",
         "tenant_spaces",
@@ -550,6 +590,10 @@ def main():
         info["default"] = generate_default_dict(fusion)
     if "hardware" in subset or "all" in subset:
         info["hardware"] = generate_hardware_dict(fusion)
+    if "users" in subset or "all" in subset:
+        info["users"] = generate_users_dict(fusion)
+    if "zones" in subset or "all" in subset:
+        info["zones"] = generate_zones_dict(fusion)
     if "volumes" in subset or "all" in subset:
         info["volumes"] = generate_volumes_dict(fusion)
     if "protection_policies" in subset or "all" in subset:
@@ -558,12 +602,14 @@ def main():
         info["placement_groups"] = generate_pg_dict(fusion)
     if "storageclass" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
-    if "nics" in subset or "all" in subset:
-        info["nics"] = generate_nics_dict(fusion)
+    if "interfaces" in subset or "all" in subset:
+        info["interfaces"] = generate_nics_dict(fusion)
     if "hosts" in subset or "all" in subset:
         info["hosts"] = generate_hap_dict(fusion)
     if "arrays" in subset or "all" in subset:
         info["arrays"] = generate_array_dict(fusion)
+    if "tenants" in subset or "all" in subset:
+        info["tenants"] = generate_tenant_dict(fusion)
     if "tenant_spaces" in subset or "all" in subset:
         info["tenant_spaces"] = generate_ts_dict(fusion)
     if "tenant_networks" in subset or "all" in subset:
