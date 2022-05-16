@@ -143,7 +143,7 @@ def update_tenant(module, fusion):
 
 def delete_tenant(module, fusion):
     """Delete Tenant"""
-    changed = False
+    changed = True
     api_instance = purefusion.TenantsApi(fusion)
     if not module.check_mode:
         try:

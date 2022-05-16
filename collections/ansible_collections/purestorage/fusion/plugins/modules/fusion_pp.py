@@ -32,7 +32,7 @@ options:
   state:
     description:
     - Define whether the protection policy should exist or not.
-    - Currently there is no mechanism to delete a protection policy
+    - Currently there is no mechanism to delete or update a protection policy
     default: present
     choices: [ present ]
     type: str
@@ -144,8 +144,8 @@ def create_pp(module, fusion):
         try:
             policy = purefusion.ProtectionPolicyPost(
                 name=module.params["name"],
-                local_retention=local_retention,
-                local_rpo=module.params["local_rpo"],
+                # local_retention=local_retention,
+                # local_rpo=module.params["local_rpo"],
                 display_name=display_name,
             )
             pp_api_instance.create_protection_policy(policy)

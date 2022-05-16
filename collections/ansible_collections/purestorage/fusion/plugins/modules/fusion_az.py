@@ -44,7 +44,6 @@ options:
   region:
     description:
     - Region within which the AZ is created
-    - Not Implemented at this point
     type: str
     choices: [ pure-us-west ]
     default: pure-us-west
@@ -82,7 +81,8 @@ def get_az(module, fusion):
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
     try:
         return az_api_instance.get_availability_zone(
-            availability_zone_name=module.params["name"]
+            availability_zone_name=module.params["name"],
+            region_name=module.params["region"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -104,7 +104,9 @@ def create_az(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            az_api_instance.create_availability_zone(azone)
+            az_api_instance.create_availability_zone(
+                azone, region_name=module.params["region"]
+            )
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Availability Zone {0} creation failed.: {1}".format(
