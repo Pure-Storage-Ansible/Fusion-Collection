@@ -21,6 +21,8 @@ version_added: '1.0.0'
 short_description:  Manage storage classes in Pure Storage Fusion
 description:
 - Create or update a storage class in Pure Storage Fusion.
+- Note that it is not currently possible to update bw_limit or
+  iops_limit after a storage class has been created.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 options:
@@ -63,9 +65,9 @@ options:
     - Must be between 100 and 100000000
     - If not provided at creation, this will default to 100000000
     type: str
-  hardware_type:
+  storage_service:
     description:
-    - Hardware type to which the storage class applies.
+    - Storage service to which the storage class belongs.
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
@@ -77,8 +79,8 @@ EXAMPLES = r"""
     name: foo
     size_limit: 100G
     iops_limit: 100000
-    bw_limit: 25Mb
-    hardware_type: bigfast
+    bw_limit: 25M
+    storage_service: service1
     display_name: "test class"
     app_id: key_name
     key_file: "az-admin-private-key.pem"
@@ -174,18 +176,19 @@ def get_sc(module, fusion):
     sc_api_instance = purefusion.StorageClassesApi(fusion)
     try:
         return sc_api_instance.get_storage_class(
-            storage_class_name=module.params["name"]
+            storage_class_name=module.params["name"],
+            storage_service_name=module.params["storage_service"],
         )
     except purefusion.rest.ApiException:
         return None
 
 
-def get_hw(module, fusion):
-    """Return Hardware Type or None"""
-    hw_api_instance = purefusion.HardwareTypesApi(fusion)
+def get_ss(module, fusion):
+    """Return Storage Service or None"""
+    ss_api_instance = purefusion.StorageServicesApi(fusion)
     try:
-        return hw_api_instance.get_hardware_type(
-            hardware_type_name=module.params["hardware_type"]
+        return ss_api_instance.get_storage_service(
+            storage_service_name=module.params["storage_service"]
         )
     except purefusion.rest.ApiException:
         return None
@@ -225,9 +228,10 @@ def create_sc(module, fusion):
                 iops_limit=iops_limit,
                 bandwidth_limit=bw_limit,
                 display_name=display_name,
-                hardware_type=module.params["hardware_type"],
             )
-            sc_api_instance.create_storage_class(s_class)
+            sc_api_instance.create_storage_class(
+                s_class, storage_service_name=module.params["storage_service"]
+            )
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Class {0} creation failed.: {1}".format(
@@ -245,6 +249,7 @@ def update_sc(module, fusion):
 
     s_class = sc_api_instance.get_storage_class(
         storage_class_name=module.params["name"],
+        storage_service_name=module.params["storage_service"],
     )
     if (
         module.params["display_name"]
@@ -258,6 +263,7 @@ def update_sc(module, fusion):
             try:
                 res = sc_api_instance.update_storage_class(
                     sclass,
+                    storage_service_name=module.params["storage_service"],
                     storage_class_name=module.params["name"],
                 )
             except purefusion.rest.ApiException as err:
@@ -283,7 +289,7 @@ def main():
             iops_limit=dict(type="str"),
             bw_limit=dict(type="str"),
             size_limit=dict(type="str"),
-            hardware_type=dict(type="str"),
+            storage_service=dict(type="str"),
             state=dict(type="str", default="present", choices=["present"]),
         )
     )
@@ -294,15 +300,15 @@ def main():
     state = module.params["state"]
     s_class = get_sc(module, fusion)
 
-    if not s_class and not module.params["hardware_type"]:
+    if not s_class and not module.params["storage_service"]:
         module.fail_json(
             msg="`hardware_type` is required when creating a new Storage Class"
         )
 
-    if module.params["hardware_type"] and not get_hw(module, fusion):
+    if module.params["storage_service"] and not get_ss(module, fusion):
         module.fail_json(
-            msg="Hardware Type {0} does not exist".format(
-                module.params["hardware_type"]
+            msg="Storage Service Type {0} does not exist".format(
+                module.params["storage_service"]
             )
         )
 

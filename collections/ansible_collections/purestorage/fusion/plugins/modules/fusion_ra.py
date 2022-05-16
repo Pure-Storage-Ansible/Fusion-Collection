@@ -205,7 +205,6 @@ def delete_ra(module, fusion):
     ra_api_instance = purefusion.RoleAssignmentsApi(fusion)
     if not module.check_mode:
         ra_name = get_ra(module, fusion).name
-        module.warn("RA: {0}".format(ra_name))
         try:
             ra_api_instance.delete_role_assignment(
                 role_name=module.params["name"], role_assignment_name=ra_name
