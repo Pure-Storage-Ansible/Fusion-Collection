@@ -96,15 +96,16 @@ def generate_default_dict(fusion):
     host_access_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     id_api_instance = purefusion.IdentityManagerApi(fusion)
     nic_api_instance = purefusion.NetworkInterfacesApi(fusion)
+    nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
     plgrp_api_instance = purefusion.PlacementGroupsApi(fusion)
-    placement_api_instance = purefusion.PlacementsApi(fusion)
     protpol_api_instance = purefusion.ProtectionPoliciesApi(fusion)
-    subnet_api_instance = purefusion.ProviderSubnetsApi(fusion)
+    regions_api_instance = purefusion.RegionsApi(fusion)
     role_assign_api_instance = purefusion.RoleAssignmentsApi(fusion)
     roles_api_instance = purefusion.RolesApi(fusion)
     snapshot_api_instance = purefusion.SnapshotsApi(fusion)
-    storage_api_instance = purefusion.StorageClassesApi(fusion)
-    tenantnetwork_api_instance = purefusion.TenantNetworksApi(fusion)
+    send_api_instance = purefusion.StorageEndpointsApi(fusion)
+    storage_srv_api_instance = purefusion.StorageServicesApi(fusion)
+    storage_class_api_instance = purefusion.StorageClassesApi(fusion)
     tenant_api_instance = purefusion.TenantsApi(fusion)
     tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
     vol_api_instance = purefusion.VolumesApi(fusion)
@@ -112,8 +113,16 @@ def generate_default_dict(fusion):
 
     default_info["version"] = default_api_instance.get_version().version
 
-    storage_classes = storage_api_instance.list_storage_classes()
-    default_info["storage_classes"] = len(storage_classes.items)
+    storage_services = storage_srv_api_instance.list_storage_services()
+    default_info["storage_services"] = len(storage_services.items)
+    sclass = 0
+    for storserv in range(0, len(storage_services.items)):
+        sclass = sclass + len(
+            storage_class_api_instance.list_storage_classes(
+                storage_service_name=storage_services.items[storserv].name
+            ).items
+        )
+    default_info["storage_classes"] = sclass
 
     protection_policies = protpol_api_instance.list_protection_policies()
     default_info["protection_policies"] = len(protection_policies.items)
@@ -138,48 +147,62 @@ def generate_default_dict(fusion):
         )
     default_info["tenant_spaces"] = tenant_spaces
 
-    roles = roles_api_instance.list_roles()
-    assignments = 0
-    default_info["roles"] = len(roles)
-    for role in range(0, len(roles)):
-        assignments = assignments + len(
-            role_assign_api_instance.list_role_assignments(role_name=roles[role].name)
-        )
-    default_info["role_assignments"] = assignments
+    #    roles = roles_api_instance.list_roles()
+    #    assignments = 0
+    #    default_info["roles"] = len(roles)
+    #    for role in range(0, len(roles)):
+    #        assignments = assignments + len(
+    #            role_assign_api_instance.list_role_assignments(role_name=roles[role].name)
+    #        )
+    #    default_info["role_assignments"] = assignments
 
-    azs = az_api_instance.list_availability_zones()
-    default_info["availability_zones"] = len(azs.items)
-
-    arrays = subnets = networks = nics = 0
-    for count in range(0, len(azs.items)):
-        array_details = arrays_api_instance.list_arrays(
-            availability_zone_name=azs.items[count].name
+    regions = regions_api_instance.list_regions()
+    default_info["regions"] = len(regions.items)
+    azs = 0
+    for count in range(0, len(regions.items)):
+        azs = azs + len(
+            az_api_instance.list_availability_zones(
+                region_name=regions.items[count].name
+            ).items
         )
-        for array_detail in range(0, len(array_details.items)):
-            nics = nics + len(
-                nic_api_instance.list_network_interfaces(
-                    availability_zone_name=azs.items[count].name,
-                    array_name=array_details.items[array_detail].name,
+    default_info["availability_zones"] = azs
+
+    arrays = nigs = sendpoints = nics = 0
+    for count in range(0, len(regions.items)):
+        azones = az_api_instance.list_availability_zones(
+            region_name=regions.items[count].name
+        )
+        for azone in range(0, len(azones.items)):
+            array_details = arrays_api_instance.list_arrays(
+                availability_zone_name=azones.items[azone].name,
+                region_name=regions.items[count].name,
+            )
+            for array_detail in range(0, len(array_details.items)):
+                nics = nics + len(
+                    nic_api_instance.list_network_interfaces(
+                        availability_zone_name=azones.items[azone].name,
+                        region_name=regions.items[count].name,
+                        array_name=array_details.items[array_detail].name,
+                    ).items
+                )
+            nigs = nigs + len(
+                nig_api_instance.list_network_interface_groups(
+                    availability_zone_name=azones.items[azone].name,
+                    region_name=regions.items[count].name,
                 ).items
             )
-        arrays = arrays + len(array_details.items)
-        subnets = subnets + len(
-            subnet_api_instance.list_provider_subnets(
-                availability_zone_name=azs.items[count].name
-            ).items
-        )
-        networks = networks + len(
-            tenantnetwork_api_instance.list_tenant_networks(
-                availability_zone_name=azs.items[count].name
-            ).items
-        )
+            sendpoints = sendpoints + len(
+                send_api_instance.list_storage_endpoints(
+                    availability_zone_name=azones.items[azone].name,
+                    region_name=regions.items[count].name,
+                ).items
+            )
+            arrays = arrays + len(array_details.items)
     default_info["appiiances"] = arrays
     default_info["network_interfaces"] = nics
+    default_info["network_interface_groups"] = nigs
 
-    default_info["provider_subnets"] = subnets
-    default_info["tenant_networks"] = networks
-
-    volumes = placement_grps = placements = snapshots = 0
+    volumes = placement_grps = snapshots = 0
     for tenant in range(0, len(tenants.items)):
         tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
             tenant_name=tenants.items[tenant].name
@@ -197,12 +220,6 @@ def generate_default_dict(fusion):
                     tenant_space_name=tenant_spaces[tenant_space].name,
                 ).items
             )
-            placements = placements + len(
-                placement_api_instance.list_placements(
-                    tenant_name=tenants.items[tenant].name,
-                    tenant_space_name=tenant_spaces[tenant_space].name,
-                ).items
-            )
             snapshots = snapshots + len(
                 snapshot_api_instance.list_snapshots(
                     tenant_name=tenants.items[tenant].name,
@@ -210,7 +227,6 @@ def generate_default_dict(fusion):
                 ).items
             )
     default_info["volumes"] = volumes
-    default_info["placements"] = placements
     default_info["placements_groups"] = placement_grps
     default_info["snapshots"] = snapshots
 
@@ -222,36 +238,45 @@ def generate_nics_dict(fusion):
     nic_api_instance = purefusion.NetworkInterfacesApi(fusion)
     arrays_api_instance = purefusion.ArraysApi(fusion)
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-
-    azs = az_api_instance.list_availability_zones()
-    for count in range(0, len(azs.items)):
-        array_details = arrays_api_instance.list_arrays(
-            availability_zone_name=azs.items[count].name
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    regions = regions_api_instance.list_regions()
+    for region in range(0, len(regions.items)):
+        azs = az_api_instance.list_availability_zones(
+            region_name=regions.items[region].name
         )
-        for array_detail in range(0, len(array_details.items)):
-            array_name = (
-                azs.items[count].name + "/" + array_details.items[array_detail].name
-            )
-            nics_info[array_name] = {}
-            nics = nic_api_instance.list_network_interfaces(
+        for count in range(0, len(azs.items)):
+            array_details = arrays_api_instance.list_arrays(
                 availability_zone_name=azs.items[count].name,
-                array_name=array_details.items[array_detail].name,
+                region_name=regions.items[region].name,
             )
+            for array_detail in range(0, len(array_details.items)):
+                array_name = (
+                    azs.items[count].name + "/" + array_details.items[array_detail].name
+                )
+                nics_info[array_name] = {}
+                nics = nic_api_instance.list_network_interfaces(
+                    availability_zone_name=azs.items[count].name,
+                    region_name=regions.items[region].name,
+                    array_name=array_details.items[array_detail].name,
+                )
 
-            for nic in range(0, len(nics.items)):
-                nics_info[array_name][nics.items[nic].name] = {
-                    "enabled": nics.items[nic].enabled,
-                    "display_name": nics.items[nic].display_name,
-                    "interface_type": nics.items[nic].interface_type,
-                    "services": nics.items[nic].services,
-                    "speed": nics.items[nic].speed,
-                    "vlan": nics.items[nic].eth.vlan,
-                    "address": nics.items[nic].eth.address,
-                    "mac_address": nics.items[nic].eth.mac_address,
-                    "gateway": nics.items[nic].eth.gateway,
-                    "mtu": nics.items[nic].eth.mtu,
-                    "provider_subnet": nics.items[nic].eth.provider_subnet.name,
-                }
+                for nic in range(0, len(nics.items)):
+                    nics_info[array_name][nics.items[nic].name] = {
+                        "enabled": nics.items[nic].enabled,
+                        "display_name": nics.items[nic].display_name,
+                        "interface_type": nics.items[nic].interface_type,
+                        "services": nics.items[nic].services,
+                        "max_speed": nics.items[nic].max_speed,
+                        "vlan": nics.items[nic].eth.vlan,
+                        "address": nics.items[nic].eth.address,
+                        "mac_address": nics.items[nic].eth.mac_address,
+                        "gateway": nics.items[nic].eth.gateway,
+                        "mtu": nics.items[nic].eth.mtu,
+                        "network_interface_group": nics.items[
+                            nic
+                        ].network_interface_group.name,
+                        "availability_zone": nics.items[nic].availability_zone.name,
+                    }
     return nics_info
 
 
@@ -273,38 +298,49 @@ def generate_array_dict(fusion):
     array_info = {}
     array_api_instance = purefusion.ArraysApi(fusion)
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    azs = az_api_instance.list_availability_zones()
-    for az in range(0, len(azs.items)):
-        arrays = array_api_instance.list_arrays(
-            availability_zone_name=azs.items[az].name
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    regions = regions_api_instance.list_regions()
+    for region in range(0, len(regions.items)):
+        azs = az_api_instance.list_availability_zones(
+            region_name=regions.items[region].name
         )
-        for array in range(0, len(arrays.items)):
-            array_name = arrays.items[array].name
-            array_space = array_api_instance.get_array_space(
-                availability_zone_name=azs.items[az].name, array_name=array_name
+        for az in range(0, len(azs.items)):
+            arrays = array_api_instance.list_arrays(
+                availability_zone_name=azs.items[az].name,
+                region_name=regions.items[region].name,
             )
-            array_perf = array_api_instance.get_array_performance(
-                availability_zone_name=azs.items[az].name, array_name=array_name
-            )
-            array_info[array_name] = {
-                "availability_zone": azs.items[az].name,
-                "host_name": arrays.items[array].host_name,
-                "display_name": arrays.items[array].display_name,
-                "hardware_type": arrays.items[array].hardware_type.name,
-                "appliance_id": arrays.items[array].appliance_id,
-                "apartment_id": getattr(arrays.items[array], "apartment_id", None),
-                "space": {
-                    "total_physical_space": array_space.space_data.total_physical_space,
-                },
-                "performance": {
-                    "read_bandwidth": array_perf.perf_data.read_bandwidth,
-                    "read_latency": array_perf.perf_data.read_latency,
-                    "reads_per_sec": array_perf.perf_data.reads_per_sec,
-                    "write_bandwidth": array_perf.perf_data.write_bandwidth,
-                    "write_latency": array_perf.perf_data.write_latency,
-                    "writes_per_sec": array_perf.perf_data.writes_per_sec,
-                },
-            }
+            for array in range(0, len(arrays.items)):
+                array_name = arrays.items[array].name
+                array_space = array_api_instance.get_array_space(
+                    availability_zone_name=azs.items[az].name,
+                    array_name=array_name,
+                    region_name=regions.items[region].name,
+                )
+                array_perf = array_api_instance.get_array_performance(
+                    availability_zone_name=azs.items[az].name,
+                    array_name=array_name,
+                    region_name=regions.items[region].name,
+                )
+                array_info[array_name] = {
+                    "region": regions.items[region].name,
+                    "availability_zone": azs.items[az].name,
+                    "host_name": arrays.items[array].host_name,
+                    "display_name": arrays.items[array].display_name,
+                    "hardware_type": arrays.items[array].hardware_type.name,
+                    "appliance_id": arrays.items[array].appliance_id,
+                    "apartment_id": getattr(arrays.items[array], "apartment_id", None),
+                    "space": {
+                        "total_physical_space": array_space.total_physical_space,
+                    },
+                    "performance": {
+                        "read_bandwidth": array_perf.read_bandwidth,
+                        "read_latency_us": array_perf.read_latency_us,
+                        "reads_per_sec": array_perf.reads_per_sec,
+                        "write_bandwidth": array_perf.write_bandwidth,
+                        "write_latency_us": array_perf.write_latency_us,
+                        "writes_per_sec": array_perf.writes_per_sec,
+                    },
+                }
     return array_info
 
 
@@ -340,68 +376,6 @@ def generate_pg_dict(fusion):
                     "array": getattr(groups.items[group].array, "name", None),
                 }
     return pg_info
-
-
-def generate_tn_dict(fusion):
-    tn_info = {}
-    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    tn_api_instance = purefusion.TenantNetworksApi(fusion)
-    zones = az_api_instance.list_availability_zones()
-    for zone in range(0, len(zones.items)):
-        networks = tn_api_instance.list_tenant_networks(
-            availability_zone_name=zones.items[zone].name
-        ).items
-        for network in range(0, len(networks)):
-            tn_name = zones.items[zone].name + "/" + networks[network].name
-            tn_info[tn_name] = {
-                "availability_zone": zones.items[zone].name,
-                "display_name": networks[network].display_name,
-                "tenant_subnets": [],
-            }
-            for subnet in range(0, len(networks[network].tenant_subnets)):
-                tn_info[tn_name]["tenant_subnets"].append(
-                    {
-                        "addresses": networks[network].tenant_subnets[subnet].addresses,
-                        "gateway": networks[network].tenant_subnets[subnet].gateway,
-                        "mtu": networks[network].tenant_subnets[subnet].mtu,
-                        "prefix": networks[network].tenant_subnets[subnet].prefix,
-                        "provider_subnets": [],
-                    }
-                )
-                for psubnet in range(
-                    0, len(networks[network].tenant_subnets[subnet].provider_subnets)
-                ):
-                    tn_info[tn_name]["tenant_subnets"][subnet][
-                        "provider_subnets"
-                    ].append(
-                        networks[network]
-                        .tenant_subnets[subnet]
-                        .provider_subnets[psubnet]
-                        .name
-                    )
-    return tn_info
-
-
-def generate_ps_dict(fusion):
-    ps_info = {}
-    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    ps_api_instance = purefusion.ProviderSubnetsApi(fusion)
-    zones = az_api_instance.list_availability_zones()
-    for zone in range(0, len(zones.items)):
-        subnets = ps_api_instance.list_provider_subnets(
-            availability_zone_name=zones.items[zone].name
-        ).items
-        for subnet in range(0, len(subnets)):
-            name = zones.items[zone].name + "/" + subnets[subnet].name
-            ps_info[name] = {
-                "availability_zone": zones.items[zone].name,
-                "display_name": subnets[subnet].display_name,
-                "gateway": subnets[subnet].gateway,
-                "mtu": subnets[subnet].mtu,
-                "vlan": subnets[subnet].vlan,
-                "prefix": subnets[subnet].prefix,
-            }
-    return ps_info
 
 
 def generate_placements_dict(fusion):
@@ -477,9 +451,7 @@ def generate_pp_dict(fusion):
     for policy in range(0, len(policies.items)):
         policy_name = policies.items[policy].name
         pp_info[policy_name] = {
-            "local_rpo": policies.items[policy].local_rpo,
-            "display_name": policies.items[policy].display_name,
-            "local_retention": policies.items[policy].local_retention,
+            "objectives": policies.items[policy].objectives,
         }
     return pp_info
 
@@ -498,14 +470,19 @@ def generate_tenant_dict(fusion):
 
 def generate_zones_dict(fusion):
     zones_info = {}
-    api_instance = purefusion.AvailabilityZonesApi(fusion)
-    zones = api_instance.list_availability_zones()
-    for zone in range(0, len(zones.items)):
-        az_name = zones.items[zone].name
-        zones_info[az_name] = {
-            "display_name": zones.items[zone].display_name,
-            "region": zones.items[zone].region.name,
-        }
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    regions = regions_api_instance.list_regions()
+    for region in range(0, len(regions.items)):
+        zones = az_api_instance.list_availability_zones(
+            region_name=regions.items[region].name
+        )
+        for zone in range(0, len(zones.items)):
+            az_name = zones.items[zone].name
+            zones_info[az_name] = {
+                "display_name": zones.items[zone].display_name,
+                "region": zones.items[zone].region.name,
+            }
     return zones_info
 
 
@@ -552,18 +529,45 @@ def generate_hardware_dict(fusion):
 
 def generate_storageclass_dict(fusion):
     sc_info = {}
-    api_instance = purefusion.StorageClassesApi(fusion)
-    classes = api_instance.list_storage_classes()
-    for s_class in range(0, len(classes.items)):
-        sc_name = classes.items[s_class].name
-        sc_info[sc_name] = {
-            "bandwidth_limit": getattr(classes.items[s_class], "bandwidth_limit", None),
-            "iops_limit": getattr(classes.items[s_class], "iops_limit", None),
-            "size_limit": getattr(classes.items[s_class], "size_limit", None),
-            "display_name": classes.items[s_class].display_name,
-            "hardware_type": classes.items[s_class].hardware_type.name,
-        }
+    ss_api_instance = purefusion.StorageServicesApi(fusion)
+    sc_api_instance = purefusion.StorageClassesApi(fusion)
+    services = ss_api_instance.list_storage_services()
+    for service in range(0, len(services.items)):
+        classes = sc_api_instance.list_storage_classes(
+            storage_service_name=services.items[service].name,
+        )
+        for s_class in range(0, len(classes.items)):
+            sc_name = classes.items[s_class].name
+            sc_info[sc_name] = {
+                "bandwidth_limit": getattr(
+                    classes.items[s_class], "bandwidth_limit", None
+                ),
+                "iops_limit": getattr(classes.items[s_class], "iops_limit", None),
+                "size_limit": getattr(classes.items[s_class], "size_limit", None),
+                "display_name": classes.items[s_class].display_name,
+                "storage_service": services.items[service].name,
+            }
     return sc_info
+
+
+def generate_storserv_dict(fusion):
+    ss_dict = {}
+    return ss_dict
+
+
+def generate_se_dict(fusion):
+    se_dict = {}
+    return se_dict
+
+
+def generate_nig_dict(fusion):
+    nig_dict = {}
+    return nig_dict
+
+
+def generate_snap_dict(fusion):
+    snap_dict = {}
+    return snap_dict
 
 
 def generate_volumes_dict(fusion):
@@ -655,11 +659,11 @@ def main():
         "placement_groups",
         "interfaces",
         "zones",
-        "subnets",
         "snapshots",
+        "storage_services",
         "tenants",
         "tenant_spaces",
-        "tenant_networks",
+        "network_interface_groups",
     )
     subset_test = (test in valid_subsets for test in subset)
     if not all(subset_test):
@@ -676,14 +680,12 @@ def main():
         info["hardware"] = generate_hardware_dict(fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(fusion)
-    if "subnets" in subset or "all" in subset:
-        info["subnets"] = generate_ps_dict(fusion)
     if "zones" in subset or "all" in subset:
         info["zones"] = generate_zones_dict(fusion)
-    if "roles" in subset or "all" in subset:
-        info["roles"] = generate_roles_dict(fusion)
-    if "placements" in subset or "all" in subset:
-        info["placements"] = generate_placements_dict(fusion)
+    #    if "roles" in subset or "all" in subset:
+    #        info["roles"] = generate_roles_dict(fusion)
+    if "storage_services" in subset or "all" in subset:
+        info["storage_services"] = generate_storserv_dict(fusion)
     if "volumes" in subset or "all" in subset:
         info["volumes"] = generate_volumes_dict(fusion)
     if "protection_policies" in subset or "all" in subset:
@@ -702,8 +704,12 @@ def main():
         info["tenants"] = generate_tenant_dict(fusion)
     if "tenant_spaces" in subset or "all" in subset:
         info["tenant_spaces"] = generate_ts_dict(fusion)
-    if "tenant_networks" in subset or "all" in subset:
-        info["tenant_networks"] = generate_tn_dict(fusion)
+    if "storage_endpoint" in subset or "all" in subset:
+        info["storage_endpoint"] = generate_se_dict(fusion)
+    if "network_interface_groups" in subset or "all" in subset:
+        info["network_interface_groups"] = generate_nig_dict(fusion)
+    if "snapshots" in subset or "all" in subset:
+        info["snapshots"] = generate_snap_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 

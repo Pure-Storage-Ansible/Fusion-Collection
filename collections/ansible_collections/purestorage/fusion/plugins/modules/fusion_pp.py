@@ -32,7 +32,7 @@ options:
   state:
     description:
     - Define whether the protection policy should exist or not.
-    - Currently there is no mechanism to delete a protection policy
+    - Currently there is no mechanism to delete or update a protection policy
     default: present
     choices: [ present ]
     type: str
