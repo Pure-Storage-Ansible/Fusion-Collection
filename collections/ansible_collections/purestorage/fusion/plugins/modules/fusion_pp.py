@@ -144,8 +144,8 @@ def create_pp(module, fusion):
         try:
             policy = purefusion.ProtectionPolicyPost(
                 name=module.params["name"],
-                local_retention=local_retention,
-                local_rpo=module.params["local_rpo"],
+                # local_retention=local_retention,
+                # local_rpo=module.params["local_rpo"],
                 display_name=display_name,
             )
             pp_api_instance.create_protection_policy(policy)
