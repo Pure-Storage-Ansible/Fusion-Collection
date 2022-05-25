@@ -169,7 +169,6 @@ def create_pp(module, fusion):
 def delete_pp(module, fusion):
     """Delete Protection Policy - not available unitl 1.1"""
     changed = False
-    pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
     module.exit_json(changed=changed)
 
 
