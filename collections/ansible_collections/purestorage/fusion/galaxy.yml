@@ -10,6 +10,7 @@ license:
 tags:
   - purestorage
   - fusion
+  - storage
 dependencies: {}
 repository: https://github.com/Pure-Storage-Ansible/Fusion-Collection
 documentation: https://github.com/Pure-Storage-Ansible/Fusion-Collection
