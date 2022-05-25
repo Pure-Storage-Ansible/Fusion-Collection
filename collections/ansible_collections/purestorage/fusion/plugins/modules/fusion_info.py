@@ -31,8 +31,10 @@ options:
   gather_subset:
     description:
       - When supplied, this argument will define the information to be collected.
-        Possible values for this include all, minimum, appliances, subscriptions,
-        contracts
+        Possible values for this include all, minimum, roles, users, placements,
+        arrays, hardware_types, volumes, host, storage_classes, protection_policies,
+        placement_groups, interfaces, zones, nigs, storage_endpoints, snapshots,
+        storage_services, tenants, tenant_spaces and network_interface_groups.
     type: list
     elements: str
     required: false
@@ -84,6 +86,13 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 )
 import datetime
 import time
+
+
+def _convertMicroseconds(micros):
+    seconds = (micros / 1000) % 60
+    minutes = (micros / (1000 * 60)) % 60
+    hours = (micros / (1000 * 60 * 60)) % 24
+    return seconds, minutes, hours
 
 
 def generate_default_dict(fusion):
@@ -147,14 +156,14 @@ def generate_default_dict(fusion):
         )
     default_info["tenant_spaces"] = tenant_spaces
 
-    #    roles = roles_api_instance.list_roles()
-    #    assignments = 0
-    #    default_info["roles"] = len(roles)
-    #    for role in range(0, len(roles)):
-    #        assignments = assignments + len(
-    #            role_assign_api_instance.list_role_assignments(role_name=roles[role].name)
-    #        )
-    #    default_info["role_assignments"] = assignments
+    roles = roles_api_instance.list_roles()
+    assignments = 0
+    default_info["roles"] = len(roles)
+    for role in range(0, len(roles)):
+        assignments = assignments + len(
+            role_assign_api_instance.list_role_assignments(role_name=roles[role].name)
+        )
+    default_info["role_assignments"] = assignments
 
     regions = regions_api_instance.list_regions()
     default_info["regions"] = len(regions.items)
@@ -325,6 +334,8 @@ def generate_array_dict(fusion):
                     "region": regions.items[region].name,
                     "availability_zone": azs.items[az].name,
                     "host_name": arrays.items[array].host_name,
+                    "maintenance_mode": arrays.items[array].maintenance_mode,
+                    "unavailable_mode": arrays.items[array].unavailable_mode,
                     "display_name": arrays.items[array].display_name,
                     "hardware_type": arrays.items[array].hardware_type.name,
                     "appliance_id": arrays.items[array].appliance_id,
@@ -486,6 +497,23 @@ def generate_zones_dict(fusion):
     return zones_info
 
 
+def generate_ras_dict(fusion):
+    ras_info = {}
+    ras_api_instance = purefusion.RoleAssignmentsApi(fusion)
+    role_api_instance = purefusion.RolesApi(fusion)
+    roles = role_api_instance.list_roles()
+    for role in range(0, len(roles)):
+        ras = ras_api_instance.list_role_assignments(role_name=roles[role].name)
+        for assignment in range(0, len(roles.items)):
+            name = ras[assignment].name
+            ras_info[name] = {
+                "display_name": ras[assignment].display_name,
+                "role": ras[assignment].role.name,
+                "scope": ras[assignment].scope.name,
+            }
+    return ras_info
+
+
 def generate_roles_dict(fusion):
     roles_info = {}
     api_instance = purefusion.RolesApi(fusion)
@@ -552,22 +580,158 @@ def generate_storageclass_dict(fusion):
 
 def generate_storserv_dict(fusion):
     ss_dict = {}
+    ss_api_instance = purefusion.StorageServicesApi(fusion)
+    services = ss_api_instance.list_storage_services()
+    for service in range(0, len(services.items)):
+        ss_dict[services.items[service].name] = {
+            "display_name": services.items[service].display_name,
+            "hardware_types": [],
+        }
+        for hwtype in range(0, len(services.items[service].hardware_types)):
+            ss_dict[services.items[service].name]["hardware_types"].append(
+                services.items[service].hardware_types[hwtype].name
+            )
     return ss_dict
 
 
 def generate_se_dict(fusion):
     se_dict = {}
+    se_api_instance = purefusion.StorageEndpointsApi(fusion)
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    regions = regions_api_instance.list_regions()
+    for region in range(0, len(regions.items)):
+        azs = az_api_instance.list_availability_zones(
+            region_name=regions.items[region].name
+        )
+        for az in range(0, len(azs.items)):
+            endpoints = se_api_instance.list_storage_endpoints(
+                region_name=regions.items[region].name,
+                availability_zone_name=azs.items[az].name,
+            )
+            for endpoint in range(0, len(endpoints.items)):
+                name = (
+                    regions.items[region].name
+                    + "/"
+                    + azs.items[az].name
+                    + "/"
+                    + endpoints.items[endpoint].name
+                )
+                se_dict[name] = {
+                    "display_name": endpoints.items[endpoint].display_name,
+                    "endpoint_type": endpoints.items[endpoint].endpoint_type,
+                    "iscsi_interfaces": [],
+                }
+                for iface in range(
+                    0, len(endpoints.items[endpoint].iscsi.discovery_interfaces)
+                ):
+                    se_dict[name]["iscsi_interfaces"].append(
+                        endpoints.items[endpoint].iscsi.discovery_interfaces[iface],
+                    )
     return se_dict
 
 
 def generate_nig_dict(fusion):
     nig_dict = {}
+    nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    regions = regions_api_instance.list_regions()
+    for region in range(0, len(regions.items)):
+        azs = az_api_instance.list_availability_zones(
+            region_name=regions.items[region].name
+        )
+        for az in range(0, len(azs.items)):
+            nigs = nig_api_instance.list_network_interface_groups(
+                region_name=regions.items[region].name,
+                availability_zone_name=azs.items[az].name,
+            )
+            for nig in range(0, len(nigs.items)):
+                name = (
+                    regions.items[region].name
+                    + "/"
+                    + azs.items[az].name
+                    + "/"
+                    + nigs.items[nig].name
+                )
+                nig_dict[name] = {
+                    "display_name": nigs.items[nig].display_name,
+                    "gateway": nigs.items[nig].eth.gateway,
+                    "prefix": nigs.items[nig].eth.prefix,
+                    "mtu": nigs.items[nig].eth.mtu,
+                }
     return nig_dict
 
 
 def generate_snap_dict(fusion):
     snap_dict = {}
-    return snap_dict
+    vsnap_dict = {}
+    tenant_api_instance = purefusion.TenantsApi(fusion)
+    tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
+    snap_api_instance = purefusion.SnapshotsApi(fusion)
+    vsnap_api_instance = purefusion.VolumeSnapshotsApi(fusion)
+    tenants = tenant_api_instance.list_tenants()
+    for tenant in range(0, len(tenants.items)):
+        tenant_spaces = tenantspace_api_instance.list_tenant_spaces(
+            tenant_name=tenants.items[tenant].name
+        ).items
+        for tenant_space in range(0, len(tenant_spaces)):
+            snaps = snap_api_instance.list_snapshots(
+                tenant_name=tenants.items[tenant].name,
+                tenant_space_name=tenant_spaces[tenant_space].name,
+            )
+            for snap in range(0, len(snaps.items)):
+                snap_name = (
+                    tenants.items[tenant].name
+                    + "/"
+                    + tenant_spaces[tenant_space].name
+                    + "/"
+                    + snaps.items[snap].name
+                )
+                secs, mins, hours = _convertMicroseconds(
+                    snaps.items[snap].time_remaining
+                )
+                snap_dict[snap_name] = {
+                    "display_name": snaps.items[snap].display_name,
+                    "protection_policy": snaps.items[snap].protection_policy,
+                    "time_remaining": "{0} hours, {1} mins, {2} secs".format(
+                        int(hours), int(mins), int(secs)
+                    ),
+                    "volume_snapshots_link": snaps.items[snap].volume_snapshots_link,
+                }
+                vsnaps = vsnap_api_instance.list_volume_snapshots(
+                    tenant_name=tenants.items[tenant].name,
+                    tenant_space_name=tenant_spaces[tenant_space].name,
+                    snapshot_name=snaps.items[snap].name,
+                )
+                for vsnap in range(0, len(vsnaps.items)):
+                    vsnap_name = (
+                        tenants.items[tenant].name
+                        + "/"
+                        + tenant_spaces[tenant_space].name
+                        + "/"
+                        + snaps.items[snap].name
+                        + "/"
+                        + vsnaps.items[vsnap].name
+                    )
+                    secs, mins, hours = _convertMicroseconds(
+                        vsnaps.items[vsnap].time_remaining
+                    )
+                    vsnap_dict[vsnap_name] = {
+                        "size": vsnaps.items[vsnap].size,
+                        "display_name": vsnaps.items[vsnap].display_name,
+                        "protection_policy": vsnaps.items[vsnap].protection_policy,
+                        "serial_number": vsnaps.items[vsnap].serial_number,
+                        "created_at": time.strftime(
+                            "%a, %d %b %Y %H:%M:%S %Z",
+                            time.localtime(vsnaps.items[vsnap].created_at / 1000),
+                        ),
+                        "time_remaining": "{0} hours, {1} mins, {2} secs".format(
+                            int(hours), int(mins), int(secs)
+                        ),
+                        "placement_group": vsnaps.items[vsnap].placement_group.name,
+                    }
+    return snap_dict, vsnap_dict
 
 
 def generate_volumes_dict(fusion):
@@ -602,7 +766,6 @@ def generate_volumes_dict(fusion):
                     "size": volumes.items[volume].size,
                     "display_name": volumes.items[volume].display_name,
                     "array": volumes.items[volume].array.name,
-                    "placement": volumes.items[volume].placement.name,
                     "placement_group": volumes.items[volume].placement_group.name,
                     "source_volume_snapshot": getattr(
                         volumes.items[volume].source_volume_snapshot, "name", None
@@ -651,14 +814,16 @@ def main():
         "users",
         "placements",
         "arrays",
-        "hardware",
+        "hardware_types",
         "volumes",
         "hosts",
-        "storageclass",
+        "storage_classes",
         "protection_policies",
         "placement_groups",
         "interfaces",
         "zones",
+        "nigs",
+        "storage_endpoints",
         "snapshots",
         "storage_services",
         "tenants",
@@ -676,14 +841,15 @@ def main():
 
     if "minimum" in subset or "all" in subset:
         info["default"] = generate_default_dict(fusion)
-    if "hardware" in subset or "all" in subset:
+    if "hardware_types" in subset or "all" in subset:
         info["hardware"] = generate_hardware_dict(fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(fusion)
     if "zones" in subset or "all" in subset:
         info["zones"] = generate_zones_dict(fusion)
-    #    if "roles" in subset or "all" in subset:
-    #        info["roles"] = generate_roles_dict(fusion)
+    if "roles" in subset or "all" in subset:
+        info["roles"] = generate_roles_dict(fusion)
+        info["role_assignments"] = generate_ras_dict(fusion)
     if "storage_services" in subset or "all" in subset:
         info["storage_services"] = generate_storserv_dict(fusion)
     if "volumes" in subset or "all" in subset:
@@ -692,7 +858,7 @@ def main():
         info["protection_policies"] = generate_pp_dict(fusion)
     if "placement_groups" in subset or "all" in subset:
         info["placement_groups"] = generate_pg_dict(fusion)
-    if "storageclass" in subset or "all" in subset:
+    if "storage_classes" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
     if "interfaces" in subset or "all" in subset:
         info["interfaces"] = generate_nics_dict(fusion)
@@ -704,12 +870,12 @@ def main():
         info["tenants"] = generate_tenant_dict(fusion)
     if "tenant_spaces" in subset or "all" in subset:
         info["tenant_spaces"] = generate_ts_dict(fusion)
-    if "storage_endpoint" in subset or "all" in subset:
-        info["storage_endpoint"] = generate_se_dict(fusion)
-    if "network_interface_groups" in subset or "all" in subset:
+    if "storage_endpoints" in subset or "all" in subset:
+        info["storage_endpoints"] = generate_se_dict(fusion)
+    if "nigs" in subset or "all" in subset:
         info["network_interface_groups"] = generate_nig_dict(fusion)
     if "snapshots" in subset or "all" in subset:
-        info["snapshots"] = generate_snap_dict(fusion)
+        info["snapshots"], info["volume_snapshots"] = generate_snap_dict(fusion)
 
     module.exit_json(changed=False, fusion_info=info)
 
