@@ -500,7 +500,7 @@ def update_volume(module, fusion):
                         hosts=purefusion.NullableString(",".join(new_vol["hosts"]))
                     )
                     try:
-                        res = vol_api_instance.update_volume(
+                        vol_api_instance.update_volume(
                             volume,
                             volume_name=module.params["name"],
                             tenant_name=module.params["tenant"],
@@ -509,20 +509,6 @@ def update_volume(module, fusion):
                         changed = True
                     except purefusion.rest.ApiException as err:
                         module.fail_json(msg="Changing hosts failed: {0}".format(err))
-    #            if module.params["rename"]:
-    #                volume = purefusion.VolumePatch(
-    #                    name=purefusion.NullableString(module.params["rename"])
-    #                )
-    #                try:
-    #                    res = vol_api_instance.update_volume(
-    #                        volume,
-    #                        volume_name=module.params["name"],
-    #                        tenant_name=module.params["tenant"],
-    #                        tenant_space_name=module.params["tenant_space"],
-    #                    )
-    #                    changed = True
-    #                except purefusion.rest.ApiException as err:
-    #                    module.fail_json(msg="Rename volume failed: {0}".format(err))
 
     module.exit_json(changed=changed)
 
