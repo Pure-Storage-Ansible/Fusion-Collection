@@ -84,7 +84,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-import datetime
 import time
 
 
@@ -118,7 +117,6 @@ def generate_default_dict(fusion):
     tenant_api_instance = purefusion.TenantsApi(fusion)
     tenantspace_api_instance = purefusion.TenantSpacesApi(fusion)
     vol_api_instance = purefusion.VolumesApi(fusion)
-    volsnap_api_instance = purefusion.VolumeSnapshotsApi(fusion)
 
     default_info["version"] = default_api_instance.get_version().version
 
