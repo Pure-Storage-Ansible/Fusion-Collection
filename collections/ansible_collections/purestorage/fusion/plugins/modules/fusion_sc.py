@@ -261,7 +261,7 @@ def update_sc(module, fusion):
                 display_name=purefusion.NullableString(module.params["display_name"])
             )
             try:
-                res = sc_api_instance.update_storage_class(
+                sc_api_instance.update_storage_class(
                     sclass,
                     storage_service_name=module.params["storage_service"],
                     storage_class_name=module.params["name"],
@@ -275,7 +275,6 @@ def update_sc(module, fusion):
 def delete_sc(module, fusion):
     """Delete Storage Class - not available unitl 1.1"""
     changed = False
-    sc_api_instance = purefusion.StorageClassesApi(fusion)
     module.exit_json(changed=changed)
 
 
