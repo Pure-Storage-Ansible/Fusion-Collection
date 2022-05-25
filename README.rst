@@ -1,7 +1,5 @@
 |License| |CLA-Assistant| |Code-style-black|
 
-|Build history for master branch|
-
 =======================================
 Ansible Modules for Pure Storage Fusion
 =======================================
@@ -86,5 +84,3 @@ New minor and major releases as well as deprecations will follow new releases an
 .. |Pure-Storage-Ansible-CI| image:: https://github.com/Pure-Storage-Ansible/Fusion-Collection/workflows/Pure%20Storage%20Ansible%20CI/badge.svg
 .. |Code-style-black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
-.. |Build history for master branch| image:: https://buildstats.info/github/chart/Pure-Storage-Ansible/Fusion-Collection?branch=master&buildCount=50&includeBuildsFromPullRequest=false&showstats=false
-    :target: https://github.com/Pure-Storage-Ansible/Fusion-Collection/actions?query=branch%3Amaster
