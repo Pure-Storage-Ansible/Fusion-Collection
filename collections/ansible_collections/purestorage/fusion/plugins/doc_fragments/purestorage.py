@@ -37,10 +37,10 @@ options:
     type: str
     required: true
 notes:
-  - This module requires the C(fusion) Python library
+  - This module requires the I(purefusion) Python library
   - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
     if I(app_id) and I(key_file) arguments are not passed to the module directly
 requirements:
   - python >= 3.8
-  - fusion
+  - purefusion
 """

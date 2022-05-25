@@ -128,13 +128,11 @@ def create_pp(module, fusion):
     """Create Protection Policy"""
 
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
-
     local_retention = human_to_minutes(module.params["local_retention"])
-    if module.params["local_rpo"] < 10:
-        module.fail_json(msg="Local RPO must me a minimum of 10 minutes")
     if local_retention < 1:
-        module.fail_json(msg="Local Retention must me a minimum of 1 minutes")
-
+        module.fail_json(msg="Local Retention must be a minimum of 1 minutes")
+    if module.params["local_rpo"] < 10:
+        module.fail_json(msg="Local RPO must be a minimum of 10 minutes")
     changed = True
     if not module.check_mode:
         if not module.params["display_name"]:
@@ -142,13 +140,22 @@ def create_pp(module, fusion):
         else:
             display_name = module.params["display_name"]
         try:
-            policy = purefusion.ProtectionPolicyPost(
-                name=module.params["name"],
-                # local_retention=local_retention,
-                # local_rpo=module.params["local_rpo"],
-                display_name=display_name,
+            pp_api_instance.create_protection_policy(
+                purefusion.ProtectionPolicyPost(
+                    name=module.params["name"],
+                    display_name=display_name,
+                    objectives=[
+                        {
+                            "type": "RPO",
+                            "rpo": "PT" + str(module.params["local_rpo"]) + "M",
+                        },
+                        {
+                            "type": "Retention",
+                            "after": "PT" + str(local_retention) + "M",
+                        },
+                    ],
+                )
             )
-            pp_api_instance.create_protection_policy(policy)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Protection Policy {0} creation failed.: {1}".format(
@@ -178,7 +185,6 @@ def main():
             state=dict(type="str", default="present", choices=["present"]),
         )
     )
-
     module = AnsibleModule(argument_spec, supports_check_mode=True)
 
     fusion = get_fusion(module)
