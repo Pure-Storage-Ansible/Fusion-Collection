@@ -41,6 +41,6 @@ notes:
   - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
     if I(app_id) and I(key_file) arguments are not passed to the module directly
 requirements:
-  - python >= 3.8
+  - python >= 3.5
   - purefusion
 """
