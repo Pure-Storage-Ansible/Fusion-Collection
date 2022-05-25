@@ -29,9 +29,6 @@ releases:
     - description: Manage protection policies in Pure Storage Fusion
       name: fusion_pp
       namespace: ''
-    - description: Manage Provider Subnets in Pure Storage Fusion
-      name: fusion_ps
-      namespace: ''
     - description: Manage role assignments in Pure Storage Fusion
       name: fusion_ra
       namespace: ''

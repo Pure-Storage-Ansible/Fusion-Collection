@@ -20,7 +20,6 @@ New Modules
 - purestorage.fusion.fusion_nig - Manage Network Interface Groups in Pure Storage Fusion
 - purestorage.fusion.fusion_pg - Manage placement groups in Pure Storage Fusion
 - purestorage.fusion.fusion_pp - Manage protection policies in Pure Storage Fusion
-- purestorage.fusion.fusion_ps - Manage Provider Subnets in Pure Storage Fusion
 - purestorage.fusion.fusion_ra - Manage role assignments in Pure Storage Fusion
 - purestorage.fusion.fusion_sc - Manage storage classes in Pure Storage Fusion
 - purestorage.fusion.fusion_ss - Manage storage services in Pure Storage Fusion

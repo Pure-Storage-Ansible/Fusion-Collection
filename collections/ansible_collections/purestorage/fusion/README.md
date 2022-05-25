@@ -16,28 +16,28 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 
 ## Available Modules
 
- - fusion_api_client - Manage API Clients in Pure Storage Fusion
- - fusion_array - Manage arrays in Pure Storage Fusion
- - fusion_az - Manage availability zones in Pure Storage Fusion
- - fusion_hap - Manage host access policies in Pure Storage Fusion
- - fusion_hw - Manage hardware types in Pure Storage Fusion
- - fusion_info - Get information on the Fusion deployment
- - fusion_pg - Manage placement groups in Pure Storage Fusion
- - fusion_pp - Manage protection policies in Pure Storage Fusion
- - fusion_ps - Manage provider subnets in Pure Storage Fusion
- - fusion_ra - Manage role assignmentsGood to hear.  in Pure Storage Fusion
- - fusion_sc - Manage storage classes in Pure Storage Fusion
- - fusion_se - Manage storage endpoints in Pure Storage Fusion
- - fusion_ss - Manage storage services in Pure Storage Fusion
-- fusion_tenant - Manage tenants in Pure Storage Fusion
- - fusion_ts - Manage tenant spaces in Pure Storage Fusion
- - fusion_volume - Manage volumes in Pure Storage Fusion
+    - fusion_api_client: Manage API clients in Pure Storage Fusion
+    - fusion_array: Manage arrays in Pure Storage Fusion
+    - fusion_az: Create Availability Zones in Pure Storage Fusion
+    - fusion_hap: Manage host access policies in Pure Storage Fusion
+    - fusion_hw: Create hardware types in Pure Storage Fusion
+    - fusion_info: Collect information from Pure Fusion
+    - fusion_nig: Manage Network Interface Groups in Pure Storage Fusion
+    - fusion_pg: Manage placement groups in Pure Storage Fusion
+    - fusion_pp: Manage protection policies in Pure Storage Fusion
+    - fusion_ra: Manage role assignments in Pure Storage Fusion
+    - fusion_sc: Manage storage classes in Pure Storage Fusion
+    - fusion_ss: Manage storage services in Pure Storage Fusion
+    - fusion_tenant: Manage tenants in Pure Storage Fusion
+    - fusion_tn: Manage tenant networks in Pure Storage Fusion
+    - fusion_ts: Manage tenant spaces in Pure Storage Fusion
+    - fusion_volume: Manage volumes in Pure Storage Fusion
 
 ## Instructions
 
 Install the Pure Storage Fusion collection on your Ansible management host.
 
-- Using ansible-galaxy (Ansible 2.10 or later):
+- Using ansible-galaxy:
 ```
 ansible-galaxy collection install purestorage.fusion -p ~/.ansible/collections
 ```
@@ -60,4 +60,4 @@ ansible-galaxy collection install purestorage.fusion -p ~/.ansible/collections
 
 ## Author
 
-This collection was created in 2020 by [Simon Dodsley](@sdodsley) for, and on behalf of, the [Pure Storage Ansible Team](pure-ansible-team@purestorage.com)
+This collection was created in 2022 by [Simon Dodsley](@sdodsley) for, and on behalf of, the [Pure Storage Ansible Team](pure-ansible-team@purestorage.com)
