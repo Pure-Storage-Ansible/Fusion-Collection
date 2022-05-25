@@ -63,7 +63,7 @@ def get_fusion(module):
                 config.issuer_id = app_id
                 config.private_key_file = key_file
                 client = fusion.ApiClient(config)
-            #                client._api_client.set_default_header("User-Agent", user_agent)
+                client.set_default_header("User-Agent", user_agent)
             except Exception:
                 module.fail_json(msg="Unknown failure. Please contact Pure Support")
         elif environ.get("FUSION_APP_ID") and environ.get("FUSION_PRIVATE_KEY_FILE"):
@@ -71,7 +71,7 @@ def get_fusion(module):
                 config.issuer_id = environ.get("FUSION_APP_ID")
                 config.private_key_file = environ.get("FUSION_PRIVATE_KEY_FILE")
                 client = fusion.ApiClient(config)
-            #                client._api_client.set_default_header("User-Agent", user_agent)
+                client.set_default_header("User-Agent", user_agent)
             except Exception:
                 module.fail_json(msg="Unknown failure. Please contact Pure Support")
         else:
