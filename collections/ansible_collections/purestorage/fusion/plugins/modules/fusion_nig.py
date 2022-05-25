@@ -101,8 +101,6 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-import math
-import time
 
 HAS_FUSION = True
 try:
@@ -222,7 +220,6 @@ def delete_nig(module, fusion):
 def update_nig(module, fusion, nig):
     """Update Network Interface Group"""
     changed = False
-    nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
     module.exit_json(changed=changed)
 
 
