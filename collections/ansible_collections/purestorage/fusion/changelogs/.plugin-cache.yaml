@@ -54,11 +54,6 @@ plugins:
       name: fusion_pp
       namespace: ''
       version_added: 1.0.0
-    fusion_ps:
-      description: Manage Provider Subnets in Pure Storage Fusion
-      name: fusion_ps
-      namespace: ''
-      version_added: 1.0.0
     fusion_ra:
       description: Manage role assignments in Pure Storage Fusion
       name: fusion_ra
