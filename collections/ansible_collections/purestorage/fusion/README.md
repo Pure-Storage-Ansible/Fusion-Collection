@@ -9,7 +9,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - Ansible 2.11 or later
 - Authorized API Application ID for Pure Storage Pure1 and associated Private Key
   - Refer to Pure Storage documentation on how to create these. 
-- fusion
+- purefusion
 - netaddr
 - time
 - datetime
