@@ -44,6 +44,7 @@ jobs:
         pwd
         mkdir -p ansible_collections/purestorage/fusion
         rsync -av . ansible_collections/purestorage/fusion --exclude ansible_collection/purestorage/fusion
+        cd ansible_collections/purestorage/fusion
         ansible-test sanity --docker -v --color --python${{ matrix.python }}
     - name: Run flake8
       run: |
