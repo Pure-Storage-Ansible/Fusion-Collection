@@ -31,12 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
         python${{ matrix.python }} -m pip install --upgrade pip
-        python${{ matrix.python }} -m pip install pycodestyle flake8 requests
         python${{ matrix.python }} -m pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
-
-    - name: Run pycodestyle
-      run: |
-        pycodestyle --max-line-length=160 --ignore=E305,E402,W503,W504,E722,E741 ./
 
     - name: Run sanity tests
       run: |
@@ -45,8 +40,3 @@ jobs:
         rsync -av . ansible_collections/purestorage/fusion --exclude ansible_collection/purestorage/fusion
         cd ansible_collections/purestorage/fusion
         ansible-test sanity -v --color --python ${{ matrix.python-version }} --docker
-
-    - name: Run flake8
-      run: |
-        python${{ matrix.python }} -m pip install flake8
-        flake8 . --exit-zero --isolated --ignore E402 --select E,F,W --max-line-length 160
