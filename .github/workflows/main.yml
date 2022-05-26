@@ -11,7 +11,6 @@ jobs:
     name: Build (${{ matrix.ansible }} on purestorge.fusion
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
       matrix:
         ansible:
           - stable-2.9
@@ -25,33 +24,38 @@ jobs:
           - 3.9
         exclude:
           - ansible: stable-2.9
-            python: "3.9"
+            python: '3.9'
           - ansible: stable-2.12
-            python: "2.7"
+            python: '2.7'
           - ansible: stable-2.13
-            python: "2.7"
-
+            python: '2.7'
     steps:
-    - uses: actions/checkout@v1
+    - name: Check out code
+      uses: actions/checkout@v2
+      
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python${{ matrix.python }} -m pip install --upgrade pip
         python${{ matrix.python }} -m pip install pycodestyle flake8 requests
         python${{ matrix.python }} -m pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
     - name: Run pycodestyle
       run: |
         pycodestyle --max-line-length=160 --ignore=E305,E402,W503,W504,E722,E741 ./
+
     - name: Run sanity tests
       run: |
         pwd
         mkdir -p ansible_collections/purestorage/fusion
         rsync -av . ansible_collections/purestorage/fusion --exclude ansible_collection/purestorage/fusion
         cd ansible_collections/purestorage/fusion
-        ansible-test sanity -v --color --python ${{ matrix.python-version }} --docker 
+        ansible-test sanity -v --color --python ${{ matrix.python-version }} --docker
+
     - name: Run flake8
       run: |
         python${{ matrix.python }} -m pip install flake8
