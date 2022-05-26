@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible/2.10/dev_guide/testing/sanity/pep8.html", 
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test pep8` [[explain](https://docs.ansible.com/ansible/2.10/dev_guide/testing/sanity/pep8.html)] failed with 8 errors:", 
+            "output": "plugins/modules/fusion_hap.py:249:14: W605: invalid escape sequence '\\.'\nplugins/modules/fusion_hap.py:249:16: W605: invalid escape sequence '\\d'\nplugins/modules/fusion_hap.py:249:22: W605: invalid escape sequence '\\d'\nplugins/modules/fusion_hap.py:249:34: W605: invalid escape sequence '\\.'\nplugins/modules/fusion_hap.py:249:51: W605: invalid escape sequence '\\-'\nplugins/modules/fusion_hap.py:249:72: W605: invalid escape sequence '\\.'\nplugins/modules/fusion_sc.py:208:8: E713: test for membership should be 'not in'\nplugins/modules/fusion_sc.py:212:8: E713: test for membership should be 'not in'"
+        }
+    ], 
+    "verified": false
+}
