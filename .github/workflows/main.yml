@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.ansible }} on purestorge.fusion
+    name: Build purefusion on Ansible ${{ matrix.ansible }} (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
