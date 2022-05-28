@@ -1,3 +1,4 @@
 *.tar.gz
 .pylintrc
 tests/output/*
+changelogs/.plugin-cache.yaml
