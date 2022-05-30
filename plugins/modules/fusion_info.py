@@ -51,7 +51,7 @@ EXAMPLES = r"""
     register: fusion_info
 
 - name: show default information
-  debug:
+  ansible.builtin.debug:
     msg: "{{ fusion_info['fusion_info']['default'] }}"
 
 - name: collect all information
@@ -62,7 +62,7 @@ EXAMPLES = r"""
     key_file: "az-admin-private-key.pem"
 
 - name: show all information
-  debug:
+  ansible.builtin.debug:
     msg: "{{ fusion_info['fusion_info'] }}"
 """
 
