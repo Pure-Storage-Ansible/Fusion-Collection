@@ -45,7 +45,7 @@ extends_documentation_fragment:
 
 EXAMPLES = r"""
 - name: collect default set of information
-  fusion_info:
+  purestorage.fusion.fusion_info:
     app_id: key_name
     key_file: "az-admin-private-key.pem"
     register: fusion_info
@@ -55,7 +55,7 @@ EXAMPLES = r"""
     msg: "{{ fusion_info['fusion_info']['default'] }}"
 
 - name: collect all information
-  fusion_info:
+  purestorage.fusion.fusion_info:
     gather_subset:
       - all
     app_id: key_name
