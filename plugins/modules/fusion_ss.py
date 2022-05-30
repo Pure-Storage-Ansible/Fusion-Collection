@@ -64,7 +64,7 @@ EXAMPLES = r"""
     key_file: "az-admin-private-key.pem"
 
 - name: Update storage service
-  purestorage.fusion.fusion_s:
+  purestorage.fusion.fusion_ss:
     name: foo
     display_name: "main class"
     hardware_types:
