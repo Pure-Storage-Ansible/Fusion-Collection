@@ -1,3 +1,4 @@
+<a href="https://github.com/Pure-Storage-Ansible/Fusion-Collection/releases/latest"><img src="https://img.shields.io/github/v/tag/Pure-Storage-Ansible/Fusion-Collection?label=release">
 <a href="COPYING.GPLv3"><img src="https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg"></a>
 <img src="https://cla-assistant.io/readme/badge/Pure-Storage-Ansible/Fusion-Collection">
 <img src="https://github.com/Pure-Storage-Ansible/Fusion-Collection/workflows/Pure%20Storage%20Ansible%20CI/badge.svg">
