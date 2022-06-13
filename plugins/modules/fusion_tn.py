@@ -33,7 +33,7 @@ options:
   display_name:
     description:
     - The human name of the tenant network.
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
   state:
     description:
