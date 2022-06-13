@@ -39,7 +39,7 @@ options:
   display_name:
     description:
     - The human name of the hardware type.
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
   media_type:
     description:
