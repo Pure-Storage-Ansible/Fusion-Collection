@@ -38,7 +38,7 @@ options:
   display_name:
     description:
     - The human name of the array.
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
   region:
     description:
