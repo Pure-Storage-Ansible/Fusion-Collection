@@ -41,7 +41,7 @@ options:
   display_name:
     description:
     - The human name of the storage class.
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
   size_limit:
     description:
