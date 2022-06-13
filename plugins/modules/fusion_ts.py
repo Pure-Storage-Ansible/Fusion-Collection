@@ -32,7 +32,7 @@ options:
   display_name:
     description:
     - The human name of the tenant space.
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
   state:
     description:
