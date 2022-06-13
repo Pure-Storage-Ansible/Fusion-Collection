@@ -5,10 +5,11 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
-v1.0.1
+v1.0.2
 ======
 
-No user-facing changes
+v1.0.1
+======
 
 v1.0.0
 ======
