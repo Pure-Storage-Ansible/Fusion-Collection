@@ -38,7 +38,7 @@ options:
   public_key:
     description:
     - The API clients PEM formatted (Base64 encoded) RSA public key.
-    - Include the I(—–BEGIN PUBLIC KEY—–) and I(—–END PUBLIC KEY—–) lines
+    - Include the C(—–BEGIN PUBLIC KEY—–) and C(—–END PUBLIC KEY—–) lines
     type: str
     required: true
 extends_documentation_fragment:
