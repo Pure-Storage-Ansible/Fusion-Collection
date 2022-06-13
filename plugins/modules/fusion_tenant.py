@@ -38,7 +38,7 @@ options:
   display_name:
     description:
     - The human name of the tenant
-    - If not provided, defaults to `name`
+    - If not provided, defaults to C(name)
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
