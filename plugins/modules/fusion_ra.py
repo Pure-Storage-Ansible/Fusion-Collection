@@ -17,6 +17,8 @@ description:
 - Create or delete a storage class in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -32,25 +34,25 @@ options:
   user:
     description:
     - The username to assign the role to.
-    - Currently this only supports the Pure1 App ID
-    - This should be provide in the same format as the `app_id` parameter
+    - Currently this only supports the Pure1 App ID.
+    - This should be provide in the same format as I(app_id).
     required: true
     type: str
   scope:
     description:
-    - The level to which the role is assigned
+    - The level to which the role is assigned.
     choices: [ organization, tenant, tenant_space ]
     default: organization
     type: str
   tenant:
     description:
-    - The name of the tenant the user has the role applied to
-    - Must be provided if `scope` is set to either `tenant` or `tenant_space`
+    - The name of the tenant the user has the role applied to.
+    - Must be provided if I(scope) is set to either C(tenant) or C(tenant_space).
     type: str
   tenant_space:
     description:
-    - The name of the tenant_space the user has the role applied to
-    - Must be provided if `scope` is set to `tenant_space`
+    - The name of the tenant_space the user has the role applied to.
+    - Must be provided if I(scope) is set to C(tenant_space).
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion

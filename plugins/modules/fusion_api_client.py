@@ -17,6 +17,8 @@ description:
 - Create or delete an API Client in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -32,7 +34,7 @@ options:
   public_key:
     description:
     - The API clients PEM formatted (Base64 encoded) RSA public key.
-    - Include the C(—–BEGIN PUBLIC KEY—–) and C(—–END PUBLIC KEY—–) lines
+    - Include the C(—–BEGIN PUBLIC KEY—–) and C(—–END PUBLIC KEY—–) lines.
     type: str
     required: true
 extends_documentation_fragment:

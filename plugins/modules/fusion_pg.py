@@ -17,6 +17,8 @@ description:
 - Create, update or delete a placement groups in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,7 +28,7 @@ options:
   display_name:
     description:
     - The human name of the placement group.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   state:
     description:
@@ -51,8 +53,8 @@ options:
     type: str
   placement_engine:
     description:
-    - For workload placement recommendations from Pure1 Meta, use I(pure1meta).
-    - Please note that this might increase volume creation time..
+    - For workload placement recommendations from Pure1 Meta, use C(pure1meta).
+    - Please note that this might increase volume creation time.
     type: str
     choices: [ heuristics, pure1meta ]
     default: heuristics
@@ -224,7 +226,7 @@ def main():
     ):
         module.fail_json(
             msg="Please check the values for `availability_zone`, `tenant` "
-            "and `tenant_space` to ensure they all exsit and have appropriate relationships."
+            "and `tenant_space` to ensure they all exit and have appropriate relationships."
         )
     if state == "present" and not pgroup:
         create_pg(module, fusion)

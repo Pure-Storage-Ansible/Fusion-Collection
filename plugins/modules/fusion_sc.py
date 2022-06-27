@@ -15,7 +15,9 @@ version_added: '1.0.0'
 short_description:  Manage storage classes in Pure Storage Fusion
 description:
 - Create or update a storage class in Pure Storage Fusion.
-- Note that it is not currently possible to update bw_limit or
+notes:
+- Supports C(check_mode).
+- It is not currently possible to update bw_limit or
   iops_limit after a storage class has been created.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
@@ -28,36 +30,36 @@ options:
   state:
     description:
     - Define whether the storage class should exist or not.
-    - Currently there is no mechanism to delete a storage class
+    - Currently there is no mechanism to delete a storage class.
     default: present
     choices: [ present ]
     type: str
   display_name:
     description:
     - The human name of the storage class.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   size_limit:
     description:
     - Volume size limit in M, G, T or P units.
-    - Must be between 1MB and 4PB
-    - If not provided at creation, this will default to 4PB
+    - Must be between 1MB and 4PB.
+    - If not provided at creation, this will default to 4PB.
     type: str
   bw_limit:
     description:
-    - The bandwidth limit in M or G units
-      M will set MB/s
-      G will set GB/s
-    - Must be between 1MB/s and 512GB/s
-    - If not provided at creation, this will default to 512GB/s
+    - The bandwidth limit in M or G units.
+      M will set MB/s.
+      G will set GB/s.
+    - Must be between 1MB/s and 512GB/s.
+    - If not provided at creation, this will default to 512GB/s.
     type: str
   iops_limit:
     description:
-    - The IOPs limit - use value or K or M
-      K will mean 1000
-      M will mean 1000000
-    - Must be between 100 and 100000000
-    - If not provided at creation, this will default to 100000000
+    - The IOPs limit - use value or K or M.
+      K will mean 1000.
+      M will mean 1000000.
+    - Must be between 100 and 100000000.
+    - If not provided at creation, this will default to 100000000.
     type: str
   storage_service:
     description:

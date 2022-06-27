@@ -21,6 +21,8 @@ description:
   - Additional information can be collected based on the configured set of arguements.
 author:
   - Pure Storage ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   gather_subset:
     description:
@@ -38,24 +40,24 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
-- name: collect default set of information
+- name: Collect default set of information
   purestorage.fusion.fusion_info:
     app_id: key_name
     key_file: "az-admin-private-key.pem"
     register: fusion_info
 
-- name: show default information
+- name: Show default information
   ansible.builtin.debug:
     msg: "{{ fusion_info['fusion_info']['default'] }}"
 
-- name: collect all information
+- name: Collect all information
   purestorage.fusion.fusion_info:
     gather_subset:
       - all
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 
-- name: show all information
+- name: Show all information
   ansible.builtin.debug:
     msg: "{{ fusion_info['fusion_info'] }}"
 """

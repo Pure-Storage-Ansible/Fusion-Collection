@@ -17,6 +17,8 @@ description:
 - Create,delete or update a tenant in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -31,8 +33,8 @@ options:
     type: str
   display_name:
     description:
-    - The human name of the tenant
-    - If not provided, defaults to C(name)
+    - The human name of the tenant.
+    - If not provided, defaults to I(name).
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion

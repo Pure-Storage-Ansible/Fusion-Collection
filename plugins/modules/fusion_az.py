@@ -17,6 +17,8 @@ description:
 - Create an Availability Zone in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,18 +28,18 @@ options:
   state:
     description:
     - Define whether the Availability Zone should exist or not.
-    - Currently there is no mechanism to delete an AZ
+    - Currently there is no mechanism to delete an AZ.
     default: present
     choices: [ present ]
     type: str
   display_name:
     description:
     - The human name of the Availability Zone.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   region:
     description:
-    - Region within which the AZ is created
+    - Region within which the AZ is created.
     type: str
     choices: [ pure-us-west ]
     default: pure-us-west

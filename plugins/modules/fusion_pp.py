@@ -17,6 +17,8 @@ description:
 - Create protection policies in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,30 +28,30 @@ options:
   state:
     description:
     - Define whether the protection policy should exist or not.
-    - Currently there is no mechanism to delete or update a protection policy
+    - Currently there is no mechanism to delete or update a protection policy.
     default: present
     choices: [ present ]
     type: str
   display_name:
     description:
     - The human name of the protection policy.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   local_rpo:
     description:
-    - Recovery Point Objective for snapshots
-    - Value should be specified in minutes
-    - Minimum value is 10 minutes
+    - Recovery Point Objective for snapshots.
+    - Value should be specified in minutes.
+    - Minimum value is 10 minutes.
     type: int
     required: true
   local_retention:
     description:
-    - Retention Duration for periodic snapshots
-    - Minimum value is 1 minute
+    - Retention Duration for periodic snapshots.
+    - Minimum value is 1 minute.
     - Value can be provided as m(inutes), h(ours),
-      d(ays), w(eeks), or y(ears)
-    - if no unit is provided, minutes are assumed
-    - Must be between 1MB/s and 512GB/s
+      d(ays), w(eeks), or y(ears).
+    - If no unit is provided, minutes are assumed.
+    - Must be between 1MB/s and 512GB/s.
     type: str
     required: true
 extends_documentation_fragment:

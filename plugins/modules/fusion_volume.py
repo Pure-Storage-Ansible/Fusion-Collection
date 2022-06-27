@@ -17,6 +17,8 @@ description:
 - Create, update or delete a volume in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,7 +28,7 @@ options:
   display_name:
     description:
     - The human name of the volume.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   state:
     description:
@@ -67,12 +69,12 @@ options:
     type: str
   hosts:
     description:
-    - A list of host access policies to connect the volume to
+    - A list of host access policies to connect the volume to.
     type: list
     elements: str
   rename:
     description:
-    - New name for volume
+    - New name for volume.
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
