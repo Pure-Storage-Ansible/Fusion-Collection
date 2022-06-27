@@ -15,7 +15,9 @@ version_added: '1.0.0'
 short_description:  Manage tenant networks in Pure Storage Fusion
 description:
 - Create or delete tenant networks in Pure Storage Fusion.
-- Currently this only supports a single tenant subnet per tenant network
+notes:
+- Supports C(check_mode).
+- Currently this only supports a single tenant subnet per tenant network.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 options:
@@ -27,7 +29,7 @@ options:
   display_name:
     description:
     - The human name of the tenant network.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   state:
     description:
@@ -43,30 +45,30 @@ options:
     required: true
   provider_subnets:
     description:
-    - List of provider subnets to assign to the tenant networks subnet
+    - List of provider subnets to assign to the tenant networks subnet.
     type: list
     elements: str
   addresses:
     description:
-    - List of IP addresses to be used in the subnet of the tenant network
-    - IP addresses must include a CIDR notation
-    - IPv4 and IPv6 are fully supported
+    - List of IP addresses to be used in the subnet of the tenant network.
+    - IP addresses must include a CIDR notation.
+    - IPv4 and IPv6 are fully supported.
     type: list
     elements: str
   gateway:
     description:
-    - Address of the subnet gateway
-    - Currently this must be provided
+    - Address of the subnet gateway.
+    - Currently this must be provided.
     type: str
   mtu:
     description:
-    - MTYU setting for the subnet
+    - MTU setting for the subnet.
     default: 1500
     type: int
   prefix:
     description:
-    - Network prefix in CIDR format
-    - This will be deprecated soon
+    - Network prefix in CIDR format.
+    - This will be deprecated soon.
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion

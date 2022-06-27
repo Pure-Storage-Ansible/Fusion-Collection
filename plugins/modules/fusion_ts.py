@@ -17,16 +17,18 @@ description:
 - Create, update or delete a tenant spaces in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
-    - The name of the tenant `space.
+    - The name of the tenant space.
     type: str
     required: true
   display_name:
     description:
     - The human name of the tenant space.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   state:
     description:

@@ -18,6 +18,8 @@ description:
 - Currently this only supports a single tenant subnet per tenant network
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -27,7 +29,7 @@ options:
   display_name:
     description:
     - The human name of the network interface group.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   state:
     description:
@@ -43,27 +45,27 @@ options:
     required: true
   region:
     description:
-    - Region for the network interface group
+    - Region for the network interface group.
     type: str
     required: true
   gateway:
     description:
-    - Address of the subnet gateway
+    - Address of the subnet gateway.
     type: str
   mtu:
     description:
-    - MTYU setting for the subnet
+    - MTU setting for the subnet.
     default: 1500
     type: int
   group_type:
     description:
-    - The type of network interface group
+    - The type of network interface group.
     type: str
     default: eth
     choices: [ eth ]
   prefix:
     description:
-    - Network prefix in CIDR format
+    - Network prefix in CIDR format.
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion

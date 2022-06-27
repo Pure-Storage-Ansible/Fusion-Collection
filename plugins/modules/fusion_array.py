@@ -17,6 +17,8 @@ description:
 - Create or delete an array in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -32,11 +34,11 @@ options:
   display_name:
     description:
     - The human name of the array.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   region:
     description:
-    - The region the AZ is in
+    - The region the AZ is in.
     type: str
     required: true
   availability_zone:
@@ -53,17 +55,17 @@ options:
     type: str
   host_name:
     description:
-    - Management IP address of the array, or FQDN
+    - Management IP address of the array, or FQDN.
     required: true
     type: str
   appliance_id:
     description:
-    - Appliance ID of the array
+    - Appliance ID of the array.
     required: true
     type: str
   maintenance_mode:
     description:
-    - Is the array in maintenance mode
+    -  Set the array in maintenance mode or not.
     type: bool
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion

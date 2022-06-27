@@ -17,6 +17,8 @@ description:
 - Create a hardware type in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,14 +28,14 @@ options:
   state:
     description:
     - Define whether the hardware type should exist or not.
-    - Currently there is no mechanism to delete a hardware type
+    - Currently there is no mechanism to delete a hardware type.
     default: present
     choices: [ present ]
     type: str
   display_name:
     description:
     - The human name of the hardware type.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   media_type:
     description:
@@ -42,7 +44,7 @@ options:
     required: true
   array_type:
     description:
-    - The array type for the hardware type
+    - The array type for the hardware type.
     choices: [ FA//X, FA//C ]
     type: str
     required: true

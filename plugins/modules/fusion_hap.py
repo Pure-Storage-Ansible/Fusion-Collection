@@ -17,6 +17,11 @@ description:
 - Create or delete host access policies in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
+- Setting passwords is not an idempotent action.
+- Only iSCSI transport is currently supported.
+- iSCSI CHAP is not yet supported.
 options:
   name:
     description:
@@ -39,7 +44,7 @@ options:
     type: list
     elements: str
     description:
-    - CURRENTLY NOT SUPPORTED
+    - CURRENTLY NOT SUPPORTED.
     - List of wwns for the host access policy.
   iqn:
     type: str
@@ -48,7 +53,7 @@ options:
   nqn:
     type: str
     description:
-    - CURRENTLY NOT SUPPORTED
+    - CURRENTLY NOT SUPPORTED.
     - NQN for the host access policy.
   personality:
     type: str
@@ -59,33 +64,31 @@ options:
   target_user:
     type: str
     description:
-    - CURRENTLY NOT SUPPORTED
-    - Sets the target user name for CHAP authentication
-    - Required with I(target_password)
-    - To clear the username/password pair use I(clear) as the password
+    - CURRENTLY NOT SUPPORTED.
+    - Sets the target user name for CHAP authentication.
+    - Required with I(target_password).
+    - To clear the username/password pair use C(clear) as the password.
   target_password:
     type: str
     description:
-    - CURRENTLY NOT SUPPORTED
-    - Sets the target password for CHAP authentication
-    - Password length between 12 and 255 characters
-    - To clear the username/password pair use I(clear) as the password
-    - SETTING A PASSWORD IS NON-IDEMPOTENT
+    - CURRENTLY NOT SUPPORTED.
+    - Sets the target password for CHAP authentication.
+    - Password length between 12 and 255 characters.
+    - To clear the username/password pair use C(clear) as the password.
   host_user:
     type: str
     description:
-    - CURRENTLY NOT SUPPORTED
-    - Sets the host user name for CHAP authentication
-    - Required with I(host_password)
-    - To clear the username/password pair use I(clear) as the password
+    - CURRENTLY NOT SUPPORTED.
+    - Sets the host user name for CHAP authentication.
+    - Required with I(host_password).
+    - To clear the username/password pair use C(clear) as the password.
   host_password:
     type: str
     description:
-    - CURRENTLY NOT SUPPORTED
-    - Sets the host password for CHAP authentication
-    - Password length between 12 and 255 characters
-    - To clear the username/password pair use I(clear) as the password
-    - SETTING A PASSWORD IS NON-IDEMPOTENT
+    - CURRENTLY NOT SUPPORTED.
+    - Sets the host password for CHAP authentication.
+    - Password length between 12 and 255 characters.
+    - To clear the username/password pair use C(clear) as the password.
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """

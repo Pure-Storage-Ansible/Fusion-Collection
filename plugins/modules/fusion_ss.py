@@ -17,6 +17,8 @@ description:
 - Create or update a storage services in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
+notes:
+- Supports C(check mode).
 options:
   name:
     description:
@@ -26,14 +28,14 @@ options:
   state:
     description:
     - Define whether the storage service should exist or not.
-    - Currently there is no mechanism to delete a storage service
+    - Currently there is no mechanism to delete a storage service.
     default: present
     choices: [ present ]
     type: str
   display_name:
     description:
     - The human name of the storage service.
-    - If not provided, defaults to C(name)
+    - If not provided, defaults to I(name).
     type: str
   hardware_types:
     description:
