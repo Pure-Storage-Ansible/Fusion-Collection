@@ -41,8 +41,6 @@ options:
     description:
     - Region within which the AZ is created.
     type: str
-    choices: [ pure-us-west ]
-    default: pure-us-west
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -120,7 +118,7 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            region=dict(type="str", choices=["pure-us-west"], default="pure-us-west"),
+            region=dict(type="str"),
             state=dict(type="str", default="present", choices=["present"]),
         )
     )
