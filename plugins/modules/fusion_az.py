@@ -82,6 +82,17 @@ def get_az(module, fusion):
         return None
 
 
+def get_region(module, fusion):
+    """Get Region or None"""
+    region_api_instance = purefusion.RegionsApi(fusion)
+    try:
+        return region_api_instance.get_region(
+            region_name=module.params["region"],
+        )
+    except purefusion.rest.ApiException:
+        return None
+
+
 def create_az(module, fusion):
     """Create Availability Zone"""
 
@@ -128,6 +139,8 @@ def main():
     fusion = get_fusion(module)
     state = module.params["state"]
     azone = get_az(module, fusion)
+    if not get_region(module, fusion):
+        module.fail_json(msg="Region {0} does not exist.".format(module.params["region"]))
 
     if not azone and state == "present":
         create_az(module, fusion)
