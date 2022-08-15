@@ -93,6 +93,6 @@ def fusion_argument_spec():
     """Return standard base dictionary used for the argument_spec argument in AnsibleModule"""
 
     return dict(
-        app_id=dict(no_log=True, required=True),
-        key_file=dict(no_log=False, required=True),
+        app_id=dict(no_log=True),
+        key_file=dict(no_log=False),
     )
