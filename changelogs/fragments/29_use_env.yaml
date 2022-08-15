@@ -1,0 +1,2 @@
+bugfixes:
+ - Allow correct use of environmental variables for App ID and private file file
