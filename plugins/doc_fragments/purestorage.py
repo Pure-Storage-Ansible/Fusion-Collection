@@ -28,14 +28,12 @@ options:
       - Path to the private key file
       - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
-    required: true
   app_id:
     description:
       - Application ID from Pure1 Registration page
       - eg. pure1:apikey:dssf2331sd
       - Defaults to the set environment variable under FUSION_APP_ID
     type: str
-    required: true
 notes:
   - This module requires the I(purefusion) Python library
   - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
