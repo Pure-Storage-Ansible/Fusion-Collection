@@ -41,8 +41,6 @@ options:
     description:
     - Region within which the AZ is created.
     type: str
-    choices: [ pure-us-west ]
-    default: pure-us-west
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -78,6 +76,17 @@ def get_az(module, fusion):
     try:
         return az_api_instance.get_availability_zone(
             availability_zone_name=module.params["name"],
+            region_name=module.params["region"],
+        )
+    except purefusion.rest.ApiException:
+        return None
+
+
+def get_region(module, fusion):
+    """Get Region or None"""
+    region_api_instance = purefusion.RegionsApi(fusion)
+    try:
+        return region_api_instance.get_region(
             region_name=module.params["region"],
         )
     except purefusion.rest.ApiException:
@@ -120,7 +129,7 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            region=dict(type="str", choices=["pure-us-west"], default="pure-us-west"),
+            region=dict(type="str"),
             state=dict(type="str", default="present", choices=["present"]),
         )
     )
@@ -130,6 +139,10 @@ def main():
     fusion = get_fusion(module)
     state = module.params["state"]
     azone = get_az(module, fusion)
+    if not get_region(module, fusion):
+        module.fail_json(
+            msg="Region {0} does not exist.".format(module.params["region"])
+        )
 
     if not azone and state == "present":
         create_az(module, fusion)
