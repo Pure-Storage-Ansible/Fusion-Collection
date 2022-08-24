@@ -14,7 +14,7 @@ module: fusion_sc
 version_added: '1.0.0'
 short_description:  Manage storage classes in Pure Storage Fusion
 description:
-- Create or update a storage class in Pure Storage Fusion.
+- Manage a storage class in Pure Storage Fusion.
 notes:
 - Supports C(check_mode).
 - It is not currently possible to update bw_limit or
@@ -30,9 +30,8 @@ options:
   state:
     description:
     - Define whether the storage class should exist or not.
-    - Currently there is no mechanism to delete a storage class.
     default: present
-    choices: [ present ]
+    choices: [ present, absent ]
     type: str
   display_name:
     description:
@@ -85,6 +84,14 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_sc:
     name: foo
     display_name: "main class"
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
+- name: Delete storage class
+  purestorage.fusion.fusion_sc:
+    name: foo
+    storage_service: service1
+    state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -269,8 +276,22 @@ def update_sc(module, fusion):
 
 
 def delete_sc(module, fusion):
-    """Delete Storage Class - not available unitl 1.1"""
-    changed = False
+    """Delete Storage Class"""
+    sc_api_instance = purefusion.StorageClassesApi(fusion)
+    changed = True
+    if not module.check_mode:
+        try:
+            sc_api_instance.delete_storage_class(
+                storage_class=module.params["name"],
+                storage_service_name=module.params["storage_service"],
+            )
+        except purefusion.rest.ApiException as err:
+            module.fail_json(
+                msg="Storage Class {0} deletion failed.: {1}".format(
+                    module.params["name"], err
+                )
+            )
+
     module.exit_json(changed=changed)
 
 
@@ -285,7 +306,7 @@ def main():
             bw_limit=dict(type="str"),
             size_limit=dict(type="str"),
             storage_service=dict(type="str"),
-            state=dict(type="str", default="present", choices=["present"]),
+            state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
 
