@@ -14,7 +14,7 @@ module: fusion_pp
 version_added: '1.0.0'
 short_description:  Manage protection policies in Pure Storage Fusion
 description:
-- Create protection policies in Pure Storage Fusion.
+- Manage protection policies in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 notes:
@@ -28,9 +28,8 @@ options:
   state:
     description:
     - Define whether the protection policy should exist or not.
-    - Currently there is no mechanism to delete or update a protection policy.
     default: present
-    choices: [ present ]
+    choices: [ present, absent ]
     type: str
   display_name:
     description:
@@ -65,6 +64,13 @@ EXAMPLES = r"""
     local_rpo: 10
     local_retention: 4d
     display_name: "foo pp"
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
+- name: Create new protection policy foo
+  purestorage.fusion.fusion_pp:
+    name: foo
+    state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -163,8 +169,21 @@ def create_pp(module, fusion):
 
 
 def delete_pp(module, fusion):
-    """Delete Protection Policy - not available unitl 1.1"""
-    changed = False
+    """Delete Protection Policy"""
+    pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
+    changed = True
+    if not module.check_mode:
+        try:
+            pp_api_instance.delete_protection_policy(
+                protection_policy_name=module.params["name"],
+            )
+        except purefusion.rest.ApiException as err:
+            module.fail_json(
+                msg="Protection Policy {0} deletion failed.: {1}".format(
+                    module.params["name"], err
+                )
+            )
+
     module.exit_json(changed=changed)
 
 
@@ -177,7 +196,7 @@ def main():
             display_name=dict(type="str"),
             local_rpo=dict(type="int", required=True),
             local_retention=dict(type="str", required=True),
-            state=dict(type="str", default="present", choices=["present"]),
+            state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
     module = AnsibleModule(argument_spec, supports_check_mode=True)
