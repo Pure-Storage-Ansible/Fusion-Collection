@@ -14,7 +14,7 @@ module: fusion_az
 version_added: '1.0.0'
 short_description:  Create Availability Zones in Pure Storage Fusion
 description:
-- Create an Availability Zone in Pure Storage Fusion.
+- Manage an Availability Zone in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 notes:
@@ -28,9 +28,8 @@ options:
   state:
     description:
     - Define whether the Availability Zone should exist or not.
-    - Currently there is no mechanism to delete an AZ.
     default: present
-    choices: [ present ]
+    choices: [ present, absent ]
     type: str
   display_name:
     description:
@@ -50,6 +49,13 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_az:
     name: foo
     display_name: "foo AZ"
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
+- name: Delete AZ foo
+  purestorage.fusion.fusion_az:
+    name: foo
+    state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -93,6 +99,32 @@ def get_region(module, fusion):
         return None
 
 
+def delete_az(module, fusion):
+    """Delete Availability Zone"""
+
+    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
+
+    changed = True
+    if not module.check_mode:
+        if not module.params["display_name"]:
+            display_name = module.params["name"]
+        else:
+            display_name = module.params["display_name"]
+        try:
+            az_api_instance.delete_availability_zone(
+                region_name=module.params["region"],
+                availability_zone_name=module.params["name"],
+            )
+        except purefusion.rest.ApiException as err:
+            module.fail_json(
+                msg="Availability Zone {0} deletion failed.: {1}".format(
+                    module.params["name"], err
+                )
+            )
+
+    module.exit_json(changed=changed)
+
+
 def create_az(module, fusion):
     """Create Availability Zone"""
 
@@ -130,7 +162,7 @@ def main():
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
             region=dict(type="str"),
-            state=dict(type="str", default="present", choices=["present"]),
+            state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
 
@@ -146,6 +178,8 @@ def main():
 
     if not azone and state == "present":
         create_az(module, fusion)
+    elif azone and state == "absent":
+        delete_az(module, fusion)
     else:
         module.exit_json(changed=False)
 
