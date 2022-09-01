@@ -60,8 +60,32 @@ releases:
     release_date: '2022-06-13'
     release_summary: Fix documentation
   1.0.3:
-    changes: {}
     fragments:
       - 27_review_fixes.yaml
     release_date: '2022-06-27'
     release_summary: Ensure documentation standards are met
+  1.1.0:
+    changes:
+      bugfixes:
+        - Allow correct use of environmental variables for App ID and private file file
+      minor_changes:
+        - fusion_az - Add delete AZ option
+        - fusion_az - Allow any region to be specificed instead of limited to a known
+          list
+        - fusion_pp - Add delete PP option
+        - fusion_sc - Add delete SC option
+        - fusion_ss - Add delete SS option
+    fragments:
+      - 27_review_fixes.yaml
+      - 28_any_region.yaml
+      - 29_use_env.yaml
+      - 31_add_delete_az.yaml
+      - 32_add_delete_pp.yaml
+      - 33_add_delete_sc.yaml
+      - 34_add_delete_ss.yaml
+    modules:
+      - description: Manage Regions in Pure Storage Fusion
+        name: fusion_region
+        namespace: ''
+    release_date: '2022-09-01'
+    release_summary: Add new deletion options for some modules and new regions module
