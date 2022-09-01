@@ -5,6 +5,28 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.1.0
+======
+
+Minor Changes
+-------------
+
+- fusion_az - Add delete AZ option
+- fusion_az - Allow any region to be specificed instead of limited to a known list
+- fusion_pp - Add delete PP option
+- fusion_sc - Add delete SC option
+- fusion_ss - Add delete SS option
+
+Bugfixes
+--------
+
+- Allow correct use of environmental variables for App ID and private file file
+
+New Modules
+-----------
+
+- purestorage.fusion.fusion_region - Manage Regions in Pure Storage Fusion
+
 v1.0.3
 ======
 
