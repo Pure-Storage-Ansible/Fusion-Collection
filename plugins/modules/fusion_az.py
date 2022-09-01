@@ -106,10 +106,6 @@ def delete_az(module, fusion):
 
     changed = True
     if not module.check_mode:
-        if not module.params["display_name"]:
-            display_name = module.params["name"]
-        else:
-            display_name = module.params["display_name"]
         try:
             az_api_instance.delete_availability_zone(
                 region_name=module.params["region"],
