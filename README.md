@@ -14,7 +14,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - Python >= 3.5
 - Authorized API Application ID for Pure Storage Pure1 and associated Private Key
   - Refer to Pure Storage documentation on how to create these. 
-- purefusion >= 1.0.1
+- purefusion >= 1.0.4
 - netaddr
 - time
 
@@ -30,6 +30,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - fusion_pg: Manage placement groups in Pure Storage Fusion
 - fusion_pp: Manage protection policies in Pure Storage Fusion
 - fusion_ra: Manage role assignments in Pure Storage Fusion
+- fusion_region: Manage regions in Pure Storage Fusion
 - fusion_sc: Manage storage classes in Pure Storage Fusion
 - fusion_ss: Manage storage services in Pure Storage Fusion
 - fusion_tenant: Manage tenants in Pure Storage Fusion
