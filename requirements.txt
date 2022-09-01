@@ -1,2 +1,2 @@
 netaddr
-purefusion>=1.0.1
+purefusion>=1.0.4
