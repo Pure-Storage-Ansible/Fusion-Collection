@@ -153,7 +153,7 @@ def _check_hosts(module, fusion):
 def _check_target_volume(module, fusion):
     vol_api_instance = purefusion.VolumesApi(fusion)
     try:
-        volume = vol_api_instance.get_volume(
+        vol_api_instance.get_volume(
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
             volume_name=module.params["rename"],
@@ -470,7 +470,7 @@ def update_volume(module, fusion):
                     )
                 )
                 try:
-                    res = vol_api_instance.update_volume(
+                    vol_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
