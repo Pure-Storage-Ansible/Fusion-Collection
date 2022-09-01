@@ -14,7 +14,7 @@ module: fusion_ss
 version_added: '1.0.0'
 short_description:  Manage storage services in Pure Storage Fusion
 description:
-- Create or update a storage services in Pure Storage Fusion.
+- Manage a storage services in Pure Storage Fusion.
 author:
 - Pure Storage Ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 notes:
@@ -28,9 +28,8 @@ options:
   state:
     description:
     - Define whether the storage service should exist or not.
-    - Currently there is no mechanism to delete a storage service.
     default: present
-    choices: [ present ]
+    choices: [ present, absent ]
     type: str
   display_name:
     description:
@@ -65,6 +64,13 @@ EXAMPLES = r"""
     display_name: "main class"
     hardware_types:
     - flash-array-c
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
+- name: Delete storage service
+  purestorage.fusion.fusion_ss:
+    name: foo
+    state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -117,6 +123,27 @@ def create_ss(module, fusion):
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Storage Service {0} creation failed.: {1}".format(
+                    module.params["name"], res.error
+                )
+            )
+
+    module.exit_json(changed=changed)
+
+
+def delete_ss(module, fusion):
+    """Delete Storage Service"""
+
+    ss_api_instance = purefusion.StorageServicesApi(fusion)
+
+    changed = True
+    if not module.check_mode:
+        try:
+            res = ss_api_instance.delete_storage_service(
+                storage_service_name=module.params["name"]
+            )
+        except purefusion.rest.ApiException:
+            module.fail_json(
+                msg="Storage Service {0} deletion failed.: {1}".format(
                     module.params["name"], res.error
                 )
             )
@@ -179,7 +206,7 @@ def main():
                     "flash-array-xl",
                 ],
             ),
-            state=dict(type="str", default="present", choices=["present"]),
+            state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
 
@@ -193,6 +220,8 @@ def main():
         create_ss(module, fusion)
     elif s_service and state == "present":
         update_ss(module, fusion)
+    elif s_service and state == "absent":
+        delete_ss(module, fusion)
     else:
         module.exit_json(changed=False)
 
