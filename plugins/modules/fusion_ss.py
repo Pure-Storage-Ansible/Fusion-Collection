@@ -119,11 +119,11 @@ def create_ss(module, fusion):
                 display_name=display_name,
                 hardware_types=module.params["hardware_types"],
             )
-            res = ss_api_instance.create_storage_service(s_service)
-        except purefusion.rest.ApiException:
+            ss_api_instance.create_storage_service(s_service)
+        except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Service {0} creation failed.: {1}".format(
-                    module.params["name"], res.error
+                    module.params["name"], err
                 )
             )
 
@@ -138,13 +138,13 @@ def delete_ss(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            res = ss_api_instance.delete_storage_service(
+            ss_api_instance.delete_storage_service(
                 storage_service_name=module.params["name"]
             )
-        except purefusion.rest.ApiException:
+        except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Service {0} deletion failed.: {1}".format(
-                    module.params["name"], res.error
+                    module.params["name"], err
                 )
             )
 
@@ -175,14 +175,14 @@ def update_ss(module, fusion):
             display_name=purefusion.NullableString(display_name),
         )
         try:
-            res = ss_api_instance.update_storage_service(
+            ss_api_instance.update_storage_service(
                 sservice,
                 storage_service_name=module.params["name"],
             )
-        except purefusion.rest.ApiException:
+        except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Changing storage service {0} failed. Error: {1}".format(
-                    module.params["name"], res.error
+                    module.params["name"], err
                 )
             )
     module.exit_json(changed=changed)
