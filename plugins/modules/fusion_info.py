@@ -498,7 +498,7 @@ def generate_ras_dict(fusion):
     roles = role_api_instance.list_roles()
     for role in range(0, len(roles)):
         ras = ras_api_instance.list_role_assignments(role_name=roles[role].name)
-        for assignment in range(0, len(roles.items)):
+        for assignment in range(0, len(ras)):
             name = ras[assignment].name
             ras_info[name] = {
                 "display_name": ras[assignment].display_name,
@@ -620,7 +620,21 @@ def generate_se_dict(fusion):
                     0, len(endpoints.items[endpoint].iscsi.discovery_interfaces)
                 ):
                     se_dict[name]["iscsi_interfaces"].append(
-                        endpoints.items[endpoint].iscsi.discovery_interfaces[iface],
+                        {
+                            "address": endpoints.items[endpoint]
+                            .iscsi.discovery_interfaces[iface]
+                            .address,
+                            "gateway": endpoints.items[endpoint]
+                            .iscsi.discovery_interfaces[iface]
+                            .gateway,
+                            "mtu": endpoints.items[endpoint]
+                            .iscsi.discovery_interfaces[iface]
+                            .mtu,
+                            "network_interface_group": endpoints.items[endpoint]
+                            .iscsi.discovery_interfaces[iface]
+                            .network_interface_groups[0]
+                            .name,
+                        }
                     )
     return se_dict
 
