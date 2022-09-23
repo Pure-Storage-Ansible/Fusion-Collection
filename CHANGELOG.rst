@@ -5,6 +5,15 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.1.1
+======
+
+Bugfixes
+--------
+
+- fusion_info - Fixed incorrect storage endpoint response format
+
+
 v1.1.0
 ======
 

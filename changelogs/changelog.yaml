@@ -52,18 +52,13 @@ releases:
         namespace: ''
     release_date: '2022-05-25'
   1.0.1:
-    changes: {}
     release_date: '2022-05-27'
-    release_summary: Fix documentation
   1.0.2:
-    changes: {}
     release_date: '2022-06-13'
-    release_summary: Fix documentation
   1.0.3:
     fragments:
       - 27_review_fixes.yaml
     release_date: '2022-06-27'
-    release_summary: Ensure documentation standards are met
   1.1.0:
     changes:
       bugfixes:
@@ -88,4 +83,8 @@ releases:
         name: fusion_region
         namespace: ''
     release_date: '2022-09-01'
-    release_summary: Add new deletion options for some modules and new regions module
+  1.1.1:
+    changes:
+      bugfixes:
+        fusion_info - Fixed incorrect storage endpoint response format
+    release_date: '2022-09-23'
