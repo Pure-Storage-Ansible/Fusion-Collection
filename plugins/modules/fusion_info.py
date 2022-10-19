@@ -30,7 +30,8 @@ options:
         Possible values for this include all, minimum, roles, users, placements,
         arrays, hardware_types, volumes, host, storage_classes, protection_policies,
         placement_groups, interfaces, zones, nigs, storage_endpoints, snapshots,
-        storage_services, tenants, tenant_spaces and network_interface_groups.
+        storage_services, tenants, tenant_spaces, network_interface_groups and
+        api_clients.
     type: list
     elements: str
     required: false
@@ -521,6 +522,29 @@ def generate_roles_dict(fusion):
     return roles_info
 
 
+def generate_api_client_dict(fusion):
+    client_info = {}
+    api_instance = purefusion.IdentityManagerApi(fusion)
+    clients = api_instance.list_api_clients()
+    for client in range(0, len(clients)):
+        name = clients[client].name
+        client_info[name] = {
+            "display_name": clients[client].display_name,
+            "issuer": clients[client].issuer,
+            "public_key": clients[client].public_key,
+            "creator_id": clients[client].creator_id,
+            "last_key_update": time.strftime(
+                "%a, %d %b %Y %H:%M:%S %Z",
+                time.localtime(clients[client].last_key_update / 1000),
+            ),
+            "last_used": time.strftime(
+                "%a, %d %b %Y %H:%M:%S %Z",
+                time.localtime(clients[client].last_used / 1000),
+            ),
+        }
+    return client_info
+
+
 def generate_users_dict(fusion):
     users_info = {}
     api_instance = purefusion.IdentityManagerApi(fusion)
@@ -837,6 +861,7 @@ def main():
         "tenants",
         "tenant_spaces",
         "network_interface_groups",
+        "api_clients",
     )
     subset_test = (test in valid_subsets for test in subset)
     if not all(subset_test):
@@ -880,6 +905,8 @@ def main():
         info["tenant_spaces"] = generate_ts_dict(fusion)
     if "storage_endpoints" in subset or "all" in subset:
         info["storage_endpoints"] = generate_se_dict(fusion)
+    if "api_clients" in subset or "all" in subset:
+        info["api_clients"] = generate_api_client_dict(fusion)
     if "nigs" in subset or "all" in subset:
         info["network_interface_groups"] = generate_nig_dict(fusion)
     if "snapshots" in subset or "all" in subset:
