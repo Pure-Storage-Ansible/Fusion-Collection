@@ -84,7 +84,14 @@ releases:
         namespace: ''
     release_date: '2022-09-01'
   1.1.1:
+    release_date: '2022-09-23'
+  1.2.0:
     changes:
       bugfixes:
-        fusion_info - Fixed incorrect storage endpoint response format
-    release_date: '2022-09-23'
+        - fusion_info - Fixed issue with storage endpoint dict formatting
+      minor_changes:
+        - fusion_info - Added API Client information
+    fragments:
+      - 39_fix_info.yaml
+      - 41_add_api_client.yaml
+    release_date: '2022-12-02'

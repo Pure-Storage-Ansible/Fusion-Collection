@@ -5,14 +5,21 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
-v1.1.1
+v1.2.0
 ======
+
+Minor Changes
+-------------
+
+- fusion_info - Added API Client information
 
 Bugfixes
 --------
 
-- fusion_info - Fixed incorrect storage endpoint response format
+- fusion_info - Fixed issue with storage endpoint dict formatting
 
+v1.1.1
+======
 
 v1.1.0
 ======
