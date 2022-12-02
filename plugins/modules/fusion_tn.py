@@ -37,6 +37,11 @@ options:
     type: str
     default: present
     choices: [ absent, present ]
+  region:
+    description:
+    - The name of the region the availability zone is in
+    type: str
+    required: true
   availability_zone:
     aliases: [ az ]
     description:
@@ -142,6 +147,7 @@ def get_az(module, fusion):
     try:
         return az_api_instance.get_availability_zone(
             availability_zone_name=module.params["availability_zone"],
+            region_name=module.params["region"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -239,6 +245,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
+            region=dict(type="str", required=True),
             display_name=dict(type="str"),
             availability_zone=dict(type="str", required=True, aliases=["az"]),
             prefix=dict(type="str"),
