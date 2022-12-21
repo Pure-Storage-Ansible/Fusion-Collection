@@ -5,6 +5,15 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.3.0
+======
+
+Bugfixes
+--------
+
+- fusion_pg - Add missing 'region' parameter
+- fusion_tn - Add missing 'region' parameter
+
 v1.2.0
 ======
 
