@@ -95,3 +95,11 @@ releases:
       - 39_fix_info.yaml
       - 41_add_api_client.yaml
     release_date: '2022-12-02'
+  1.3.0:
+    changes:
+      bugfixes:
+        - fusion_pg - Add missing 'region' parameter
+        - fusion_tn - Add missing 'region' parameter
+    fragments:
+      - 44_fix_missing_regions.yaml
+    release_date: '2022-12-21'
