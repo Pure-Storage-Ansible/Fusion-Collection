@@ -46,6 +46,11 @@ options:
     - The name of the tenant space.
     type: str
     required: true
+  region:
+    description:
+    - The name of the region the availability zone is in.
+    type: str
+    required: true
   availability_zone:
     aliases: [ az ]
     description:
@@ -117,7 +122,8 @@ def get_az(module, fusion):
     api_instance = purefusion.AvailabilityZonesApi(fusion)
     try:
         return api_instance.get_availability_zone(
-            availability_zone_name=module.params["availability_zone"]
+            availability_zone_name=module.params["availability_zone"],
+            region_name=module.params["region"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -205,6 +211,7 @@ def main():
             display_name=dict(type="str"),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
+            region=dict(type="str", required=True),
             availability_zone=dict(type="str", aliases=["az"]),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             placement_engine=dict(
