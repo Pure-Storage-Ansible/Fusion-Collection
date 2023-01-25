@@ -4,6 +4,13 @@ Purestorage.Fusion Release Notes
 
 .. contents:: Topics
 
+unreleased
+======
+
+Bugfixes
+--------
+
+- rename fusion_tn to fusion_se (Tenant networks to Storage endpoints)
 
 v1.3.0
 ======

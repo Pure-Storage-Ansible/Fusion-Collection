@@ -81,8 +81,8 @@ def get_az(module, fusion):
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
     try:
         return az_api_instance.get_availability_zone(
-            availability_zone_name=module.params["name"],
             region_name=module.params["region"],
+            availability_zone_name=module.params["name"],
         )
     except purefusion.rest.ApiException:
         return None

@@ -32,9 +32,9 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - fusion_ra: Manage role assignments in Pure Storage Fusion
 - fusion_region: Manage regions in Pure Storage Fusion
 - fusion_sc: Manage storage classes in Pure Storage Fusion
+- fusion_se: Manage storage endpoints in Pure Storage Fusion
 - fusion_ss: Manage storage services in Pure Storage Fusion
 - fusion_tenant: Manage tenants in Pure Storage Fusion
-- fusion_tn: Manage tenant networks in Pure Storage Fusion
 - fusion_ts: Manage tenant spaces in Pure Storage Fusion
 - fusion_volume: Manage volumes in Pure Storage Fusion
 
