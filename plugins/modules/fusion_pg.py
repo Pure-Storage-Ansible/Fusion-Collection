@@ -74,6 +74,7 @@ EXAMPLES = r"""
     tenant: test
     tenant_space: space_1
     availability_zone: az1
+    region: region1
     placement_engine: pure1meta
     state: present
     app_id: key_name
@@ -84,6 +85,7 @@ EXAMPLES = r"""
     name: foo
     tenant: test
     tenant_space: space_1
+    region: region1
     state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
