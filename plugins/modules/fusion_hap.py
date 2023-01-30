@@ -243,7 +243,7 @@ def main():
     module.params["name"] = module.params["name"].lower()
     hap_pattern = re.compile("^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?$")
     iqn_pattern = re.compile(
-        r"^iqn\.\d{4}-\d{2}((?<!-)\.(?!-)[a-zA-Z0-9\-]+){1,63}(?<!-)(?<!\.)(:[^:]+)?$"
+        r"^iqn\.\d{4}-\d{2}((?<!-)\.(?!-)[a-zA-Z0-9\-]+){1,63}(?<!-)(?<!\.)(:(?!:)[^,\s'\"]+)?$"
     )
     if not hap_pattern.match(module.params["name"]):
         module.fail_json(
