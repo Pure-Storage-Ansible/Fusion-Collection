@@ -168,47 +168,6 @@ def _check_target_volume(module, fusion):
     except purefusion.rest.ApiException:
         return False
 
-
-def human_to_bytes(size):
-    """Given a human-readable byte string (e.g. 2G, 30M),
-    return the number of bytes.  Will return 0 if the argument has
-    unexpected form.
-    """
-    my_bytes = size[:-1]
-    unit = size[-1].upper()
-    if my_bytes.isdigit():
-        my_bytes = int(my_bytes)
-        if unit == "P":
-            my_bytes *= 1125899906842624
-        elif unit == "T":
-            my_bytes *= 1099511627776
-        elif unit == "G":
-            my_bytes *= 1073741824
-        elif unit == "M":
-            my_bytes *= 1048576
-        elif unit == "K":
-            my_bytes *= 1024
-        else:
-            my_bytes = 0
-    else:
-        my_bytes = 0
-    return my_bytes
-
-
-def bytes_to_human(bytes_number):
-    """Convert bytes to a human readable string"""
-    if bytes_number:
-        labels = ["B", "KB", "MB", "GB", "TB", "PB"]
-        i = 0
-        double_bytes = bytes_number
-        while i < len(labels) and bytes_number >= 1024:
-            double_bytes = bytes_number / 1024.0
-            i += 1
-            bytes_number = bytes_number / 1024
-        return str(round(double_bytes, 2)) + " " + labels[i]
-    return None
-
-
 def get_volume(module, fusion):
     """Return Volume or None"""
     volume_api_instance = purefusion.VolumesApi(fusion)
@@ -278,14 +237,14 @@ def create_volume(module, fusion):
 
     if not module.params["size"]:
         module.fail_json(msg="Size for a new volume must be specified")
-    size = human_to_bytes(module.params["size"])
+    size = parse_number_with_suffix(module.params["size"])
     sc_size_limit = sc_api_instance.get_storage_class(
         storage_class_name=module.params["storage_class"]
     ).size_limit
     if size > sc_size_limit:
         module.fail_json(
             msg="Requested size {0} exceeds the storage class limit of {1}".format(
-                module.params["size"], bytes_to_human(sc_size_limit)
+                module.params["size"], print_number_with_suffix(sc_size_limit)
             )
         )
 
@@ -360,10 +319,10 @@ def update_volume(module, fusion):
         new_vol["storage_class"] = module.params["storage_class"]
     if (
         module.params["size"]
-        and human_to_bytes(module.params["size"]) != current_vol["size"]
+        and parse_number_with_suffix(module.params["size"]) != current_vol["size"]
     ):
-        if human_to_bytes(module.params["size"]) > current_vol["size"]:
-            new_vol["size"] = human_to_bytes(module.params["size"])
+        if parse_number_with_suffix(module.params["size"]) > current_vol["size"]:
+            new_vol["size"] = parse_number_with_suffix(module.params["size"])
         sc_size_limit = sc_api_instance.get_storage_class(
             storage_class_name=new_vol["storage_class"]
         ).size_limit
