@@ -157,9 +157,9 @@ def _check_host_access_policies(module, fusion):
 
 
 def _check_target_volume(module, fusion):
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    volume_api_instance = purefusion.VolumesApi(fusion)
     try:
-        vol_api_instance.get_volume(
+        op_id = volume_api_instance.get_volume(
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
             volume_name=module.params["rename"],
@@ -218,9 +218,9 @@ def get_pp(module, fusion):
 
 def get_destroyed_volume(module, fusion):
     """Return Destroyed Volume or None"""
-    vs_api_instance = purefusion.VolumeSnapshotsApi(fusion)
+    volume_api_instance = purefusion.VolumeSnapshotsApi(fusion)
     try:
-        return vs_api_instance.get_volume_snapshot(
+        return volume_api_instance.get_volume_snapshot(
             volume_name=module.params["name"],
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
@@ -233,7 +233,7 @@ def create_volume(module, fusion):
     """Create Volume"""
 
     sc_api_instance = purefusion.StorageClassesApi(fusion)
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    volume_api_instance = purefusion.VolumesApi(fusion)
 
     if not module.params["size"]:
         module.fail_json(msg="Size for a new volume must be specified")
@@ -262,7 +262,7 @@ def create_volume(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            vol_api_instance.create_volume(
+            volume_api_instance.create_volume(
                 volume,
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
@@ -285,9 +285,9 @@ def update_volume(module, fusion):
     """Update Volume size, placement group, storage class, HAPs"""
     changed = False
     sc_api_instance = purefusion.StorageClassesApi(fusion)
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    volume_api_instance = purefusion.VolumesApi(fusion)
 
-    vol = vol_api_instance.get_volume(
+    vol = volume_api_instance.get_volume(
         tenant_name=module.params["tenant"],
         tenant_space_name=module.params["tenant_space"],
         volume_name=module.params["name"],
@@ -369,7 +369,7 @@ def update_volume(module, fusion):
                     display_name=purefusion.NullableString(new_vol["display_name"])
                 )
                 try:
-                    res = vol_api_instance.update_volume(
+                    res = volume_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
@@ -385,7 +385,7 @@ def update_volume(module, fusion):
                     storage_class=purefusion.NullableString(new_vol["storage_class"])
                 )
                 try:
-                    res = vol_api_instance.update_volume(
+                    res = volume_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
@@ -401,7 +401,7 @@ def update_volume(module, fusion):
                     size=purefusion.NullableSize(new_vol["size"])
                 )
                 try:
-                    res = vol_api_instance.update_volume(
+                    res = volume_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
@@ -417,7 +417,7 @@ def update_volume(module, fusion):
                     )
                 )
                 try:
-                    res = vol_api_instance.update_volume(
+                    res = volume_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
@@ -435,7 +435,7 @@ def update_volume(module, fusion):
                     )
                 )
                 try:
-                    vol_api_instance.update_volume(
+                    volume_api_instance.update_volume(
                         volume,
                         volume_name=module.params["name"],
                         tenant_name=module.params["tenant"],
@@ -461,7 +461,7 @@ def update_volume(module, fusion):
                         host_access_policies=purefusion.NullableString(",".join(new_vol["host_access_policies"]))
                     )
                     try:
-                        vol_api_instance.update_volume(
+                        volume_api_instance.update_volume(
                             volume,
                             volume_name=module.params["name"],
                             tenant_name=module.params["tenant"],
@@ -477,10 +477,10 @@ def update_volume(module, fusion):
 def delete_volume(module, fusion):
     """Delete Volume"""
     changed = True
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    volume_api_instance = purefusion.VolumesApi(fusion)
     if not module.check_mode:
         try:
-            vol_api_instance.delete_volume(
+            volume_api_instance.delete_volume(
                 volume_name=module.params["name"],
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
