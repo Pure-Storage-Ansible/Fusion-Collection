@@ -552,7 +552,11 @@ def main():
         )
     )
 
-    module = AnsibleModule(argument_spec, supports_check_mode=True)
+    required_if = [
+        ('state', 'present', ('storage_class', 'placement_group'), False)
+    ]
+
+    module = AnsibleModule(argument_spec, required_if=required_if, supports_check_mode=True)
 
     size = module.params["size"]
     state = module.params["state"]
