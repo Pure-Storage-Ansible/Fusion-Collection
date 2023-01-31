@@ -182,12 +182,16 @@ def create_se(module, fusion):
                     iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
                         address=address,
                         gateway=module.params["gateway"],
-                        network_interface_groups=module.params["network_interface_groups"],
+                        network_interface_groups=module.params[
+                            "network_interface_groups"
+                        ],
                     )
                 else:
                     iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
                         address=address,
-                        network_interface_groups=module.params["network_interface_groups"],
+                        network_interface_groups=module.params[
+                            "network_interface_groups"
+                        ],
                     )
                 ifaces.append(iface)
             sendp = purefusion.StorageEndpointPost(
