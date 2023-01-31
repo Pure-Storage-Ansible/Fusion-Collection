@@ -67,7 +67,7 @@ options:
     description:
     - The name of the protection policy.
     type: str
-  hosts:
+  host_access_policies:
     description:
     - A list of host access policies to connect the volume to.
     type: list
@@ -136,17 +136,23 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_suffix,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
 
 
-def _check_hosts(module, fusion):
+def _check_host_access_policies(module, fusion):
     current_haps = []
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-    hosts = hap_api_instance.list_host_access_policies()
-    for host in range(0, len(hosts.items)):
-        current_haps.append(hosts.items[host].name)
-    if not (set(module.params["hosts"]).issubset(set(current_haps))):
+    haps = hap_api_instance.list_host_access_policies()
+    for host in range(0, len(haps.items)):
+        current_haps.append(haps.items[host].name)
+    if not (set(module.params["host_access_policies"]).issubset(set(current_haps))):
         module.fail_json(
-            msg="At least of of the speciied hosts does not currently exist"
+            msg="At least one of the specified host access policies does not currently exist"
         )
 
 
@@ -308,9 +314,9 @@ def create_volume(module, fusion):
                     module.params["name"], err
                 )
             )
-    if module.params["hosts"]:
+    if module.params["host_access_policies"]:
         volume = purefusion.VolumePatch(
-            hosts=purefusion.NullableString(module.params["hosts"])
+            host_access_policies=purefusion.NullableString(module.params["host_access_policies"])
         )
 
     module.exit_json(changed=changed)
@@ -327,13 +333,13 @@ def update_volume(module, fusion):
         tenant_space_name=module.params["tenant_space"],
         volume_name=module.params["name"],
     )
-    hosts = []
-    if vol.hosts:
-        for host in range(0, len(vol.hosts)):
-            hosts.append(vol.hosts[host].name)
+    haps = []
+    if vol.host_access_policies:
+        for host in range(0, len(vol.host_access_policies)):
+            haps.append(vol.host_access_policies[host].name)
     current_vol = {
         "size": vol.size,
-        "hosts": list(dict.fromkeys(hosts)),
+        "host_access_policies": list(dict.fromkeys(haps)),
         "placement_group": vol.placement_group.name,
         "protection_policy": getattr(vol.protection_policy, "name", None),
         "storage_class": vol.storage_class.name,
@@ -341,7 +347,7 @@ def update_volume(module, fusion):
     }
     new_vol = {
         "size": vol.size,
-        "hosts": list(dict.fromkeys(hosts)),
+        "host_access_policies": list(dict.fromkeys(haps)),
         "placement_group": vol.placement_group.name,
         "protection_policy": getattr(vol.protection_policy, "name", None),
         "storage_class": vol.storage_class.name,
@@ -394,7 +400,7 @@ def update_volume(module, fusion):
     ):
         new_vol["display_name"] = module.params["display_name"]
 
-    if (new_vol != current_vol) or module.params["hosts"]:
+    if (new_vol != current_vol) or module.params["host_access_policies"]:
         changed = False
         if not module.check_mode:
             # PATCH is atomic so has to pass or fail, therefore only one item
@@ -481,19 +487,19 @@ def update_volume(module, fusion):
                     module.fail_json(
                         msg="Changing protection_policy failed: {0}".format(err)
                     )
-            if module.params["hosts"]:
-                if not new_vol["hosts"]:
-                    new_vol["hosts"] = []
-                for host in module.params["hosts"]:
+            if module.params["host_access_policies"]:
+                if not new_vol["host_access_policies"]:
+                    new_vol["host_access_policies"] = []
+                for host in module.params["host_access_policies"]:
                     if module.params["state"] == "absent":
-                        if new_vol["hosts"]:
-                            new_vol["hosts"].remove(host)
+                        if new_vol["host_access_policies"]:
+                            new_vol["host_access_policies"].remove(host)
                     else:
-                        new_vol["hosts"].append(host)
-                new_vol["hosts"] = list(dict.fromkeys(new_vol["hosts"]))
-                if new_vol["hosts"] != current_vol["hosts"]:
+                        new_vol["host_access_policies"].append(host)
+                new_vol["host_access_policies"] = list(dict.fromkeys(new_vol["host_access_policies"]))
+                if new_vol["host_access_policies"] != current_vol["host_access_policies"]:
                     volume = purefusion.VolumePatch(
-                        hosts=purefusion.NullableString(",".join(new_vol["hosts"]))
+                        host_access_policies=purefusion.NullableString(",".join(new_vol["host_access_policies"]))
                     )
                     try:
                         vol_api_instance.update_volume(
@@ -504,7 +510,7 @@ def update_volume(module, fusion):
                         )
                         changed = True
                     except purefusion.rest.ApiException as err:
-                        module.fail_json(msg="Changing hosts failed: {0}".format(err))
+                        module.fail_json(msg="Changing host access policies failed: {0}".format(err))
 
     module.exit_json(changed=changed)
 
@@ -565,6 +571,11 @@ def recover_volume(module, array):
 def main():
     """Main code"""
     argument_spec = fusion_argument_spec()
+    deprecated_hosts = dict(
+        name="hosts",
+        date="2023-07-26",
+        collection_name="purefusion.fusion"
+    )
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
@@ -575,7 +586,7 @@ def main():
             placement_group=dict(type="str"),
             storage_class=dict(type="str"),
             protection_policy=dict(type="str"),
-            hosts=dict(type="list", elements="str"),
+            host_access_policies=dict(type="list", elements="str", deprecated_aliases=[deprecated_hosts]),
             eradicate=dict(type="bool", default=False),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             size=dict(type="str"),
@@ -600,8 +611,8 @@ def main():
         module.fail_json(
             msg="`storage_class` and `placement_group` are required when creating a new volume"
         )
-    if module.params["hosts"]:
-        _check_hosts(module, fusion)
+    if module.params["host_access_policies"]:
+        _check_host_access_policies(module, fusion)
 
     if module.params["storage_class"] and not get_sc(module, fusion):
         module.fail_json(
@@ -628,10 +639,10 @@ def main():
     if state == "present" and not volume and not destroyed and size:
         create_volume(module, fusion)
     elif (state == "present" and volume) or (
-        state == "absent" and volume and module.params["hosts"]
+        state == "absent" and volume and module.params["host_access_policies"]
     ):
         update_volume(module, fusion)
-    elif state == "absent" and volume and not module.params["hosts"]:
+    elif state == "absent" and volume and not module.params["host_access_policies"]:
         delete_volume(module, fusion)
     elif state == "absent" and destroyed:
         eradicate_volume(module, fusion)
