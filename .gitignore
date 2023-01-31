@@ -2,3 +2,4 @@
 .pylintrc
 tests/output/*
 changelogs/.plugin-cache.yaml
+**/__pycache__/
