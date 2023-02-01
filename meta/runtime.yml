@@ -1,2 +1,8 @@
 ---
 requires_ansible: ">=2.11.0"
+plugin_routing:
+    modules:
+        fusion_tn:
+            deprecation:
+                removal_date: 2023-07-26
+                warning_text: Use fusion_se + fusion_nig instead.
