@@ -240,25 +240,29 @@ def main():
     )
 
     fusion = get_fusion(module)
-    module.params["name"] = module.params["name"].lower()
+
     hap_pattern = re.compile("^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?$")
     iqn_pattern = re.compile(
         r"^iqn\.\d{4}-\d{2}((?<!-)\.(?!-)[a-zA-Z0-9\-]+){1,63}(?<!-)(?<!\.)(:(?!:)[^,\s'\"]+)?$"
     )
+
     if not hap_pattern.match(module.params["name"]):
         module.fail_json(
             msg="Host Access Policy {0} does not conform to naming convention".format(
                 module.params["name"]
             )
         )
-    if not iqn_pattern.match(module.params["iqn"]):
-        module.fail_json(
-            msg="IQN {0} is not a valid iSCSI IQN".format(module.params["name"])
-        )
+
     state = module.params["state"]
     host = get_host(module, fusion)
     _check_iqn(module, fusion)
+
     if not host and state == "present":
+        if not iqn_pattern.match(module.params["iqn"]):
+            module.fail_json(
+                msg="IQN {0} is not a valid iSCSI IQN".format(module.params["name"])
+            )
+
         create_hap(module, fusion)
     elif host and state == "absent":
         delete_hap(module, fusion)
