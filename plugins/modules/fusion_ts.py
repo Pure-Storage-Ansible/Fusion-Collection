@@ -46,7 +46,7 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
-- name: Create new teanat space foo for tenany bar
+- name: Create new tenant space foo for tenant bar
   purestorage.fusion.fusion_ts:
     name: foo
     tenant: bar

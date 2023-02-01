@@ -54,7 +54,12 @@ options:
   availability_zone:
     aliases: [ az ]
     description:
-    - The name of the availability zone to create the placement group in.
+    - The name of the availability zone the placement group is in.
+    type: str
+    required: true
+  storage_service:
+    description:
+    - The name of the storage service to create the placement group for.
     type: str
   placement_engine:
     description:
@@ -74,7 +79,8 @@ EXAMPLES = r"""
     tenant: test
     tenant_space: space_1
     availability_zone: az1
-    placement_engine: pure1meta
+    region: region1
+    storage_service: storage_service_1
     state: present
     app_id: key_name
     key_file: "az-admin-private-key.pem"
@@ -84,6 +90,8 @@ EXAMPLES = r"""
     name: foo
     tenant: test
     tenant_space: space_1
+    region: region1
+    availability_zone: az1
     state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
@@ -164,10 +172,11 @@ def create_pg(module, fusion):
             display_name = module.params["display_name"]
         try:
             group = purefusion.PlacementGroupPost(
-                placement_engine=module.params["placement_engine"].lower(),
                 availability_zone=module.params["availability_zone"],
                 name=module.params["name"],
                 display_name=display_name,
+                region=module.params["region"],
+                storage_service=module.params["storage_service"],
             )
             pg_api_instance.create_placement_group(
                 group,
@@ -212,18 +221,26 @@ def main():
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
             region=dict(type="str", required=True),
-            availability_zone=dict(type="str", aliases=["az"]),
+            availability_zone=dict(type="str", aliases=["az"], required=True),
+            storage_service=dict(type="str"),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             placement_engine=dict(
-                type="str", default="heuristics", choices=["heuristics", "pure1meta"]
+                type="str",
+                default="heuristics",
+                choices=["heuristics", "pure1meta"],
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
             ),
         )
     )
 
-    required_if = [["state", "present", ["availability_zone", "placement_engine"]]]
+    required_if = [["state", "present", ["storage_service"]]]
     module = AnsibleModule(
         argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    if "placement_engine" in module.params:
+        module.warn("placement_engine parameter will be deprecated in version 2.0.0")
 
     state = module.params["state"]
     fusion = get_fusion(module)
