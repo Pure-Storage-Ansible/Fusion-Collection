@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 
-def await_operation(module, fusion, name, op_id, fail_playbook_if_operation_fails=True):
+def await_operation(module, fusion, op_id, fail_playbook_if_operation_fails=True):
     """
     Waits for given operation to finish.
     Throws an exception if the operation fails or times out.
