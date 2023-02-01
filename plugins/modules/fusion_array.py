@@ -76,7 +76,9 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_array:
     name: foo
     az: zone_1
-    hardware_type: bigfast
+    region: region1
+    hardware_type: flash-array-x
+    host_name: foo_array
     display_name: "foo array"
     appliance_id: 1227571-198887878-35016350232000707
     app_id: key_name

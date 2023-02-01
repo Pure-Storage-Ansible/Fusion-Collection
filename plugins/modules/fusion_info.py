@@ -28,7 +28,7 @@ options:
     description:
       - When supplied, this argument will define the information to be collected.
         Possible values for this include all, minimum, roles, users, placements,
-        arrays, hardware_types, volumes, host, storage_classes, protection_policies,
+        arrays, hardware_types, volumes, hosts, storage_classes, protection_policies,
         placement_groups, interfaces, zones, nigs, storage_endpoints, snapshots,
         storage_services, tenants, tenant_spaces, network_interface_groups and
         api_clients.
@@ -663,8 +663,8 @@ def generate_se_dict(fusion):
     return se_dict
 
 
-def generate_nig_dict(fusion):
-    nig_dict = {}
+def generate_nigs_dict(fusion):
+    nigs_dict = {}
     nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
     regions_api_instance = purefusion.RegionsApi(fusion)
@@ -686,13 +686,13 @@ def generate_nig_dict(fusion):
                     + "/"
                     + nigs.items[nig].name
                 )
-                nig_dict[name] = {
+                nigs_dict[name] = {
                     "display_name": nigs.items[nig].display_name,
                     "gateway": nigs.items[nig].eth.gateway,
                     "prefix": nigs.items[nig].eth.prefix,
                     "mtu": nigs.items[nig].eth.mtu,
                 }
-    return nig_dict
+    return nigs_dict
 
 
 def generate_snap_dict(fusion):
@@ -907,8 +907,12 @@ def main():
         info["storage_endpoints"] = generate_se_dict(fusion)
     if "api_clients" in subset or "all" in subset:
         info["api_clients"] = generate_api_client_dict(fusion)
-    if "nigs" in subset or "all" in subset:
-        info["network_interface_groups"] = generate_nig_dict(fusion)
+    if "network_interface_groups" in subset or "all" in subset or "nigs" in subset:
+        info["network_interface_groups"] = generate_nigs_dict(fusion)
+        if "nigs" in subset:
+            module.warn(
+                "The 'nigs' subset is deprecated and will be removed in the version 1.7.0"
+            )
     if "snapshots" in subset or "all" in subset:
         info["snapshots"], info["volume_snapshots"] = generate_snap_dict(fusion)
 

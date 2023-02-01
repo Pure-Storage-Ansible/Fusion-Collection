@@ -1,0 +1,6 @@
+bugfixes:
+  - fusion_pg - create_pg always broke runtime. Now it executes and creates placement group successfully
+    (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/53).
+deprecated_features:
+  - fusion_pg - placement_engine option is deprecated because Fusion API does not longer support this parameter
+    It will be removed in the version 2.0.0 (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/53).
