@@ -84,7 +84,7 @@ def get_region(module, fusion):
     region_api_instance = purefusion.RegionsApi(fusion)
     try:
         return region_api_instance.get_region(
-            region_name=module.params["region"],
+            region_name=module.params["name"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -125,7 +125,7 @@ def delete_region(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            reg_api_instance.delete_region(region_name=module.params["region"])
+            reg_api_instance.delete_region(region_name=module.params["name"])
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Region {0} creation failed.: {1}".format(
