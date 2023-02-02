@@ -61,15 +61,16 @@ options:
     type: str
   placement_group:
     description:
-    - The name of the plcement group.
+    - The name of the placement group.
     type: str
   protection_policy:
     description:
     - The name of the protection policy.
     type: str
-  hosts:
+  host_access_policies:
     description:
-    - A list of host access policies to connect the volume to.
+    - 'A list of host access policies to connect the volume to.
+        To clear, assign empty list: host_access_policies: []'
     type: list
     elements: str
   rename:
@@ -136,71 +137,13 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
-
-def _check_hosts(module, fusion):
-    current_haps = []
-    hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-    hosts = hap_api_instance.list_host_access_policies()
-    for host in range(0, len(hosts.items)):
-        current_haps.append(hosts.items[host].name)
-    if not (set(module.params["hosts"]).issubset(set(current_haps))):
-        module.fail_json(
-            msg="At least of of the speciied hosts does not currently exist"
-        )
-
-
-def _check_target_volume(module, fusion):
-    vol_api_instance = purefusion.VolumesApi(fusion)
-    try:
-        vol_api_instance.get_volume(
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["tenant_space"],
-            volume_name=module.params["rename"],
-        )
-        return True
-    except purefusion.rest.ApiException:
-        return False
-
-
-def human_to_bytes(size):
-    """Given a human-readable byte string (e.g. 2G, 30M),
-    return the number of bytes.  Will return 0 if the argument has
-    unexpected form.
-    """
-    my_bytes = size[:-1]
-    unit = size[-1].upper()
-    if my_bytes.isdigit():
-        my_bytes = int(my_bytes)
-        if unit == "P":
-            my_bytes *= 1125899906842624
-        elif unit == "T":
-            my_bytes *= 1099511627776
-        elif unit == "G":
-            my_bytes *= 1073741824
-        elif unit == "M":
-            my_bytes *= 1048576
-        elif unit == "K":
-            my_bytes *= 1024
-        else:
-            my_bytes = 0
-    else:
-        my_bytes = 0
-    return my_bytes
-
-
-def bytes_to_human(bytes_number):
-    """Convert bytes to a human readable string"""
-    if bytes_number:
-        labels = ["B", "KB", "MB", "GB", "TB", "PB"]
-        i = 0
-        double_bytes = bytes_number
-        while i < len(labels) and bytes_number >= 1024:
-            double_bytes = bytes_number / 1024.0
-            i += 1
-            bytes_number = bytes_number / 1024
-        return str(round(double_bytes, 2)) + " " + labels[i]
-    return None
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_suffix,
+    print_number_with_suffix,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
 
 
 def get_volume(module, fusion):
@@ -218,10 +161,17 @@ def get_volume(module, fusion):
 
 def get_sc(module, fusion):
     """Return Storage Class or None"""
+    pg_api_instance = purefusion.PlacementGroupsApi(fusion)
+    pg = pg_api_instance.get_placement_group(
+        tenant_name=module.params["tenant"],
+        tenant_space_name=module.params["tenant_space"],
+        placement_group_name=module.params["placement_group"],
+    )
     sc_api_instance = purefusion.StorageClassesApi(fusion)
     try:
         return sc_api_instance.get_storage_class(
-            storage_class_name=module.params["storage_class"]
+            storage_service_name=pg.storage_service.name,
+            storage_class_name=module.params["storage_class"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -251,35 +201,19 @@ def get_pp(module, fusion):
         return None
 
 
-def get_destroyed_volume(module, fusion):
-    """Return Destroyed Volume or None"""
-    vs_api_instance = purefusion.VolumeSnapshotsApi(fusion)
-    try:
-        return vs_api_instance.get_volume_snapshot(
-            volume_name=module.params["name"],
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["tenant_space"],
-        )
-    except purefusion.rest.ApiException:
-        return False
-
-
 def create_volume(module, fusion):
     """Create Volume"""
 
-    sc_api_instance = purefusion.StorageClassesApi(fusion)
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    volume_api_instance = purefusion.VolumesApi(fusion)
 
     if not module.params["size"]:
         module.fail_json(msg="Size for a new volume must be specified")
-    size = human_to_bytes(module.params["size"])
-    sc_size_limit = sc_api_instance.get_storage_class(
-        storage_class_name=module.params["storage_class"]
-    ).size_limit
+    size = parse_number_with_suffix(module, module.params["size"])
+    sc_size_limit = get_sc(module, fusion).size_limit
     if size > sc_size_limit:
         module.fail_json(
             msg="Requested size {0} exceeds the storage class limit of {1}".format(
-                module.params["size"], bytes_to_human(sc_size_limit)
+                module.params["size"], print_number_with_suffix(sc_size_limit)
             )
         )
 
@@ -297,323 +231,236 @@ def create_volume(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            vol_api_instance.create_volume(
+            op = volume_api_instance.create_volume(
                 volume,
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Volume {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
+                msg="Volume {0} creation failed: {1}".format(module.params["name"], err)
             )
-    if module.params["hosts"]:
-        volume = purefusion.VolumePatch(
-            hosts=purefusion.NullableString(module.params["hosts"])
-        )
+    if module.params["host_access_policies"]:
+        try:
+            op = volume_api_instance.update_volume(
+                purefusion.VolumePatch(
+                    host_access_policies=purefusion.NullableString(
+                        ",".join(module.params["host_access_policies"])
+                    )
+                ),
+                volume_name=module.params["name"],
+                tenant_name=module.params["tenant"],
+                tenant_space_name=module.params["tenant_space"],
+            )
+            await_operation(module, fusion, op.id)
+        except purefusion.rest.ApiException as err:
+            module.fail_json(
+                msg="Assigning host access policies to volume failed: {0}".format(err)
+            )
 
     module.exit_json(changed=changed)
 
 
 def update_volume(module, fusion):
-    """Update Volume size, placement group, storage class, HAPs"""
-    changed = False
-    sc_api_instance = purefusion.StorageClassesApi(fusion)
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    """Update Volume size, placement group, protection policy, storage class, HAPs"""
+    volume_api_instance = purefusion.VolumesApi(fusion)
 
-    vol = vol_api_instance.get_volume(
+    current = volume_api_instance.get_volume(
         tenant_name=module.params["tenant"],
         tenant_space_name=module.params["tenant_space"],
         volume_name=module.params["name"],
     )
-    hosts = []
-    if vol.hosts:
-        for host in range(0, len(vol.hosts)):
-            hosts.append(vol.hosts[host].name)
-    current_vol = {
-        "size": vol.size,
-        "hosts": list(dict.fromkeys(hosts)),
-        "placement_group": vol.placement_group.name,
-        "protection_policy": getattr(vol.protection_policy, "name", None),
-        "storage_class": vol.storage_class.name,
-        "display_name": vol.display_name,
-    }
-    new_vol = {
-        "size": vol.size,
-        "hosts": list(dict.fromkeys(hosts)),
-        "placement_group": vol.placement_group.name,
-        "protection_policy": getattr(vol.protection_policy, "name", None),
-        "storage_class": vol.storage_class.name,
-        "display_name": vol.display_name,
-    }
-    if (
-        module.params["storage_class"]
-        and module.params["storage_class"] != current_vol["storage_class"]
-    ):
-        new_vol["storage_class"] = module.params["storage_class"]
-    if (
-        module.params["size"]
-        and human_to_bytes(module.params["size"]) != current_vol["size"]
-    ):
-        if human_to_bytes(module.params["size"]) > current_vol["size"]:
-            new_vol["size"] = human_to_bytes(module.params["size"])
-        sc_size_limit = sc_api_instance.get_storage_class(
-            storage_class_name=new_vol["storage_class"]
-        ).size_limit
-        if new_vol["size"] > sc_size_limit:
-            module.fail_json(
-                msg="Volume size {0} exceeds the storage class limit of {1}".format(
-                    new_vol["size"], sc_size_limit
-                )
-            )
-    if not module.params["size"] and module.params["storage_class"]:
-        sc_size_limit = sc_api_instance.get_storage_class(
-            storage_class_name=new_vol["storage_class"]
-        ).size_limit
-        if current_vol["size"] > sc_size_limit:
-            module.fail_json(
-                msg="Volume size {0} exceeds the storage class limit of {1}".format(
-                    new_vol["size"], sc_size_limit
-                )
-            )
+    wanted = module.params
+    patches = []
+
+    if wanted["display_name"] and wanted["display_name"] != current.display_name:
+        patch = purefusion.VolumePatch(
+            display_name=purefusion.NullableString(wanted["display_name"])
+        )
+        patches.append(patch)
+
+    if wanted["size"]:
+        wanted_size = parse_number_with_suffix(module, wanted["size"])
+        if wanted_size != current.size:
+            patch = purefusion.VolumePatch(size=purefusion.NullableSize(wanted_size))
+            patches.append(patch)
 
     if (
-        module.params["placement_group"]
-        and module.params["placement_group"] != current_vol["placement_group"]
+        wanted["storage_class"]
+        and wanted["storage_class"] != current.storage_class.name
     ):
-        new_vol["protection_group"] = module.params["placement_group"]
-    if (
-        module.params["protection_policy"]
-        and module.params["protection_policy"] != current_vol["protection_policy"]
-    ):
-        new_vol["protection_policy"] = module.params["protection_policy"]
-    if (
-        module.params["display_name"]
-        and module.params["display_name"] != current_vol["display_name"]
-    ):
-        new_vol["display_name"] = module.params["display_name"]
+        patch = purefusion.VolumePatch(
+            storage_class=purefusion.NullableString(wanted["storage_class"])
+        )
+        patches.append(patch)
 
-    if (new_vol != current_vol) or module.params["hosts"]:
-        changed = False
-        if not module.check_mode:
-            # PATCH is atomic so has to pass or fail, therefore only one item
-            # can be changed at a time
-            if new_vol["display_name"] != current_vol["display_name"]:
-                volume = purefusion.VolumePatch(
-                    display_name=purefusion.NullableString(new_vol["display_name"])
+    if (
+        wanted["placement_group"]
+        and wanted["placement_group"] != current.placement_group.name
+    ):
+        patch = purefusion.VolumePatch(
+            placement_group=purefusion.NullableString(wanted["placement_group"])
+        )
+        patches.append(patch)
+
+    if (
+        wanted["protection_policy"]
+        and wanted["protection_policy"] != current.protection_policy.name
+    ):
+        patch = purefusion.VolumePatch(
+            protection_policy=purefusion.NullableString(wanted["protection_policy"])
+        )
+        patches.append(patch)
+
+    # 'wanted[...] is not None' to differentiate between empty list and no list
+    if wanted["host_access_policies"] is not None:
+        hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
+        all_haps = hap_api_instance.list_host_access_policies()
+        all_haps = set([hap.name for hap in all_haps.items])
+        current_haps = (
+            current.host_access_policies if current.host_access_policies else []
+        )
+        current_haps = set([hap.name for hap in current_haps])
+        wanted_haps = set(
+            [hap.strip() for hap in wanted["host_access_policies"]]
+        )  # looks like yaml parsing can leave in spaces if coma-delimited
+        if not wanted_haps <= all_haps:
+            module.fail_json(msg="Some new host access policies don't exist")
+        if not (wanted_haps <= current_haps and current_haps <= wanted_haps):
+            patch = purefusion.VolumePatch(
+                host_access_policies=purefusion.NullableString(",".join(wanted_haps))
+            )
+            patches.append(patch)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = volume_api_instance.update_volume(
+                    patch,
+                    volume_name=module.params["name"],
+                    tenant_name=module.params["tenant"],
+                    tenant_space_name=module.params["tenant_space"],
                 )
-                try:
-                    res = vol_api_instance.update_volume(
-                        volume,
-                        volume_name=module.params["name"],
-                        tenant_name=module.params["tenant"],
-                        tenant_space_name=module.params["tenant_space"],
-                    )
-                    changed = True
-                except purefusion.rest.ApiException as err:
-                    module.fail_json(
-                        msg="Changing display_name failed: {0}".format(err)
-                    )
-            if new_vol["storage_class"] != current_vol["storage_class"]:
-                volume = purefusion.VolumePatch(
-                    storage_class=purefusion.NullableString(new_vol["storage_class"])
-                )
-                try:
-                    res = vol_api_instance.update_volume(
-                        volume,
-                        volume_name=module.params["name"],
-                        tenant_name=module.params["tenant"],
-                        tenant_space_name=module.params["tenant_space"],
-                    )
-                    changed = True
-                except purefusion.rest.ApiException as err:
-                    module.fail_json(
-                        msg="Changing storage_class failed: {0}".format(err)
-                    )
-            if new_vol["size"] != current_vol["size"]:
-                volume = purefusion.VolumePatch(
-                    size=purefusion.NullableSize(new_vol["size"])
-                )
-                try:
-                    res = vol_api_instance.update_volume(
-                        volume,
-                        volume_name=module.params["name"],
-                        tenant_name=module.params["tenant"],
-                        tenant_space_name=module.params["tenant_space"],
-                    )
-                    changed = True
-                except purefusion.rest.ApiException as err:
-                    module.fail_json(msg="Changing size failed: {0}".format(err))
-            if new_vol["placement_group"] != current_vol["placement_group"]:
-                volume = purefusion.VolumePatch(
-                    placement_group=purefusion.NullableString(
-                        new_vol["placement_group"]
-                    )
-                )
-                try:
-                    res = vol_api_instance.update_volume(
-                        volume,
-                        volume_name=module.params["name"],
-                        tenant_name=module.params["tenant"],
-                        tenant_space_name=module.params["tenant_space"],
-                    )
-                    changed = True
-                except purefusion.rest.ApiException as err:
-                    module.fail_json(
-                        msg="Changing placement_group failed: {0}".format(err)
-                    )
-            if new_vol["protection_policy"] != current_vol["protection_policy"]:
-                volume = purefusion.VolumePatch(
-                    protection_policy=purefusion.NullableString(
-                        new_vol["protection_policy"]
-                    )
-                )
-                try:
-                    vol_api_instance.update_volume(
-                        volume,
-                        volume_name=module.params["name"],
-                        tenant_name=module.params["tenant"],
-                        tenant_space_name=module.params["tenant_space"],
-                    )
-                    changed = True
-                except purefusion.rest.ApiException as err:
-                    module.fail_json(
-                        msg="Changing protection_policy failed: {0}".format(err)
-                    )
-            if module.params["hosts"]:
-                if not new_vol["hosts"]:
-                    new_vol["hosts"] = []
-                for host in module.params["hosts"]:
-                    if module.params["state"] == "absent":
-                        if new_vol["hosts"]:
-                            new_vol["hosts"].remove(host)
-                    else:
-                        new_vol["hosts"].append(host)
-                new_vol["hosts"] = list(dict.fromkeys(new_vol["hosts"]))
-                if new_vol["hosts"] != current_vol["hosts"]:
-                    volume = purefusion.VolumePatch(
-                        hosts=purefusion.NullableString(",".join(new_vol["hosts"]))
-                    )
-                    try:
-                        vol_api_instance.update_volume(
-                            volume,
-                            volume_name=module.params["name"],
-                            tenant_name=module.params["tenant"],
-                            tenant_space_name=module.params["tenant_space"],
-                        )
-                        changed = True
-                    except purefusion.rest.ApiException as err:
-                        module.fail_json(msg="Changing hosts failed: {0}".format(err))
+                await_operation(module, fusion, op.id)
+                changed = True
+            except purefusion.rest.ApiException as err:
+                module.fail_json(msg="Updating volume failed: {0}".format(err))
+
+    changed = len(patches) != 0
 
     module.exit_json(changed=changed)
 
 
 def delete_volume(module, fusion):
     """Delete Volume"""
-    changed = True
-    vol_api_instance = purefusion.VolumesApi(fusion)
+    changed = False
+    volume_api_instance = purefusion.VolumesApi(fusion)
+    current = volume_api_instance.get_volume(
+        tenant_name=module.params["tenant"],
+        tenant_space_name=module.params["tenant_space"],
+        volume_name=module.params["name"],
+    )
+
+    if current.host_access_policies:
+        module.fail_json(
+            """Please first manually unassign any host access policies from the volume before deleting it, like so:
+            purestorage.fusion.fusion_volume:
+                name: {0}
+                tenant: {1}
+                tenant_space: {2}
+                host_access_policies: []
+                state: present
+            """.format(
+                module.params["name"],
+                module.params["tenant"],
+                module.params["tenant_space"],
+            )
+        )
+
+    hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
+    all_haps = hap_api_instance.list_host_access_policies()
     if not module.check_mode:
         try:
-            vol_api_instance.delete_volume(
+            op = volume_api_instance.delete_volume(
                 volume_name=module.params["name"],
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
-            if module.params["eradicate"]:
-                try:
-                    pass
-                #                    eradicate_volume(module, array)
-                except Exception:
-                    module.fail_json(
-                        msg="Eradicate volume {0} failed.".format(module.params["name"])
-                    )
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete volume {0} failed.".format(module.params["name"])
             )
-    module.exit_json(changed=changed)
 
-
-def eradicate_volume(module, array):
-    """Eradicate Deleted Volume"""
     changed = True
-    if not module.check_mode:
-        try:
-            array.eradicate_volume(module.params["name"])
-        except Exception:
-            module.fail_json(
-                msg="Eradication of volume {0} failed".format(module.params["name"])
-            )
-    module.exit_json(changed=changed)
-
-
-def recover_volume(module, array):
-    """Recover Deleted Volume"""
-    changed = True
-    module.warn("Volume recovery not yet supported")
-    #    if not module.check_mode:
-    #        try:
-    #            array.recover_volume(module.params["name"])
-    #        except Exception:
-    #            module.fail_json(
-    #                msg="Recovery of volume {0} failed".format(module.params["name"])
-    #            )
     module.exit_json(changed=changed)
 
 
 def main():
     """Main code"""
     argument_spec = fusion_argument_spec()
+    deprecated_hosts = dict(
+        name="hosts", date="2023-07-26", collection_name="purefusion.fusion"
+    )
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            rename=dict(type="str"),
+            rename=dict(
+                type="str",
+                removed_at_date="2023-07-26",
+                removed_from_collection="purestorage.fusion",
+            ),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
             placement_group=dict(type="str"),
             storage_class=dict(type="str"),
             protection_policy=dict(type="str"),
-            hosts=dict(type="list", elements="str"),
-            eradicate=dict(type="bool", default=False),
+            host_access_policies=dict(
+                type="list", elements="str", deprecated_aliases=[deprecated_hosts]
+            ),
+            eradicate=dict(
+                type="bool",
+                default=False,
+                removed_at_date="2023-07-26",
+                removed_from_collection="purestorage.fusion",
+            ),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             size=dict(type="str"),
         )
     )
 
-    module = AnsibleModule(argument_spec, supports_check_mode=True)
+    required_if = [
+        ("state", "present", ("size", "storage_class", "placement_group"), False),
+    ]
+    required_by = {
+        "placement_group": "storage_class",
+    }
+
+    module = AnsibleModule(
+        argument_spec,
+        required_if=required_if,
+        required_by=required_by,
+        supports_check_mode=True,
+    )
 
     size = module.params["size"]
     state = module.params["state"]
-    destroyed = False
     fusion = get_fusion(module)
     volume = get_volume(module, fusion)
-    if module.params["rename"] and _check_target_volume(module, fusion):
-        module.fail_json(
-            msg="Taerget volume name {0} already exists".format(module.params["rename"])
-        )
 
-    if not volume and not (
-        module.params["storage_class"] and module.params["placement_group"]
-    ):
+    if module.params["placement_group"] and not get_pg(module, fusion):
         module.fail_json(
-            msg="`storage_class` and `placement_group` are required when creating a new volume"
+            msg="Placement Group {0} does not exist in the provide "
+            "tenant and tenant name space".format(module.params["placement_group"])
         )
-    if module.params["hosts"]:
-        _check_hosts(module, fusion)
 
     if module.params["storage_class"] and not get_sc(module, fusion):
         module.fail_json(
             msg="Storage Class {0} does not exist".format(
                 module.params["storage_class"]
             )
-        )
-
-    if module.params["placement_group"] and not get_pg(module, fusion):
-        module.fail_json(
-            msg="Placement Group {0} does not exist in the provide "
-            "tenant and tenant name space".format(module.params["placement_group"])
         )
 
     if module.params["protection_policy"] and not get_pp(module, fusion):
@@ -623,23 +470,12 @@ def main():
             )
         )
 
-    #    if not volume:
-    #        destroyed = get_destroyed_volume(module, fusion)
-    if state == "present" and not volume and not destroyed and size:
+    if state == "present" and not volume:
         create_volume(module, fusion)
-    elif (state == "present" and volume) or (
-        state == "absent" and volume and module.params["hosts"]
-    ):
+    elif state == "present" and volume:
         update_volume(module, fusion)
-    elif state == "absent" and volume and not module.params["hosts"]:
+    elif state == "absent" and volume:
         delete_volume(module, fusion)
-    elif state == "absent" and destroyed:
-        eradicate_volume(module, fusion)
-    elif state == "present":
-        if not volume and not size:
-            module.fail_json(msg="Size must be specified to create a new volume")
-    elif state == "absent" and not volume:
-        module.exit_json(changed=False)
 
     module.exit_json(changed=False)
 
