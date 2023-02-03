@@ -126,6 +126,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def _check_iqn(module, fusion):
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
@@ -160,7 +164,7 @@ def create_hap(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            hap_api_instance.create_host_access_policy(
+            op = hap_api_instance.create_host_access_policy(
                 purefusion.HostAccessPoliciesPost(
                     iqn=module.params["iqn"],
                     personality=module.params["personality"],
@@ -168,6 +172,7 @@ def create_hap(module, fusion):
                     display_name=module.params["display_name"],
                 )
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Host Access Policy {0} creation failed: {1}".format(
@@ -183,9 +188,10 @@ def delete_hap(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            hap_api_instance.delete_host_access_policy(
+            op = hap_api_instance.delete_host_access_policy(
                 host_access_policy_name=module.params["name"]
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Host Access Policy {0} deletion failed: {1}".format(

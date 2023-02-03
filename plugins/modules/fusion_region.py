@@ -78,6 +78,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_region(module, fusion):
     """Get Region or None"""
@@ -106,7 +110,8 @@ def create_region(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            reg_api_instance.create_region(region)
+            op = reg_api_instance.create_region(region)
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Region {0} creation failed.: {1}".format(
@@ -125,7 +130,8 @@ def delete_region(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            reg_api_instance.delete_region(region_name=module.params["name"])
+            op = reg_api_instance.delete_region(region_name=module.params["name"])
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Region {0} creation failed.: {1}".format(
@@ -151,10 +157,11 @@ def update_region(module, fusion, region):
                 display_name=purefusion.NullableString(module.params["display_name"])
             )
             try:
-                reg_api_instance.update_region(
+                op = reg_api_instance.update_region(
                     reg,
                     region_name=module.params["name"],
                 )
+                await_operation(module, fusion, op)
             except purefusion.rest.ApiException as err:
                 module.fail_json(
                     msg="Changing region display_name failed: {0}".format(err)

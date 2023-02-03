@@ -19,7 +19,7 @@ except ImportError:
 def await_operation(module, fusion, op_id, fail_playbook_if_operation_fails=True):
     """
     Waits for given operation to finish.
-    Throws an exception if the operation fails or times out.
+    Throws an exception by default if the operation fails.
     """
     op_api = purefusion.OperationsApi(fusion)
     next_timeout = 250

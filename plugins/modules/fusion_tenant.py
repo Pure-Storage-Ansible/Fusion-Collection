@@ -71,6 +71,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_tenant(module, fusion):
     """Return Tenant or None"""
@@ -96,7 +100,8 @@ def create_tenant(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            api_instance.create_tenant(tenant)
+            op = api_instance.create_tenant(tenant)
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Tenant {0} creation failed.: {1}".format(
@@ -125,10 +130,11 @@ def update_tenant(module, fusion):
                 display_name=purefusion.NullableString(module.params["display_name"]),
             )
             try:
-                api_instance.update_tenant(
+                op = api_instance.update_tenant(
                     new_tenant,
                     tenant_name=module.params["name"],
                 )
+                await_operation(module, fusion, op)
             except purefusion.rest.ApiException as err:
                 module.fail_json(
                     msg="Changing tenant display_name failed: {0}".format(err)
@@ -143,7 +149,8 @@ def delete_tenant(module, fusion):
     api_instance = purefusion.TenantsApi(fusion)
     if not module.check_mode:
         try:
-            api_instance.delete_tenant(tenant_name=module.params["name"])
+            op = api_instance.delete_tenant(tenant_name=module.params["name"])
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Deleting Tenant {0} failed: {1}".format(module.params["name"], err)

@@ -111,6 +111,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_ts(module, fusion):
     """Tenant Space or None"""
@@ -177,11 +181,12 @@ def create_pg(module, fusion):
                 region=module.params["region"],
                 storage_service=module.params["storage_service"],
             )
-            pg_api_instance.create_placement_group(
+            op = pg_api_instance.create_placement_group(
                 group,
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Placement Group {0} creation failed.: {1}".format(
@@ -198,11 +203,12 @@ def delete_pg(module, fusion):
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     if not module.check_mode:
         try:
-            pg_api_instance.delete_placement_group(
+            op = pg_api_instance.delete_placement_group(
                 placement_group_name=module.params["name"],
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Placement Group {0} failed.".format(module.params["name"])

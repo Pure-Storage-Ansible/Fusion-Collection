@@ -75,6 +75,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_az(module, fusion):
     """Get Availability Zone or None"""
@@ -107,10 +111,11 @@ def delete_az(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            az_api_instance.delete_availability_zone(
+            op = az_api_instance.delete_availability_zone(
                 region_name=module.params["region"],
                 availability_zone_name=module.params["name"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Availability Zone {0} deletion failed.: {1}".format(
@@ -137,9 +142,10 @@ def create_az(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            az_api_instance.create_availability_zone(
+            op = az_api_instance.create_availability_zone(
                 azone, region_name=module.params["region"]
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Availability Zone {0} creation failed.: {1}".format(

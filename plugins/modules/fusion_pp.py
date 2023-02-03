@@ -89,8 +89,13 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_minutes,
+)
+
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
 )
 
 
@@ -121,7 +126,7 @@ def create_pp(module, fusion):
         else:
             display_name = module.params["display_name"]
         try:
-            pp_api_instance.create_protection_policy(
+            op = pp_api_instance.create_protection_policy(
                 purefusion.ProtectionPolicyPost(
                     name=module.params["name"],
                     display_name=display_name,
@@ -137,6 +142,7 @@ def create_pp(module, fusion):
                     ],
                 )
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Protection Policy {0} creation failed.: {1}".format(
@@ -153,9 +159,10 @@ def delete_pp(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            pp_api_instance.delete_protection_policy(
+            op = pp_api_instance.delete_protection_policy(
                 protection_policy_name=module.params["name"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Protection Policy {0} deletion failed.: {1}".format(
