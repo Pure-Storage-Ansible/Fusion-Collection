@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# (c) 2022, Simon Dodsley (simon@purestorage.com)
+# (c) 2023, Simon Dodsley (simon@purestorage.com), Jan Kodera (jkodera@purestorage.com)
 # GNU General Public License v3.0+ (see COPYING.GPLv3 or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -48,9 +48,9 @@ options:
     required: true
   eradicate:
     description:
-    - Define whether to eradicate the volume on delete or leave in trash.
+    - "Wipes the volume instead of a soft delete if true. Must be used with `state: absent`."
     type: bool
-    default: 'no'
+    default: false
   size:
     description:
     - Volume size in M, G, T or P units.
@@ -159,7 +159,7 @@ def get_volume(module, fusion):
         return None
 
 
-def get_sc(module, fusion):
+def get_storage_class(module, fusion):
     """Return Storage Class or None"""
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     pg = pg_api_instance.get_placement_group(
@@ -177,7 +177,7 @@ def get_sc(module, fusion):
         return None
 
 
-def get_pg(module, fusion):
+def get_protection_group(module, fusion):
     """Return Placement Group or None"""
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     try:
@@ -190,7 +190,7 @@ def get_pg(module, fusion):
         return None
 
 
-def get_pp(module, fusion):
+def get_protection_policy(module, fusion):
     """Return Protection Policy or None"""
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
     try:
@@ -201,29 +201,43 @@ def get_pp(module, fusion):
         return None
 
 
+def get_all_haps(fusion):
+    """Return set of all existing host access policies or None"""
+    hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
+    try:
+        all_haps = hap_api_instance.list_host_access_policies()
+        return set([hap.name for hap in all_haps.items])
+    except purefusion.rest.ApiException:
+        return None
+
+
+def get_wanted_haps(module):
+    """Return set of host access policies to assign"""
+    if not module.params["host_access_policies"]:
+        return set()
+    # looks like yaml parsing can leave in some spaces if coma-delimited .so strip() the names
+    return set([hap.strip() for hap in module.params["host_access_policies"]])
+
+
+def extract_current_haps(volume):
+    """Return set of host access policies that volume currently has"""
+    if not volume.host_access_policies:
+        return set()
+    return set([hap.name for hap in volume.host_access_policies])
+
+
 def create_volume(module, fusion):
     """Create Volume"""
 
-    volume_api_instance = purefusion.VolumesApi(fusion)
-
-    if not module.params["size"]:
-        module.fail_json(msg="Size for a new volume must be specified")
     size = parse_number_with_suffix(module, module.params["size"])
-    sc_size_limit = get_sc(module, fusion).size_limit
-    if size > sc_size_limit:
-        module.fail_json(
-            msg="Requested size {0} exceeds the storage class limit of {1}".format(
-                module.params["size"], print_number_with_suffix(sc_size_limit)
-            )
-        )
 
-    changed = True
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
         try:
+            volume_api_instance = purefusion.VolumesApi(fusion)
             volume = purefusion.VolumePost(
                 size=size,
                 storage_class=module.params["storage_class"],
@@ -239,53 +253,57 @@ def create_volume(module, fusion):
             await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Volume {0} creation failed: {1}".format(module.params["name"], err)
-            )
-    if module.params["host_access_policies"]:
-        try:
-            op = volume_api_instance.update_volume(
-                purefusion.VolumePatch(
-                    host_access_policies=purefusion.NullableString(
-                        ",".join(module.params["host_access_policies"])
-                    )
-                ),
-                volume_name=module.params["name"],
-                tenant_name=module.params["tenant"],
-                tenant_space_name=module.params["tenant_space"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Assigning host access policies to volume failed: {0}".format(err)
+                msg="Volume '{0}' creation failed: {1}".format(
+                    module.params["name"], err
+                )
             )
 
-    module.exit_json(changed=changed)
+    return True
 
 
-def update_volume(module, fusion):
-    """Update Volume size, placement group, protection policy, storage class, HAPs"""
-    volume_api_instance = purefusion.VolumesApi(fusion)
-
-    current = volume_api_instance.get_volume(
-        tenant_name=module.params["tenant"],
-        tenant_space_name=module.params["tenant_space"],
-        volume_name=module.params["name"],
-    )
+def update_host_access_policies(module, fusion, current, patches):
     wanted = module.params
-    patches = []
+    # 'wanted[...] is not None' to differentiate between empty list and no list
+    if wanted["host_access_policies"] is not None:
+        hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
+        current_haps = (
+            current.host_access_policies if current.host_access_policies else []
+        )
+        current_haps = set([hap.name for hap in current_haps])
+        wanted_haps = get_wanted_haps(module)
+        if wanted_haps != current_haps:
+            patch = purefusion.VolumePatch(
+                host_access_policies=purefusion.NullableString(",".join(wanted_haps))
+            )
+            patches.append(patch)
 
+
+def update_destroyed(module, fusion, current, patches):
+    wanted = module.params
+    destroyed = wanted["state"] != "present"
+    if destroyed != current.destroyed:
+        patch = purefusion.VolumePatch(destroyed=purefusion.NullableBoolean(destroyed))
+        patches.append(patch)
+        if destroyed and not module.params["eradicate"]:
+            module.warn(
+                (
+                    "Volume '{0}' is being soft deleted to prevent data loss, "
+                    "if you want to wipe it immediately to reclaim used space, add 'eradicate: true'"
+                ).format(current.name)
+            )
+
+
+def update_display_name(module, fusion, current, patches):
+    wanted = module.params
     if wanted["display_name"] and wanted["display_name"] != current.display_name:
         patch = purefusion.VolumePatch(
             display_name=purefusion.NullableString(wanted["display_name"])
         )
         patches.append(patch)
 
-    if wanted["size"]:
-        wanted_size = parse_number_with_suffix(module, wanted["size"])
-        if wanted_size != current.size:
-            patch = purefusion.VolumePatch(size=purefusion.NullableSize(wanted_size))
-            patches.append(patch)
 
+def update_storage_class(module, fusion, current, patches):
+    wanted = module.params
     if (
         wanted["storage_class"]
         and wanted["storage_class"] != current.storage_class.name
@@ -295,6 +313,9 @@ def update_volume(module, fusion):
         )
         patches.append(patch)
 
+
+def update_placement_group(module, fusion, current, patches):
+    wanted = module.params
     if (
         wanted["placement_group"]
         and wanted["placement_group"] != current.placement_group.name
@@ -304,6 +325,18 @@ def update_volume(module, fusion):
         )
         patches.append(patch)
 
+
+def update_size(module, fusion, current, patches):
+    wanted = module.params
+    if wanted["size"]:
+        wanted_size = parse_number_with_suffix(module, wanted["size"])
+        if wanted_size != current.size:
+            patch = purefusion.VolumePatch(size=purefusion.NullableSize(wanted_size))
+            patches.append(patch)
+
+
+def update_protection_policy(module, fusion, current, patches):
+    wanted = module.params
     if (
         wanted["protection_policy"]
         and wanted["protection_policy"] != current.protection_policy.name
@@ -313,88 +346,167 @@ def update_volume(module, fusion):
         )
         patches.append(patch)
 
-    # 'wanted[...] is not None' to differentiate between empty list and no list
-    if wanted["host_access_policies"] is not None:
-        hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-        all_haps = hap_api_instance.list_host_access_policies()
-        all_haps = set([hap.name for hap in all_haps.items])
-        current_haps = (
-            current.host_access_policies if current.host_access_policies else []
-        )
-        current_haps = set([hap.name for hap in current_haps])
-        wanted_haps = set(
-            [hap.strip() for hap in wanted["host_access_policies"]]
-        )  # looks like yaml parsing can leave in spaces if coma-delimited
-        if not wanted_haps <= all_haps:
-            module.fail_json(msg="Some new host access policies don't exist")
-        if not (wanted_haps <= current_haps and current_haps <= wanted_haps):
-            patch = purefusion.VolumePatch(
-                host_access_policies=purefusion.NullableString(",".join(wanted_haps))
-            )
-            patches.append(patch)
 
-    if not module.check_mode:
-        for patch in patches:
-            try:
-                op = volume_api_instance.update_volume(
-                    patch,
-                    volume_name=module.params["name"],
-                    tenant_name=module.params["tenant"],
-                    tenant_space_name=module.params["tenant_space"],
-                )
-                await_operation(module, fusion, op.id)
-                changed = True
-            except purefusion.rest.ApiException as err:
-                module.fail_json(msg="Updating volume failed: {0}".format(err))
-
-    changed = len(patches) != 0
-
-    module.exit_json(changed=changed)
-
-
-def delete_volume(module, fusion):
-    """Delete Volume"""
-    changed = False
+def apply_patches(module, fusion, patches):
     volume_api_instance = purefusion.VolumesApi(fusion)
-    current = volume_api_instance.get_volume(
-        tenant_name=module.params["tenant"],
-        tenant_space_name=module.params["tenant_space"],
-        volume_name=module.params["name"],
-    )
-
-    if current.host_access_policies:
-        module.fail_json(
-            """Please first manually unassign any host access policies from the volume before deleting it, like so:
-            purestorage.fusion.fusion_volume:
-                name: {0}
-                tenant: {1}
-                tenant_space: {2}
-                host_access_policies: []
-                state: present
-            """.format(
-                module.params["name"],
-                module.params["tenant"],
-                module.params["tenant_space"],
-            )
-        )
-
-    hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-    all_haps = hap_api_instance.list_host_access_policies()
-    if not module.check_mode:
+    for patch in patches:
         try:
-            op = volume_api_instance.delete_volume(
+            op = volume_api_instance.update_volume(
+                patch,
                 volume_name=module.params["name"],
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
             await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
+        except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Delete volume {0} failed.".format(module.params["name"])
+                msg="Update volume '{0}' failed: {1}".format(module.params["name"], err)
             )
 
-    changed = True
-    module.exit_json(changed=changed)
+
+def update_volume(module, fusion):
+    """Update Volume size, placement group, protection policy, storage class, HAPs"""
+    current = get_volume(module, fusion)
+    patches = []
+
+    if not current:
+        # cannot update nonexistent volume
+        # Note for check mode: the reasons this codepath is ran in check mode
+        # is to catch any argument errors and to compute 'changed'. Basically
+        # all argument checks are kept in validate_arguments() to filter the
+        # first part. The second part MAY diverge flow from the real run here if
+        # create_volume() created the volume and update was then run to update
+        # its properties. HOWEVER we don't really care in that case because
+        # create_volume() already sets 'changed' to true, so any 'changed'
+        # result from update_volume() would not change it.
+        return False
+
+    # volumes with 'destroyed' flag are kinda special because we can't change
+    # most of their properties while in this state, so we need to set it last
+    # and unset it first if changed, respectively
+    if module.params["state"] == "present":
+        update_destroyed(module, fusion, current, patches)
+        update_size(module, fusion, current, patches)
+        update_protection_policy(module, fusion, current, patches)
+        update_display_name(module, fusion, current, patches)
+        update_storage_class(module, fusion, current, patches)
+        update_placement_group(module, fusion, current, patches)
+        update_host_access_policies(module, fusion, current, patches)
+    elif module.params["state"] == "absent" and not current.destroyed:
+        update_size(module, fusion, current, patches)
+        update_protection_policy(module, fusion, current, patches)
+        update_display_name(module, fusion, current, patches)
+        update_storage_class(module, fusion, current, patches)
+        update_placement_group(module, fusion, current, patches)
+        update_host_access_policies(module, fusion, current, patches)
+        update_destroyed(module, fusion, current, patches)
+
+    if not module.check_mode:
+        apply_patches(module, fusion, patches)
+
+    changed = len(patches) != 0
+    return changed
+
+
+def eradicate_volume(module, fusion):
+    """Eradicate Volume"""
+    current = get_volume(module, fusion)
+    if module.check_mode:
+        return current or module.params["state"] == "present"
+    if not current:
+        return False
+
+    # update_volume() should be called before eradicate=True and it should
+    # ensure the volume is destroyed and HAPs are unassigned
+    if not current.destroyed or current.host_access_policies:
+        module.fail_json(
+            msg="BUG: inconsistent state, eradicate_volume() cannot be called with current.destroyed=False or any host_access_policies"
+        )
+
+    try:
+        volume_api_instance = purefusion.VolumesApi(fusion)
+        op = volume_api_instance.delete_volume(
+            volume_name=module.params["name"],
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+        )
+        await_operation(module, fusion, op.id)
+    except purefusion.rest.ApiException as err:
+        module.fail_json(
+            msg="Eradicate volume '{0}' failed: {1}".format(module.params["name"], err)
+        )
+    return True
+
+
+def validate_arguments(module, fusion):
+    """Validates most argument conditions and possible unacceptable argument combinations"""
+    volume = get_volume(module, fusion)
+    state = module.params["state"]
+
+    if state == "present" and not volume:
+        module.fail_on_missing_params(["placement_group", "storage_class", "size"])
+
+    if module.params["placement_group"] and not get_protection_group(module, fusion):
+        module.fail_json(
+            msg="Placement Group '{0}' does not exist in the provided "
+            "tenant and tenant name space".format(module.params["placement_group"])
+        )
+
+    if module.params["storage_class"] and not get_storage_class(module, fusion):
+        module.fail_json(
+            msg="Storage Class '{0}' does not exist".format(
+                module.params["storage_class"]
+            )
+        )
+
+    if module.params["protection_policy"] and not get_protection_policy(module, fusion):
+        module.fail_json(
+            msg="Protection Policy '{0}' does not exist".format(
+                module.params["protection_policy"]
+            )
+        )
+
+    if module.params["host_access_policies"] is not None:
+        existing_haps = get_all_haps(fusion)
+        wanted_haps = get_wanted_haps(module)
+        if not (wanted_haps <= existing_haps):
+            module.fail_json(
+                msg="To-be-assigned host access policies '{0}' don't exist".format(
+                    wanted_haps - existing_haps
+                )
+            )
+
+    if module.params["state"] == "absent" and (
+        module.params["host_access_policies"]
+        or (
+            module.params["host_access_policies"] is None
+            and volume.host_access_policies
+        )
+    ):
+        module.fail_json(
+            msg=(
+                "Volume must have no host access policies when destroyed, either revert the delete "
+                "by setting 'state: present' or remove all HAPs by 'host_access_policies: []'"
+            )
+        )
+
+    if state == "present" and module.params["eradicate"]:
+        module.fail_json(
+            msg="'eradicate: true' cannot be used together with 'state: present'"
+        )
+
+    if state == "present" and not volume:
+        # would create a volume; check size is lower than storage class limit
+        # (let resize checks be handled by the server since they are more complicated)
+        size = parse_number_with_suffix(module, module.params["size"])
+        size_limit = get_storage_class(module, fusion).size_limit
+        if size > size_limit:
+            module.fail_json(
+                msg="Requested volume size {0} exceeds the storage class limit of {1}".format(
+                    module.params["size"],
+                    print_number_with_suffix(size_limit),
+                )
+            )
 
 
 def main():
@@ -420,64 +532,41 @@ def main():
             host_access_policies=dict(
                 type="list", elements="str", deprecated_aliases=[deprecated_hosts]
             ),
-            eradicate=dict(
-                type="bool",
-                default=False,
-                removed_at_date="2023-07-26",
-                removed_from_collection="purestorage.fusion",
-            ),
+            eradicate=dict(type="bool", default=False),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             size=dict(type="str"),
         )
     )
 
-    required_if = [
-        ("state", "present", ("size", "storage_class", "placement_group"), False),
-    ]
     required_by = {
         "placement_group": "storage_class",
     }
 
     module = AnsibleModule(
         argument_spec,
-        required_if=required_if,
         required_by=required_by,
         supports_check_mode=True,
     )
 
-    size = module.params["size"]
     state = module.params["state"]
     fusion = get_fusion(module)
+
     volume = get_volume(module, fusion)
 
-    if module.params["placement_group"] and not get_pg(module, fusion):
-        module.fail_json(
-            msg="Placement Group {0} does not exist in the provide "
-            "tenant and tenant name space".format(module.params["placement_group"])
-        )
+    validate_arguments(module, fusion)
 
-    if module.params["storage_class"] and not get_sc(module, fusion):
-        module.fail_json(
-            msg="Storage Class {0} does not exist".format(
-                module.params["storage_class"]
-            )
-        )
+    if state == "absent" and not volume:
+        module.exit_json(changed=False)
 
-    if module.params["protection_policy"] and not get_pp(module, fusion):
-        module.fail_json(
-            msg="Protection Policy {0} does not exist".format(
-                module.params["protection_policy"]
-            )
-        )
-
+    changed = False
     if state == "present" and not volume:
-        create_volume(module, fusion)
-    elif state == "present" and volume:
-        update_volume(module, fusion)
-    elif state == "absent" and volume:
-        delete_volume(module, fusion)
+        changed = create_volume(module, fusion) or changed
+    # volume might exist even if soft-deleted, so we still have to update it
+    changed = update_volume(module, fusion) or changed
+    if module.params["eradicate"]:
+        changed = eradicate_volume(module, fusion) or changed
 
-    module.exit_json(changed=False)
+    module.exit_json(changed=changed)
 
 
 if __name__ == "__main__":
