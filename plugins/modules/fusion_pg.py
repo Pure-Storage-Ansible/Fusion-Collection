@@ -67,7 +67,6 @@ options:
     - Please note that this might increase volume creation time.
     type: str
     choices: [ heuristics, pure1meta ]
-    default: heuristics
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -226,7 +225,6 @@ def main():
             state=dict(type="str", default="present", choices=["absent", "present"]),
             placement_engine=dict(
                 type="str",
-                default="heuristics",
                 choices=["heuristics", "pure1meta"],
                 removed_in_version="2.0.0",
                 removed_from_collection="purestorage.fusion",
@@ -238,8 +236,7 @@ def main():
     module = AnsibleModule(
         argument_spec, required_if=required_if, supports_check_mode=True
     )
-
-    if "placement_engine" in module.params:
+    if module.params["placement_engine"]:
         module.warn("placement_engine parameter will be deprecated in version 2.0.0")
 
     state = module.params["state"]
