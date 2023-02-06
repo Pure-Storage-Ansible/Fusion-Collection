@@ -7,13 +7,13 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-UNIT_SUFFIXES = ["K", "M", "G", "T", "P"]
+METRIC_SUFFIXES = ["K", "M", "G", "T", "P"]
 
 
-def parse_number_with_suffix(module, number, factor=1024):
+def parse_number_with_metric_suffix(module, number, factor=1024):
     """Given a human-readable string (e.g. 2G, 30M, 400),
     return the resolved integer.
-    Will fail via Ansible if the input is not valid.
+    Will call `module.fail_json()` for invalid inputs.
     """
     try:
         stripped_num = number.strip()
@@ -22,7 +22,7 @@ def parse_number_with_suffix(module, number, factor=1024):
         # has unit prefix
         result = float(stripped_num[:-1])
         suffix = stripped_num[-1].upper()
-        factor_count = UNIT_SUFFIXES.index(suffix) + 1
+        factor_count = METRIC_SUFFIXES.index(suffix) + 1
         for _i in range(0, factor_count):
             result = result * float(factor)
         return int(result)
@@ -33,17 +33,56 @@ def parse_number_with_suffix(module, number, factor=1024):
     return 0
 
 
-def print_number_with_suffix(number, factor=1024):
+def print_number_with_metric_suffix(number, factor=1024):
     """Returns string with the number, suffixed space and
-    potentially factor suffix, e.g. 400 -> '400 ', 1000 -> '1 K'
-    etc."""
+    potentially metric symbol, e.g. 400 -> '400 ', 1000 -> '1 K'
+    etc.
+    Will call `module.fail_json()` for invalid inputs."""
     factor_count = 0
     float_rem = number
     int_rem = number
-    while factor_count < len(UNIT_SUFFIXES) and int_rem >= int(factor):
+    while factor_count < len(METRIC_SUFFIXES) and int_rem >= int(factor):
         float_rem = int_rem / float(factor)
         int_rem = int_rem / int(factor)
         factor_count += 1
     if factor_count == 0:
         return "{0} ".format(number)
-    return "{0:.5g} {1}".format(round(float_rem, 2), UNIT_SUFFIXES[factor_count - 1])
+    return "{0:.5g} {1}".format(round(float_rem, 2), METRIC_SUFFIXES[factor_count - 1])
+
+
+def parse_minutes(module, period):
+    """Given a human-readable time period (e.g. 2d, 3w), return the number of minutes.
+    Will call `module.fail_json()` for invalid inputs.
+    """
+    try:
+        unit = period[-1].upper()
+        if unit.isdigit():
+            return int(period)
+
+        value = int(period[:-1])
+        if unit == "Y":
+            value *= 365 * 24 * 60
+        elif unit == "W":
+            value *= 7 * 24 * 60
+        elif unit == "D":
+            value *= 24 * 60
+        elif unit == "H":
+            value *= 60
+        elif unit == "M":
+            pass
+        elif unit == "S":
+            module.fail_json(
+                msg="'{0}' is too small time unit, minimum is minutes ('M')".format(
+                    period[-1]
+                )
+            )
+        else:
+            raise ValueError()
+        return value
+    except Exception:
+        module.fail_json(
+            msg=(
+                "'{0}' is not a valid time period, use raw number of minutes or a number with a time unit,"
+                "e.g. 4M, 168H, 3D, 5W, 1Y..."
+            ).format(period)
+        )
