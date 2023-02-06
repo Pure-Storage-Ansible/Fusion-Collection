@@ -58,6 +58,10 @@ def get_fusion(module):
     key_file = module.params["key_file"]
     if HAS_FUSION:
         config = fusion.Configuration()
+        config.host = environ.get("FUSION_HOST", config.host)
+        config.token_endpoint = environ.get(
+            "FUSION_TOKEN_ENDPOINT", config.token_endpoint
+        )
         if app_id and key_file:
             try:
                 config.issuer_id = app_id
