@@ -78,6 +78,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_ts(module, fusion):
     """Tenant Space or None"""
@@ -116,10 +120,11 @@ def create_ts(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-            ts_api_instance.create_tenant_space(
+            op = ts_api_instance.create_tenant_space(
                 tspace,
                 tenant_name=module.params["tenant"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Tenant Space {0} creation failed.: {1}".format(
@@ -136,10 +141,11 @@ def delete_ts(module, fusion):
     ts_api_instance = purefusion.TenantSpacesApi(fusion)
     if not module.check_mode:
         try:
-            ts_api_instance.delete_tenant_space(
+            op = ts_api_instance.delete_tenant_space(
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["name"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Tenant Space {0} failed.".format(module.params["name"])

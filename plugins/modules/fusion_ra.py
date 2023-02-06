@@ -92,6 +92,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def human_to_principal(fusion, user_id):
     """Given a human readable Fusion user, such as a Pure 1 App ID
@@ -183,9 +187,10 @@ def create_ra(module, fusion):
         principal = human_to_principal(fusion, module.params["user"])
         assignment = purefusion.RoleAssignmentPost(scope=scope, principal=principal)
         try:
-            ra_api_instance.create_role_assignment(
+            op = ra_api_instance.create_role_assignment(
                 assignment, role_name=module.params["name"]
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="{0} level Role Assignment creation for user {1} failed".format(
@@ -202,9 +207,10 @@ def delete_ra(module, fusion):
     if not module.check_mode:
         ra_name = get_ra(module, fusion).name
         try:
-            ra_api_instance.delete_role_assignment(
+            op = ra_api_instance.delete_role_assignment(
                 role_name=module.params["name"], role_assignment_name=ra_name
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="{0} level Role Assignment delete for user {1} failed".format(

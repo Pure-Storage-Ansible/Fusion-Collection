@@ -101,34 +101,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
-
-def wait_operation_finish(module, op_id, fusion):
-    """
-    wait_operation_finish wait until operation status is Succeeded or Failed. Then returns you that operation.
-    if the operation takes longer than expected, it will raise an Exception
-    """
-    op_cli = purefusion.OperationsApi(fusion)
-    while True:
-        op = op_cli.get_operation(op_id)
-        if op.status == "Succeeded" or op.status == "Failed":
-            return op
-        time.sleep(int(math.ceil(op.retry_in / 1000)))
-
-
-def wait_operation_succeeded(module, op_id, fusion):
-    """
-    wait_operation_succeeded calls wait_operation_finish and expect the result is succeeded.
-    if the operation is in other status, it will raise an expection
-    """
-    op = wait_operation_finish(module, op_id, fusion)
-    if op.status == "Succeeded":
-        return op
-    else:
-        # this is how we handle asynchronous error
-        # if operation failed, the error field should be set. We can check it by op.error
-        # op.error uses fusion.models.error.Error
-        module.fail_json("Operation failed: {0}".format(op.error.message))
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
 
 
 def get_array(module, fusion):
@@ -168,7 +143,7 @@ def create_array(module, fusion):
                 availability_zone_name=module.params["availability_zone"],
                 region_name=module.params["region"],
             )
-            wait_operation_succeeded(module, res.id, fusion)
+            await_operation(module, fusion, res.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Array {0} creation failed.: {1}".format(module.params["name"], err)
@@ -185,7 +160,7 @@ def create_array(module, fusion):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            wait_operation_succeeded(module, res.id, fusion)
+            await_operation(module, fusion, res.id)
     module.exit_json(changed=changed)
 
 
@@ -209,7 +184,7 @@ def update_array(module, fusion, array):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            wait_operation_succeeded(module, res.id, fusion)
+            await_operation(module, fusion, res.id)
     if module.params["maintenance_mode"] is not None:
         if module.params["maintenance_mode"] != array.maintenance_mode:
             maint_mode = module.params["maintenance_mode"]
@@ -224,7 +199,7 @@ def update_array(module, fusion, array):
                     region_name=module.params["region"],
                     array_name=module.params["name"],
                 )
-                wait_operation_succeeded(module, res.id, fusion)
+                await_operation(module, fusion, res.id)
     module.exit_json(changed=changed)
 
 
@@ -239,7 +214,7 @@ def delete_array(module, fusion):
                 availability_zone_name=module.params["availability_zone"],
                 array_name=module.params["name"],
             )
-            wait_operation_succeeded(module, res.id, fusion)
+            await_operation(module, fusion, res.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Array {0} creation failed.: {1}".format(module.params["name"], err)

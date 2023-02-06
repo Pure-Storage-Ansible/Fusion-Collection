@@ -110,9 +110,14 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
     print_number_with_metric_suffix,
+)
+
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
 )
 
 
@@ -178,9 +183,10 @@ def create_sc(module, fusion):
                 bandwidth_limit=bw_limit,
                 display_name=display_name,
             )
-            sc_api_instance.create_storage_class(
+            op = sc_api_instance.create_storage_class(
                 s_class, storage_service_name=module.params["storage_service"]
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Class {0} creation failed.: {1}".format(
@@ -210,11 +216,12 @@ def update_sc(module, fusion):
                 display_name=purefusion.NullableString(module.params["display_name"])
             )
             try:
-                sc_api_instance.update_storage_class(
+                op = sc_api_instance.update_storage_class(
                     sclass,
                     storage_service_name=module.params["storage_service"],
                     storage_class_name=module.params["name"],
                 )
+                await_operation(module, fusion, op)
             except purefusion.rest.ApiException as err:
                 module.fail_json(msg="Changing display_name failed: {0}".format(err))
 
@@ -227,10 +234,11 @@ def delete_sc(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            sc_api_instance.delete_storage_class(
+            op = sc_api_instance.delete_storage_class(
                 storage_class=module.params["name"],
                 storage_service_name=module.params["storage_service"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Class {0} deletion failed.: {1}".format(

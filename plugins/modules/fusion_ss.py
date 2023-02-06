@@ -90,6 +90,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+
 
 def get_ss(module, fusion):
     """Return Storage Service or None"""
@@ -119,7 +123,8 @@ def create_ss(module, fusion):
                 display_name=display_name,
                 hardware_types=module.params["hardware_types"],
             )
-            ss_api_instance.create_storage_service(s_service)
+            op = ss_api_instance.create_storage_service(s_service)
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Service {0} creation failed.: {1}".format(
@@ -138,9 +143,10 @@ def delete_ss(module, fusion):
     changed = True
     if not module.check_mode:
         try:
-            ss_api_instance.delete_storage_service(
+            op = ss_api_instance.delete_storage_service(
                 storage_service_name=module.params["name"]
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Service {0} deletion failed.: {1}".format(
@@ -175,10 +181,11 @@ def update_ss(module, fusion):
             display_name=purefusion.NullableString(display_name),
         )
         try:
-            ss_api_instance.update_storage_service(
+            op = ss_api_instance.update_storage_service(
                 sservice,
                 storage_service_name=module.params["name"],
             )
+            await_operation(module, fusion, op)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Changing storage service {0} failed. Error: {1}".format(
