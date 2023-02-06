@@ -110,68 +110,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
-
-def human_to_bytes(size):
-    """Given a human-readable byte string (e.g. 2G, 30M),
-    return the number of bytes.  Will return 0 if the argument has
-    unexpected form.
-    """
-    my_bytes = size[:-1]
-    unit = size[-1].upper()
-    if my_bytes.isdigit():
-        my_bytes = int(my_bytes)
-        if unit == "P":
-            my_bytes *= 1125899906842624
-        elif unit == "T":
-            my_bytes *= 1099511627776
-        elif unit == "G":
-            my_bytes *= 1073741824
-        elif unit == "M":
-            my_bytes *= 1048576
-        elif unit == "K":
-            my_bytes *= 1024
-        else:
-            my_bytes = 0
-    else:
-        my_bytes = 0
-    return my_bytes
-
-
-def human_to_real(iops):
-    """Given a human-readable IOPs string (e.g. 2K, 30M),
-    return the real number.  Will return 0 if the argument has
-    unexpected form.
-    """
-    digit = iops[:-1]
-    unit = iops[-1].upper()
-    if unit.isdigit():
-        digit = iops
-    elif digit.isdigit():
-        digit = int(digit)
-        if unit == "M":
-            digit *= 1000000
-        elif unit == "K":
-            digit *= 1000
-        else:
-            digit = 0
-    else:
-        digit = 0
-    return digit
-
-
-def bytes_to_human(bytes_number):
-    """Convert bytes to a human readable string"""
-    if bytes_number:
-        labels = ["B", "KB", "MB", "GB", "TB", "PB"]
-        i = 0
-        double_bytes = bytes_number
-        while i < len(labels) and bytes_number >= 1024:
-            double_bytes = bytes_number / 1024.0
-            i += 1
-            bytes_number = bytes_number / 1024
-        return str(round(double_bytes, 2)) + " " + labels[i]
-    return None
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_metric_suffix,
+    print_number_with_metric_suffix,
+)
 
 
 def get_sc(module, fusion):
@@ -208,9 +150,13 @@ def create_sc(module, fusion):
         module.params["iops_limit"] = "100000000"
     if not module.params["bw_limit"]:
         module.params["bw_limit"] = "512G"
-    size_limit = human_to_bytes(module.params["size_limit"])
-    iops_limit = int(human_to_real(module.params["iops_limit"]))
-    bw_limit = human_to_bytes(module.params["bw_limit"])
+    size_limit = parse_number_with_metric_suffix(module, module.params["size_limit"])
+    iops_limit = int(
+        parse_number_with_metric_suffix(
+            module, module.params["iops_limit"], factor=1000
+        )
+    )
+    bw_limit = parse_number_with_metric_suffix(module.params["bw_limit"])
     if bw_limit not in range(1048576, 549755813889):  # 1MB/s to 512GB/s
         module.fail_json(msg="Bandwidth limit is not within the required range")
     if 100 > iops_limit > 10000000:

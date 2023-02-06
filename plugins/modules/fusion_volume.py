@@ -138,8 +138,8 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
-    parse_number_with_suffix,
-    print_number_with_suffix,
+    parse_number_with_metric_suffix,
+    print_number_with_metric_suffix,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
@@ -229,7 +229,7 @@ def extract_current_haps(volume):
 def create_volume(module, fusion):
     """Create Volume"""
 
-    size = parse_number_with_suffix(module, module.params["size"])
+    size = parse_number_with_metric_suffix(module, module.params["size"])
 
     if not module.check_mode:
         if not module.params["display_name"]:
@@ -329,7 +329,7 @@ def update_placement_group(module, fusion, current, patches):
 def update_size(module, fusion, current, patches):
     wanted = module.params
     if wanted["size"]:
-        wanted_size = parse_number_with_suffix(module, wanted["size"])
+        wanted_size = parse_number_with_metric_suffix(module, wanted["size"])
         if wanted_size != current.size:
             patch = purefusion.VolumePatch(size=purefusion.NullableSize(wanted_size))
             patches.append(patch)
@@ -498,13 +498,13 @@ def validate_arguments(module, fusion):
     if state == "present" and not volume:
         # would create a volume; check size is lower than storage class limit
         # (let resize checks be handled by the server since they are more complicated)
-        size = parse_number_with_suffix(module, module.params["size"])
+        size = parse_number_with_metric_suffix(module, module.params["size"])
         size_limit = get_storage_class(module, fusion).size_limit
         if size > size_limit:
             module.fail_json(
                 msg="Requested volume size {0} exceeds the storage class limit of {1}".format(
                     module.params["size"],
-                    print_number_with_suffix(size_limit),
+                    print_number_with_metric_suffix(size_limit),
                 )
             )
 
