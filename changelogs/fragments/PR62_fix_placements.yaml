@@ -1,0 +1,6 @@
+bugfixes:
+  - fusion_info - placements subset returned nothing. Now it collects the same information
+    as placement_groups subset (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/62).
+deprecated_features:
+  - fusion_info - placements subset is deprecated in favor of placement_groups and will be removed
+    in the version 1.7.0 (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/62).
