@@ -889,8 +889,12 @@ def main():
         info["volumes"] = generate_volumes_dict(fusion)
     if "protection_policies" in subset or "all" in subset:
         info["protection_policies"] = generate_pp_dict(fusion)
-    if "placement_groups" in subset or "all" in subset:
+    if "placement_groups" in subset or "all" in subset or "placements" in subset:
         info["placement_groups"] = generate_pg_dict(fusion)
+        if "placements" in subset:
+            module.warn(
+                "The 'placements' subset is deprecated and will be removed in the version 1.7.0"
+            )
     if "storage_classes" in subset or "all" in subset:
         info["storageclass"] = generate_storageclass_dict(fusion)
     if "interfaces" in subset or "all" in subset:
