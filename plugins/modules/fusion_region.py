@@ -111,7 +111,7 @@ def create_region(module, fusion):
                 display_name=display_name,
             )
             op = reg_api_instance.create_region(region)
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Region {0} creation failed.: {1}".format(
@@ -131,7 +131,7 @@ def delete_region(module, fusion):
     if not module.check_mode:
         try:
             op = reg_api_instance.delete_region(region_name=module.params["name"])
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Region {0} creation failed.: {1}".format(
@@ -161,7 +161,7 @@ def update_region(module, fusion, region):
                     reg,
                     region_name=module.params["name"],
                 )
-                await_operation(module, fusion, op)
+                await_operation(module, fusion, op.id)
             except purefusion.rest.ApiException as err:
                 module.fail_json(
                     msg="Changing region display_name failed: {0}".format(err)

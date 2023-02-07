@@ -172,7 +172,7 @@ def create_hap(module, fusion):
                     display_name=module.params["display_name"],
                 )
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Host Access Policy {0} creation failed: {1}".format(
@@ -191,7 +191,7 @@ def delete_hap(module, fusion):
             op = hap_api_instance.delete_host_access_policy(
                 host_access_policy_name=module.params["name"]
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Host Access Policy {0} deletion failed: {1}".format(

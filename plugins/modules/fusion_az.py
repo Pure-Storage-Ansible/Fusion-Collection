@@ -115,7 +115,7 @@ def delete_az(module, fusion):
                 region_name=module.params["region"],
                 availability_zone_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Availability Zone {0} deletion failed.: {1}".format(
@@ -145,7 +145,7 @@ def create_az(module, fusion):
             op = az_api_instance.create_availability_zone(
                 azone, region_name=module.params["region"]
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Availability Zone {0} creation failed.: {1}".format(

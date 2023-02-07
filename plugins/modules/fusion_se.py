@@ -211,7 +211,7 @@ def create_se(module, fusion):
                 region_name=module.params["region"],
                 availability_zone_name=module.params["availability_zone"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Endpoint {0} creation failed.: {1}".format(
@@ -233,7 +233,7 @@ def delete_se(module, fusion):
                 availability_zone_name=module.params["availability_zone"],
                 storage_endpoint_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Storage Endpoint {0} failed.".format(module.params["name"])

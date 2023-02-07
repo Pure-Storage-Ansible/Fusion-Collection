@@ -101,7 +101,7 @@ def create_tenant(module, fusion):
                 display_name=display_name,
             )
             op = api_instance.create_tenant(tenant)
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Tenant {0} creation failed.: {1}".format(
@@ -134,7 +134,7 @@ def update_tenant(module, fusion):
                     new_tenant,
                     tenant_name=module.params["name"],
                 )
-                await_operation(module, fusion, op)
+                await_operation(module, fusion, op.id)
             except purefusion.rest.ApiException as err:
                 module.fail_json(
                     msg="Changing tenant display_name failed: {0}".format(err)
@@ -150,7 +150,7 @@ def delete_tenant(module, fusion):
     if not module.check_mode:
         try:
             op = api_instance.delete_tenant(tenant_name=module.params["name"])
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Deleting Tenant {0} failed: {1}".format(module.params["name"], err)
