@@ -560,11 +560,11 @@ def main():
 
     changed = False
     if state == "present" and not volume:
-        changed = create_volume(module, fusion) or changed
+        changed = changed | create_volume(module, fusion)
     # volume might exist even if soft-deleted, so we still have to update it
-    changed = update_volume(module, fusion) or changed
+    changed = changed | update_volume(module, fusion)
     if module.params["eradicate"]:
-        changed = eradicate_volume(module, fusion) or changed
+        changed = changed | eradicate_volume(module, fusion)
 
     module.exit_json(changed=changed)
 

@@ -61,6 +61,11 @@ options:
     description:
     - The name of the storage service to create the placement group for.
     type: str
+  array:
+    description:
+    - "Array to place the placement group to. Changing it (i.e. manual migration)
+    is an elevated operation."
+    type: str
   placement_engine:
     description:
     - For workload placement recommendations from Pure1 Meta, use C(pure1meta).
@@ -197,6 +202,63 @@ def create_pg(module, fusion):
     module.exit_json(changed=changed)
 
 
+def update_display_name(module, fusion, patches, pg):
+    if not module.params["display_name"]:
+        return
+    if module.params["display_name"] == pg.display_name:
+        return
+    patch = purefusion.PlacementGroupPatch(
+        display_name=purefusion.NullableString(module.params["display_name"]),
+    )
+    patches.append(patch)
+
+
+def update_array(module, fusion, patches, pg):
+    if not pg.array:
+        module.warn(
+            "cannot see placement group array, probably missing required permissions to change it"
+        )
+        return
+    if pg.array.name == module.params["array"]:
+        return
+
+    patch = purefusion.PlacementGroupPatch(
+        display_name=purefusion.NullableString(module.params["array"]),
+    )
+    patches.append(patch)
+
+
+def update_pg(module, fusion, pg):
+    """Update Placement Group"""
+
+    pg_api_instance = purefusion.PlacementGroupsApi(fusion)
+    patches = []
+
+    update_display_name(module, fusion, patches, pg)
+    update_array(module, fusion, patches, pg)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = pg_api_instance.update_placement_group(
+                    patch,
+                    tenant_name=module.params["tenant"],
+                    tenant_space_name=module.params["tenant_space"],
+                    placement_group_name=module.params["placement_group"],
+                )
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update network interface group '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+
+    module.exit_json(changed=changed)
+
+
 def delete_pg(module, fusion):
     """Delete Placement Group"""
     changed = True
@@ -229,6 +291,7 @@ def main():
             availability_zone=dict(type="str", aliases=["az"], required=True),
             storage_service=dict(type="str"),
             state=dict(type="str", default="present", choices=["absent", "present"]),
+            array=dict(type="str"),
             placement_engine=dict(
                 type="str",
                 choices=["heuristics", "pure1meta"],
@@ -257,6 +320,8 @@ def main():
         )
     if state == "present" and not pgroup:
         create_pg(module, fusion)
+    if state == "present" and pgroup:
+        update_pg(module, fusion, pgroup)
     elif state == "absent" and pgroup:
         delete_pg(module, fusion)
 

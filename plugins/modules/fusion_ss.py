@@ -157,41 +157,37 @@ def delete_ss(module, fusion):
     module.exit_json(changed=changed)
 
 
-def update_ss(module, fusion):
+def update_ss(module, fusion, ss):
     """Update Storage Service"""
-    changed = False
-    ss_api_instance = purefusion.StorageServicesApi(fusion)
 
-    s_service = ss_api_instance.get_storage_service(
-        storage_service_name=module.params["name"],
-    )
-    hw_types = []
-    for hw_type in range(0, len(s_service.hardware_types)):
-        hw_types.append(s_service.hardware_types[hw_type].name)
+    ss_api_instance = purefusion.StorageServicesApi(fusion)
+    patches = []
     if (
         module.params["display_name"]
-        and module.params["display_name"] != s_service.display_name
+        and module.params["display_name"] != ss.display_name
     ):
-        changed = True
-        display_name = module.params["display_name"]
-    else:
-        display_name = s_service.display_name
-    if changed and not module.check_mode:
-        sservice = purefusion.StorageServicePatch(
-            display_name=purefusion.NullableString(display_name),
+        patch = purefusion.StorageServicePatch(
+            display_name=purefusion.NullableString(module.params["display_name"]),
         )
-        try:
-            op = ss_api_instance.update_storage_service(
-                sservice,
-                storage_service_name=module.params["name"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Changing storage service {0} failed. Error: {1}".format(
-                    module.params["name"], err
+        patches.append(patch)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = ss_api_instance.update_storage_service(
+                    patch,
+                    storage_service_name=module.params["name"],
                 )
-            )
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update storage service '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+
     module.exit_json(changed=changed)
 
 
@@ -226,7 +222,7 @@ def main():
     if not s_service and state == "present":
         create_ss(module, fusion)
     elif s_service and state == "present":
-        update_ss(module, fusion)
+        update_ss(module, fusion, s_service)
     elif s_service and state == "absent":
         delete_ss(module, fusion)
     else:
