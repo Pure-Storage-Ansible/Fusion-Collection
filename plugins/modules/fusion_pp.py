@@ -142,7 +142,7 @@ def create_pp(module, fusion):
                     ],
                 )
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Protection Policy {0} creation failed.: {1}".format(
@@ -162,7 +162,7 @@ def delete_pp(module, fusion):
             op = pp_api_instance.delete_protection_policy(
                 protection_policy_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Protection Policy {0} deletion failed.: {1}".format(

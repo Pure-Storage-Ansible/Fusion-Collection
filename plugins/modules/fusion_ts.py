@@ -124,7 +124,7 @@ def create_ts(module, fusion):
                 tspace,
                 tenant_name=module.params["tenant"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Tenant Space {0} creation failed.: {1}".format(
@@ -145,7 +145,7 @@ def delete_ts(module, fusion):
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Tenant Space {0} failed.".format(module.params["name"])

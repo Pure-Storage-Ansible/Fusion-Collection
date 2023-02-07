@@ -186,7 +186,7 @@ def create_sc(module, fusion):
             op = sc_api_instance.create_storage_class(
                 s_class, storage_service_name=module.params["storage_service"]
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Class {0} creation failed.: {1}".format(
@@ -221,7 +221,7 @@ def update_sc(module, fusion):
                     storage_service_name=module.params["storage_service"],
                     storage_class_name=module.params["name"],
                 )
-                await_operation(module, fusion, op)
+                await_operation(module, fusion, op.id)
             except purefusion.rest.ApiException as err:
                 module.fail_json(msg="Changing display_name failed: {0}".format(err))
 
@@ -238,7 +238,7 @@ def delete_sc(module, fusion):
                 storage_class=module.params["name"],
                 storage_service_name=module.params["storage_service"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Storage Class {0} deletion failed.: {1}".format(

@@ -187,7 +187,7 @@ def create_nig(module, fusion):
                 availability_zone_name=module.params["availability_zone"],
                 region_name=module.params["region"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Network Interface Group {0} creation failed.: {1}".format(
@@ -209,7 +209,7 @@ def delete_nig(module, fusion):
                 region_name=module.params["region"],
                 network_interface_group_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Network Interface Group {0} failed.".format(

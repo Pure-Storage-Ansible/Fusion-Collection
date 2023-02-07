@@ -186,7 +186,7 @@ def create_pg(module, fusion):
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
                 msg="Placement Group {0} creation failed.: {1}".format(
@@ -208,7 +208,7 @@ def delete_pg(module, fusion):
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["tenant_space"],
             )
-            await_operation(module, fusion, op)
+            await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException:
             module.fail_json(
                 msg="Delete Placement Group {0} failed.".format(module.params["name"])
