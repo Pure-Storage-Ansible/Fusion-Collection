@@ -161,7 +161,7 @@ def create_sc(module, fusion):
             module, module.params["iops_limit"], factor=1000
         )
     )
-    bw_limit = parse_number_with_metric_suffix(module.params["bw_limit"])
+    bw_limit = parse_number_with_metric_suffix(module, module.params["bw_limit"])
     if bw_limit not in range(1048576, 549755813889):  # 1MB/s to 512GB/s
         module.fail_json(msg="Bandwidth limit is not within the required range")
     if 100 > iops_limit > 10000000:
@@ -235,7 +235,7 @@ def delete_sc(module, fusion):
     if not module.check_mode:
         try:
             op = sc_api_instance.delete_storage_class(
-                storage_class=module.params["name"],
+                storage_class_name=module.params["name"],
                 storage_service_name=module.params["storage_service"],
             )
             await_operation(module, fusion, op.id)

@@ -214,6 +214,8 @@ def update_display_name(module, fusion, patches, pg):
 
 
 def update_array(module, fusion, patches, pg):
+    if not module.params["array"]:
+        return
     if not pg.array:
         module.warn(
             "cannot see placement group array, probably missing required permissions to change it"
@@ -223,7 +225,7 @@ def update_array(module, fusion, patches, pg):
         return
 
     patch = purefusion.PlacementGroupPatch(
-        display_name=purefusion.NullableString(module.params["array"]),
+        array=purefusion.NullableString(module.params["array"]),
     )
     patches.append(patch)
 
@@ -244,7 +246,7 @@ def update_pg(module, fusion, pg):
                     patch,
                     tenant_name=module.params["tenant"],
                     tenant_space_name=module.params["tenant_space"],
-                    placement_group_name=module.params["placement_group"],
+                    placement_group_name=module.params["name"],
                 )
                 await_operation(module, fusion, op.id)
             except purefusion.rest.ApiException as err:

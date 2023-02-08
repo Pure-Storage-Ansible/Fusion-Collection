@@ -162,8 +162,9 @@ def create_array(module, fusion):
     return True
 
 
-def update_array(module, fusion, array):
+def update_array(module, fusion):
     """Update Array"""
+    array = get_array(module, fusion)
     patches = []
     if (
         module.params["display_name"]
@@ -277,10 +278,10 @@ def main():
     changed = False
     if not array and state == "present":
         changed = create_array(module, fusion) | update_array(
-            module, fusion, array
+            module, fusion
         )  # update is run to set properties which cannot be set on creation and instead use defaults
     elif array and state == "present":
-        changed = changed | update_array(module, fusion, array)
+        changed = changed | update_array(module, fusion)
     elif array and state == "absent":
         changed = changed | delete_array(module, fusion)
     else:
