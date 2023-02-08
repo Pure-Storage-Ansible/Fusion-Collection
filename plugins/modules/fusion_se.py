@@ -62,7 +62,7 @@ options:
     description:
     - List of IP addresses to be used in the subnet of the storage endpoint.
     - IP addresses must include a CIDR notation.
-    - IPv4 and IPv6 are fully supported.
+    - Only IPv4 is supported at the moment.
     type: list
     elements: str
   gateway:
@@ -109,19 +109,15 @@ try:
 except ImportError:
     HAS_FUSION = False
 
-try:
-    from netaddr import IPNetwork
-
-    HAS_NETADDR = True
-except ImportError:
-    HAS_NETADDR = False
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
+    is_valid_network,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -198,7 +194,7 @@ def create_se(module, fusion):
                         ],
                     )
                 ifaces.append(iface)
-            sendp = purefusion.StorageEndpointPost(
+            op = purefusion.StorageEndpointPost(
                 endpoint_type=module.params["endpoint_type"],
                 iscsi=purefusion.StorageEndpointIscsiPost(
                     discovery_interfaces=ifaces,
@@ -207,14 +203,14 @@ def create_se(module, fusion):
                 display_name=display_name,
             )
             op = se_api_instance.create_storage_endpoint(
-                sendp,
+                op,
                 region_name=module.params["region"],
                 availability_zone_name=module.params["availability_zone"],
             )
             await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Storage Endpoint {0} creation failed.: {1}".format(
+                msg="Storage Endpoint {0} creation failed: {1}".format(
                     module.params["name"], err
                 )
             )
@@ -234,16 +230,48 @@ def delete_se(module, fusion):
                 storage_endpoint_name=module.params["name"],
             )
             await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
+        except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Delete Storage Endpoint {0} failed.".format(module.params["name"])
+                msg="Delete Storage Endpoint {0} failed: {1}".format(
+                    module.params["name"], err
+                )
             )
     module.exit_json(changed=changed)
 
 
-def update_se(module, fusion, storage_endpoint):
+def update_se(module, fusion, se):
     """Update Storage Endpoint"""
-    changed = False
+
+    se_api_instance = purefusion.StorageEndpointsApi(fusion)
+    patches = []
+    if (
+        module.params["display_name"]
+        and module.params["display_name"] != se.display_name
+    ):
+        patch = purefusion.StorageEndpointPatch(
+            display_name=purefusion.NullableString(module.params["display_name"]),
+        )
+        patches.append(patch)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = se_api_instance.update_storage_endpoint(
+                    patch,
+                    region_name=module.params["region"],
+                    availability_zone_name=module.params["availability_zone"],
+                    storage_endpoint_name=module.params["name"],
+                )
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update storage endpoint '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+
     module.exit_json(changed=changed)
 
 
@@ -266,9 +294,6 @@ def main():
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
 
-    if not HAS_NETADDR:
-        module.fail_json(msg="netaddr module is required")
-
     state = module.params["state"]
     fusion = get_fusion(module)
     if not get_az(module, fusion):
@@ -277,28 +302,20 @@ def main():
         module.fail_json(
             msg="Not all of the network interface groups exist in the specified AZ"
         )
-    for address in range(0, len(module.params["addresses"])):
-        if "/" not in module.params["addresses"][address]:
-            module.fail_json(msg="All addresses must include a CIDR notation")
-        if 8 > int(module.params["addresses"][address].split("/")[1]) > 32:
-            module.fail_json(
-                msg="An invalid CIDR notation has been provided: {0}".format(
-                    module.params["addresses"][address]
+    if module.params["addresses"]:
+        for address in module.params["addresses"]:
+            if not is_valid_network(address):
+                module.fail_json(
+                    msg="'{0}' is not a valid address in CIDR notation".format(address)
                 )
-            )
 
     sendp = get_se(module, fusion)
 
     if state == "present" and not sendp:
-        if not (
-            module.params["addresses"]
-            and module.params["gateway"]  # Soon to be optional
-            and module.params["network_interface_groups"]
-        ):
+        module.fail_on_missing_params(["addresses"])
+        if not (module.params["addresses"]):
             module.fail_json(
-                msg="When creating a new storage endpoint, the following "
-                "parameters must be supplied: `gateway`, `addresses` "
-                "and `network_interface_groups`"
+                msg="At least one entry in 'addresses' is required to create new storage endpoint"
             )
         create_se(module, fusion)
     elif state == "present" and sendp:

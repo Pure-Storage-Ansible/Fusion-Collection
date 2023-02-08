@@ -65,7 +65,17 @@ options:
     type: str
   maintenance_mode:
     description:
-    -  Set the array in maintenance mode or not.
+    - "Switch the array into maintenance mode or back.
+    Array in maintenance mode can have placement groups migrated out but not in.
+    Intended use cases are for example safe decommissioning or to prevent use
+    of an array that has not yet been fully configured."
+    type: bool
+  unavailable_mode:
+    description:
+    -  "Switch the array into unavailable mode or back.
+    Fusion tries to exclude unavailable arrays from virtually any operation it
+    can. This is to prevent stalling operations in case of e.g. a networking
+    failure. As of the moment arrays have to be marked unavailable manually."
     type: bool
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
@@ -124,7 +134,6 @@ def create_array(module, fusion):
 
     array_api_instance = purefusion.ArraysApi(fusion)
 
-    changed = True
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -146,67 +155,78 @@ def create_array(module, fusion):
             await_operation(module, fusion, res.id)
         except purefusion.rest.ApiException as err:
             module.fail_json(
-                msg="Array {0} creation failed.: {1}".format(module.params["name"], err)
+                msg="Array '{0}' creation failed.: {1}".format(
+                    module.params["name"], err
+                )
             )
-        if module.params["maintenance_mode"] is not None:
-            array = purefusion.ArrayPatch(
-                maintenance_mode=purefusion.NullableBoolean(
-                    module.params["maintenance_mode"]
-                ),
-            )
-            res = array_api_instance.update_array(
-                array,
-                availability_zone_name=module.params["availability_zone"],
-                region_name=module.params["region"],
-                array_name=module.params["name"],
-            )
-            await_operation(module, fusion, res.id)
-    module.exit_json(changed=changed)
+    return True
 
 
-def update_array(module, fusion, array):
+def update_array(module, fusion):
     """Update Array"""
-    array_api_instance = purefusion.ArraysApi(fusion)
-    changed = False
+    array = get_array(module, fusion)
+    patches = []
     if (
         module.params["display_name"]
         and module.params["display_name"] != array.display_name
     ):
-        display_name = module.params["display_name"]
-        changed = True
-        if not module.check_mode:
-            array = purefusion.ArrayPatch(
-                display_name=purefusion.NullableString(display_name),
+        patch = purefusion.ArrayPatch(
+            display_name=purefusion.NullableString(module.params["display_name"]),
+        )
+        patches.append(patch)
+
+    if module.params["host_name"] and module.params["host_name"] != array.host_name:
+        patch = purefusion.ArrayPatch(
+            host_name=purefusion.NullableString(module.params["host_name"])
+        )
+        patches.append(patch)
+
+    if (
+        module.params["maintenance_mode"] is not None
+        and module.params["maintenance_mode"] != array.maintenance_mode
+    ):
+        patch = purefusion.ArrayPatch(
+            maintenance_mode=purefusion.NullableBoolean(
+                module.params["maintenance_mode"]
             )
-            res = array_api_instance.update_array(
-                array,
-                availability_zone_name=module.params["availability_zone"],
-                region_name=module.params["region"],
-                array_name=module.params["name"],
+        )
+        patches.append(patch)
+    if (
+        module.params["unavailable_mode"] is not None
+        and module.params["unavailable_mode"] != array.unavailable_mode
+    ):
+        patch = purefusion.ArrayPatch(
+            unavailable_mode=purefusion.NullableBoolean(
+                module.params["unavailable_mode"]
             )
-            await_operation(module, fusion, res.id)
-    if module.params["maintenance_mode"] is not None:
-        if module.params["maintenance_mode"] != array.maintenance_mode:
-            maint_mode = module.params["maintenance_mode"]
-            changed = True
-            if not module.check_mode:
-                array = purefusion.ArrayPatch(
-                    maintenance_mode=purefusion.NullableBoolean(maint_mode),
-                )
-                res = array_api_instance.update_array(
-                    array,
+        )
+        patches.append(patch)
+
+    if not module.check_mode:
+        array_api_instance = purefusion.ArraysApi(fusion)
+        for patch in patches:
+            try:
+                op = array_api_instance.update_array(
+                    patch,
                     availability_zone_name=module.params["availability_zone"],
                     region_name=module.params["region"],
                     array_name=module.params["name"],
                 )
-                await_operation(module, fusion, res.id)
-    module.exit_json(changed=changed)
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update array '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+    return changed
 
 
 def delete_array(module, fusion):
     """Delete Array - not currently available"""
     array_api_instance = purefusion.ArraysApi(fusion)
-    changed = True
     if not module.check_mode:
         try:
             res = array_api_instance.delete_array(
@@ -219,7 +239,7 @@ def delete_array(module, fusion):
             module.fail_json(
                 msg="Array {0} creation failed.: {1}".format(module.params["name"], err)
             )
-    module.exit_json(changed=changed)
+    return True
 
 
 def main():
@@ -244,6 +264,7 @@ def main():
                 ],
             ),
             maintenance_mode=dict(type="bool"),
+            unavailable_mode=dict(type="bool"),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
@@ -254,16 +275,19 @@ def main():
     state = module.params["state"]
     array = get_array(module, fusion)
 
+    changed = False
     if not array and state == "present":
-        create_array(module, fusion)
+        changed = create_array(module, fusion) | update_array(
+            module, fusion
+        )  # update is run to set properties which cannot be set on creation and instead use defaults
     elif array and state == "present":
-        update_array(module, fusion, array)
+        changed = changed | update_array(module, fusion)
     elif array and state == "absent":
-        delete_array(module, fusion)
+        changed = changed | delete_array(module, fusion)
     else:
         module.exit_json(changed=False)
 
-    module.exit_json(changed=False)
+    module.exit_json(changed=changed)
 
 
 if __name__ == "__main__":

@@ -50,7 +50,8 @@ options:
     required: true
   gateway:
     description:
-    - Address of the subnet gateway.
+    - "Address of the subnet gateway.
+    Currently must be a valid IPv4 address."
     type: str
   mtu:
     description:
@@ -65,7 +66,9 @@ options:
     choices: [ eth ]
   prefix:
     description:
-    - Network prefix in CIDR format.
+    - "Network prefix in CIDR notation.
+    Required to create a new network interface group.
+    Currently only IPv4 addresses with subnet mask are supported."
     type: str
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
@@ -104,19 +107,16 @@ try:
 except ImportError:
     HAS_FUSION = False
 
-try:
-    from netaddr import IPNetwork
-
-    HAS_NETADDR = True
-except ImportError:
-    HAS_NETADDR = False
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
+from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
+    is_valid_address,
+    is_valid_network,
+    is_address_in_network,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -153,10 +153,10 @@ def create_nig(module, fusion):
     nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
 
     changed = True
-    if module.params["gateway"] and module.params["gateway"] not in IPNetwork(
-        module.params["prefix"]
+    if module.params["gateway"] and not is_address_in_network(
+        module.params["gateway"], module.params["prefix"]
     ):
-        module.fail_json(msg="Gateway and subnet prefix are not compatible.")
+        module.fail_json(msg="`gateway` must be an address in subnet `prefix`")
 
     if not module.check_mode:
         if not module.params["display_name"]:
@@ -221,7 +221,37 @@ def delete_nig(module, fusion):
 
 def update_nig(module, fusion, nig):
     """Update Network Interface Group"""
-    changed = False
+
+    nifg_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
+    patches = []
+    if (
+        module.params["display_name"]
+        and module.params["display_name"] != nig.display_name
+    ):
+        patch = purefusion.NetworkInterfaceGroupPatch(
+            display_name=purefusion.NullableString(module.params["display_name"]),
+        )
+        patches.append(patch)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = nifg_api_instance.update_network_interface_group(
+                    patch,
+                    availability_zone_name=module.params["availability_zone"],
+                    region_name=module.params["region"],
+                    network_interface_group_name=module.params["name"],
+                )
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update network interface group '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+
     module.exit_json(changed=changed)
 
 
@@ -244,20 +274,20 @@ def main():
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
 
-    if not HAS_NETADDR:
-        module.fail_json(msg="netaddr module is required")
-
     state = module.params["state"]
     fusion = get_fusion(module)
-    if module.params["prefix"]:
-        if "/" not in module.params["prefix"]:
-            module.fail_json(msg="Prefix must be in a CIDR format")
-        if 8 > int(module.params["prefix"].split("/")[1]) > 32:
-            module.fail_json(
-                msg="An invalid CIDR notation has been provided: {0}".format(
-                    module.params["prefix"]
-                )
+    if module.params["prefix"] and not is_valid_network(module.params["prefix"]):
+        module.fail_json(
+            msg="`prefix` '{0}' is not a valid address in CIDR notation".format(
+                module.params["prefix"]
             )
+        )
+    if module.params["gateway"] and not is_valid_address(module.params["gateway"]):
+        module.fail_json(
+            msg="`gateway` '{0}' is not a valid address".format(
+                module.params["gateway"]
+            )
+        )
 
     if not get_az(module, fusion):
         module.fail_json(msg="Availability Zone {0} does not exist")
@@ -265,16 +295,10 @@ def main():
     nig = get_nig(module, fusion)
 
     if state == "present" and not nig:
-        if not module.params["prefix"]:
-            module.fail_json(
-                msg="When creating a new network interface group "
-                "`prefix` must be provided"
-            )
+        module.fail_on_missing_params(["prefix"])
         create_nig(module, fusion)
     elif state == "present" and nig:
-        # TODO: re-add this when SDK bug fixed
-        module.exit_json(changed=False)
-        # update_ps(module, fusion, subnet)
+        update_nig(module, fusion, nig)
     elif state == "absent" and nig:
         delete_nig(module, fusion)
 

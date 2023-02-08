@@ -135,6 +135,41 @@ def create_ts(module, fusion):
     module.exit_json(changed=changed)
 
 
+def update_ts(module, fusion, ts):
+    """Update Tenant Space"""
+
+    ts_api_instance = purefusion.TenantSpacesApi(fusion)
+    patches = []
+    if (
+        module.params["display_name"]
+        and module.params["display_name"] != ts.display_name
+    ):
+        patch = purefusion.TenantSpacePatch(
+            display_name=purefusion.NullableString(module.params["display_name"]),
+        )
+        patches.append(patch)
+
+    if not module.check_mode:
+        for patch in patches:
+            try:
+                op = ts_api_instance.update_tenant_space(
+                    patch,
+                    tenant_name=module.params["tenant"],
+                    tenant_space_name=module.params["name"],
+                )
+                await_operation(module, fusion, op.id)
+            except purefusion.rest.ApiException as err:
+                module.fail_json(
+                    msg="Update tenant space '{0}' failed: {1}".format(
+                        module.params["name"], err
+                    )
+                )
+
+    changed = len(patches) != 0
+
+    module.exit_json(changed=changed)
+
+
 def delete_ts(module, fusion):
     """Delete Tenant Space"""
     changed = True
@@ -174,6 +209,8 @@ def main():
     tspace = get_ts(module, fusion)
     if state == "present" and not tspace:
         create_ts(module, fusion)
+    elif state == "present" and tspace:
+        update_ts(module, fusion, tspace)
     elif state == "absent" and tspace:
         delete_ts(module, fusion)
 
