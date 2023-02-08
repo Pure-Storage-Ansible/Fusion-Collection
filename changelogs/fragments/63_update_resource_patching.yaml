@@ -3,4 +3,4 @@ major_changes:
     underlying Python SDK, meaning the collection can create/update/delete
     all resource properties the SDK can
 minor_changes:
-  - removed dependency on Python `ipaddress` package
+  - removed dependency on Python `netaddr` package
