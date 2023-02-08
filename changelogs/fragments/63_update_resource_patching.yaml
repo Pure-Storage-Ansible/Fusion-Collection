@@ -1,0 +1,6 @@
+major_changes:
+  - Patching of resource properties was brought to parity with
+    underlying Python SDK, meaning the collection can create/update/delete
+    all resource properties the SDK can
+minor_changes:
+  - removed dependency on Python `ipaddress` package
