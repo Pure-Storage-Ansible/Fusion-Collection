@@ -15,6 +15,10 @@ try:
 except ImportError:
     pass
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    OperationException,
+)
+
 
 def await_operation(module, fusion, op_id, fail_playbook_if_operation_fails=True):
     """
@@ -22,17 +26,13 @@ def await_operation(module, fusion, op_id, fail_playbook_if_operation_fails=True
     Throws an exception by default if the operation fails.
     """
     op_api = purefusion.OperationsApi(fusion)
-    next_timeout = 250
+
     while True:
         op = op_api.get_operation(op_id)
         if op.status == "Succeeded":
             return op
         if op.status == "Failed":
             if fail_playbook_if_operation_fails:
-                module.fail_json(
-                    msg="operation {0} ({1}) failed: {2}".format(
-                        op_id, op.request_type, op.error
-                    )
-                )
+                raise OperationException(op)
             return op
         time.sleep(int(math.ceil(op.retry_in / 1000)))
