@@ -1,1 +1,1 @@
-purefusion==1.0.10
+purefusion>=1.0,<2.0
