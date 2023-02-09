@@ -12,6 +12,10 @@ DOCUMENTATION = r"""
 ---
 module: fusion_hw
 version_added: '1.0.0'
+deprecated:
+    removed_at_date: "2023-08-09"
+    why: Hardware type cannot be modified in Pure Storage Fusion
+    alternative: there's no alternative as this functionality has never worked before
 short_description:  Create hardware types in Pure Storage Fusion
 description:
 - Create a hardware type in Pure Storage Fusion.
@@ -66,57 +70,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-HAS_FUSION = True
-try:
-    import fusion as purefusion
-except ImportError:
-    HAS_FUSION = False
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
-
-
-def get_hw(module, fusion):
-    """Get Hardware Type or None"""
-    hw_api_instance = purefusion.HardwareTypesApi(fusion)
-    try:
-        return hw_api_instance.get_hardware_type(
-            hardware_type_name=module.params["name"]
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def create_hw(module, fusion):
-    """Create Hardware Type"""
-
-    hw_api_instance = purefusion.HardwareTypesApi(fusion)
-
-    changed = True
-    if not module.check_mode:
-        if not module.params["display_name"]:
-            display_name = module.params["name"]
-        else:
-            display_name = module.params["display_name"]
-        try:
-            hw_type = purefusion.HardwareTypePost(
-                name=module.params["name"],
-                array_type=module.params["array_type"],
-                media_type=module.params["media_type"],
-                display_name=display_name,
-            )
-            hw_api_instance.create_hardware_type(hw_type)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Hardware Type {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
-
-    module.exit_json(changed=changed)
 
 
 def main():
@@ -133,15 +90,6 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
-
-    fusion = get_fusion(module)
-    state = module.params["state"]
-    h_type = get_hw(module, fusion)
-
-    if not h_type and state == "present":
-        create_hw(module, fusion)
-    else:
-        module.exit_json(changed=False)
 
     module.exit_json(changed=False)
 
