@@ -40,6 +40,7 @@ options:
     description:
     - Region within which the AZ is created.
     type: str
+    required: true
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -49,12 +50,13 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_az:
     name: foo
     display_name: "foo AZ"
+    region: region1
     app_id: key_name
     key_file: "az-admin-private-key.pem"
-
 - name: Delete AZ foo
   purestorage.fusion.fusion_az:
     name: foo
+    region: region1
     state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
@@ -74,9 +76,11 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    ApiExceptionWrapper,
 )
 
 
@@ -117,11 +121,17 @@ def delete_az(module, fusion):
             )
             await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Availability Zone {0} deletion failed.: {1}".format(
-                    module.params["name"], err
-                )
+            wrapped_error = ApiExceptionWrapper(
+                err,
+                operation="Availability Zone {0} deletion".format(
+                    module.params["name"]
+                ),
             )
+
+            message = str(wrapped_error)
+            if module._verbosity < 2:
+                message = wrapped_error.pretty_message()
+            module.fail_json(msg=message)
 
     module.exit_json(changed=changed)
 
@@ -147,11 +157,17 @@ def create_az(module, fusion):
             )
             await_operation(module, fusion, op.id)
         except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Availability Zone {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
+            wrapped_error = ApiExceptionWrapper(
+                err,
+                operation="Availability Zone {0} creation".format(
+                    module.params["name"]
+                ),
             )
+
+            message = str(wrapped_error)
+            if module._verbosity < 2:
+                message = wrapped_error.pretty_message()
+            module.fail_json(msg=message)
 
     module.exit_json(changed=changed)
 
@@ -163,7 +179,7 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            region=dict(type="str"),
+            region=dict(type="str", required=True),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
@@ -173,10 +189,6 @@ def main():
     fusion = get_fusion(module)
     state = module.params["state"]
     azone = get_az(module, fusion)
-    if not get_region(module, fusion):
-        module.fail_json(
-            msg="Region {0} does not exist.".format(module.params["region"])
-        )
 
     if not azone and state == "present":
         create_az(module, fusion)

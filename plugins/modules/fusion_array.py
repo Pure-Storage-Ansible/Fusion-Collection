@@ -104,8 +104,6 @@ try:
 except ImportError:
     HAS_FUSION = False
 
-import math
-import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
@@ -113,6 +111,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    ApiExceptionWrapper,
 )
 
 
@@ -139,6 +140,7 @@ def create_array(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
+
         try:
             array = purefusion.ArrayPost(
                 hardware_type=module.params["hardware_type"],
@@ -154,11 +156,16 @@ def create_array(module, fusion):
             )
             await_operation(module, fusion, res.id)
         except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Array '{0}' creation failed.: {1}".format(
-                    module.params["name"], err
-                )
+            wrapped_error = ApiExceptionWrapper(
+                err,
+                operation="Array '{0}' creation failed".format(module.params["name"]),
             )
+
+            message = str(wrapped_error)
+            if module._verbosity < 2:
+                message = wrapped_error.pretty_message()
+            module.fail_json(msg=message)
+
     return True
 
 
@@ -214,11 +221,14 @@ def update_array(module, fusion):
                 )
                 await_operation(module, fusion, op.id)
             except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update array '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
+                wrapped_error = ApiExceptionWrapper(
+                    err,
+                    operation="Update array {0} deletion".format(module.params["name"]),
                 )
+                message = str(wrapped_error)
+                if module._verbosity < 2:
+                    message = wrapped_error.pretty_message()
+                module.fail_json(msg=message)
 
     changed = len(patches) != 0
     return changed
@@ -236,9 +246,16 @@ def delete_array(module, fusion):
             )
             await_operation(module, fusion, res.id)
         except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Array {0} creation failed.: {1}".format(module.params["name"], err)
+            wrapped_error = ApiExceptionWrapper(
+                err,
+                operation="Array {0} deletion".format(module.params["name"]),
             )
+
+            message = str(wrapped_error)
+            if module._verbosity < 2:
+                message = wrapped_error.pretty_message()
+            module.fail_json(msg=message)
+
     return True
 
 
