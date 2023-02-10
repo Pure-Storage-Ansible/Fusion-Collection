@@ -15,6 +15,13 @@ except ImportError:
 import sys
 import json
 import re
+import traceback as trace
+
+_HAS_URLLIB = True
+try:
+    import urllib3
+except ImportError:
+    _HAS_URLLIB = False
 
 
 class OperationException(Exception):
@@ -28,17 +35,17 @@ class OperationException(Exception):
         return self._op
 
 
-def _should_be_verbose(module) -> bool:
+def _get_verbosity(module) -> int:
     # verbosity is a private member and Ansible does not really allow
     # providing extra information only if the user wants it due to ideological
     # reasons, so extract it as carefully as possible and assume non-verbose
     # if something fails
     try:
         if module._verbosity is not None and isinstance(module._verbosity, int):
-            return module._verbosity > 0
+            return module._verbosity
     except Exception:
         pass
-    return False
+    return 0
 
 
 def _extract_rest_call_site(traceback):
@@ -180,44 +187,91 @@ def format_failed_fusion_operation(op):
     return output
 
 
+def format_http_exception(exception, traceback):
+    """Formats failed `urllib3.exceptions` exceptions into a simple short form,
+    suitable for Ansible error output. Returns a `str`."""
+    # urllib3 exceptions hide all details in a formatted message so all we
+    # can do is append the REST call that caused this
+    output = ""
+    call_site = _extract_rest_call_site(traceback)
+    if call_site:
+        output += "'{0}': ".format(call_site)
+    output += "HTTP request failed via "
+
+    inner = exception
+    while True:
+        try:
+            e = inner.reason
+            if e and isinstance(e, urllib3.exceptions.HTTPError):
+                inner = e
+                continue
+            break
+        except Exception:
+            break
+
+    if inner != exception:
+        output += "'{0}'/'{1}'".format(type(inner).__name__, type(exception).__name__)
+    else:
+        output += "'{0}'".format(type(exception).__name__)
+
+    output += " - {0}".format(str(exception).replace('"', "'"))
+
+    return output
+
+
 def _handle_api_exception(
     module,
     exception,
     traceback,
-    verbose,
+    verbosity,
 ):
     (error_message, body) = format_fusion_api_exception(exception, traceback)
 
-    if verbose:
+    if verbosity > 1:
+        module.fail_json(msg=error_message, call_details=body, traceback=str(traceback))
+    elif verbosity > 0:
         module.fail_json(msg=error_message, call_details=body)
     else:
         module.fail_json(msg=error_message)
 
 
-def _handle_operation_exception(module, exception, verbose):
+def _handle_operation_exception(module, exception, traceback, verbosity):
     op = exception.op
 
     error_message = format_failed_fusion_operation(op)
 
-    if verbose:
+    if verbosity > 1:
+        module.fail_json(
+            msg=error_message, op_details=op.to_dict(), traceback=str(traceback)
+        )
+    elif verbosity > 0:
         module.fail_json(msg=error_message, op_details=op.to_dict())
     else:
         module.fail_json(msg=error_message)
 
 
+def _handle_http_exception(module, exception, traceback, verbosity):
+    error_message = format_http_exception(exception, traceback)
+
+    if verbosity > 1:
+        module.fail_json(msg=error_message, traceback=trace.format_exception(exception))
+    else:
+        module.fail_json(msg=error_message)
+
+
 def _except_hook_callback(module, original_hook, type, value, traceback):
-    verbose = _should_be_verbose(module)
+    verbosity = _get_verbosity(module)
     if type == purefusion.rest.ApiException:
         _handle_api_exception(
             module,
             value,
             traceback,
-            verbose,
+            verbosity,
         )
     elif type == OperationException:
-        _handle_operation_exception(module, value, verbose)
-    # TODO handle urllib.Protocol here as it is fired by the API on HTTP errors
-    # https://urllib3.readthedocs.io/en/stable/reference/urllib3.exceptions.html#urllib3.exceptions.ProtocolError
+        _handle_operation_exception(module, value, traceback, verbosity)
+    elif _HAS_URLLIB and issubclass(type, urllib3.exceptions.HTTPError):
+        _handle_http_exception(module, value, traceback, verbosity)
 
     # if we bubbled here the handlers were not able to process the exception
     original_hook(type, value, traceback)
