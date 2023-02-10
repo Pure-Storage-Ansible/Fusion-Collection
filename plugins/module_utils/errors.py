@@ -67,16 +67,14 @@ def _extract_rest_call_site(traceback):
     return None
 
 
-def _handle_api_exception(
-    module,
-    exception,
-    traceback,
-    verbose,
-):
+def format_fusion_api_exception(exception, traceback=None):
+    """Formats `fusion.rest.ApiException` into a simple short form, suitable
+    for Ansible error output. Returns a (message: str, body: dict) tuple."""
     message = None
     code = None
     resource_name = None
     request_id = None
+    body = None
     call_site = _extract_rest_call_site(traceback)
     try:
         body = json.loads(exception.body)
@@ -126,38 +124,38 @@ def _handle_api_exception(
     if parenthesed:
         output += ")"
 
-    if verbose:
-        output += " -- {0}".format(exception)
-
-    module.fail_json(msg=output)
+    return (output, body)
 
 
-def _handle_operation_exception(module, exception, verbose):
-    # Swagger unfortunately returns responses as dicts instead of typed objects
-    # so we have to be careful
+def format_failed_fusion_operation(op):
+    """Formats failed `fusion.Operation` into a simple short form, suitable
+    for Ansible error output. Returns a (message: str, body: dict) tuple."""
+    if op.status != "Failed":
+        raise ValueError("BUG: can only format Operation with .status == Failed")
     message = None
     code = None
-    operation = None
+    operation_name = None
     operation_id = None
 
     try:
-        op = exception.op
         operation_id = op.id
         error = op.error
         message = error.message
         code = error.pure_code
         if not code:
             code = error.http_code
-        operation = op.request_type
+        operation_name = op.request_type
     except Exception as e:
         pass
 
     output = ""
-    if operation:
+    if operation_name:
         # converts e.g. 'CreateVolume' to 'Create volume'
-        operation = re.sub("(.)([A-Z][a-z]+)", r"\1 \2", operation)
-        operation = re.sub("([a-z0-9])([A-Z])", r"\1 \2", operation).capitalize()
-        output += "{0}: ".format(operation)
+        operation_name = re.sub("(.)([A-Z][a-z]+)", r"\1 \2", operation_name)
+        operation_name = re.sub(
+            "([a-z0-9])([A-Z])", r"\1 \2", operation_name
+        ).capitalize()
+        output += "{0}: ".format(operation_name)
     output += "operation failed"
 
     if message:
@@ -179,10 +177,32 @@ def _handle_operation_exception(module, exception, verbose):
     if parenthesed:
         output += ")"
 
-    if verbose:
-        output += " -- {0}".format(op)
+    return output
 
-    module.fail_json(msg=output)
+
+def _handle_api_exception(
+    module,
+    exception,
+    traceback,
+    verbose,
+):
+    (error_message, body) = format_fusion_api_exception(exception, traceback)
+
+    if verbose:
+        module.fail_json(msg=error_message, call_details=body)
+    else:
+        module.fail_json(msg=error_message)
+
+
+def _handle_operation_exception(module, exception, verbose):
+    op = exception.op
+
+    error_message = format_failed_fusion_operation(op)
+
+    if verbose:
+        module.fail_json(msg=error_message, op_details=op.to_dict())
+    else:
+        module.fail_json(msg=error_message)
 
 
 def _except_hook_callback(module, original_hook, type, value, traceback):
@@ -196,6 +216,9 @@ def _except_hook_callback(module, original_hook, type, value, traceback):
         )
     elif type == OperationException:
         _handle_operation_exception(module, value, verbose)
+    # TODO handle urllib.Protocol here as it is fired by the API on HTTP errors
+    # https://urllib3.readthedocs.io/en/stable/reference/urllib3.exceptions.html#urllib3.exceptions.ProtocolError
+
     # if we bubbled here the handlers were not able to process the exception
     original_hook(type, value, traceback)
 
