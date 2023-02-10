@@ -1,0 +1,55 @@
+---
+prefix_disk: "3624a9370"
+
+tenant_space:
+  - name: db_tenant_space
+    display_name: oracle-db
+    tenant: oracle_dbas
+
+placement_groups:
+  - name: pg1
+    display_name: pg1
+    storage_service: flash_performance
+    tenant: oracle_dbas
+    tenant_space: db_tenant_space
+    region: region1
+    availability_zone: az1
+
+
+volumes:
+  - name: data_vol1
+    display_name: data_vol1
+    size: 500G
+    storage_class: db_high_performance
+    tenant: oracle_dbas
+    tenant_space: db_tenant_space
+    placement_group: pg1
+    host_access_policies: ["initiatorserver1"]
+    mount_path: /mnt/data_vol1
+  - name: data_vol2
+    display_name: data_vol2
+    size: 500G
+    storage_class: db_standard
+    tenant: oracle_dbas
+    tenant_space: db_tenant_space
+    placement_group: pg1
+    host_access_policies: ["initiatorserver2", "initiatorserver3"]
+    mount_path: /mnt/data_vol2
+  - name: log_vol
+    display_name: log_vol
+    size: 500G
+    storage_class: db_standard
+    tenant: oracle_dbas
+    tenant_space: db_tenant_space
+    placement_group: pg1
+    host_access_policies: ["initiatorserver1", "initiatorserver3"]
+    mount_path: /mnt/log_vol
+  - name: config_vol
+    display_name: config_vol
+    size: 500G
+    tenant: oracle_dbas
+    tenant_space: db_tenant_space
+    storage_class: db_standard
+    placement_group: pg1
+    host_access_policies: ["initiatorserver2"]
+    mount_path: /mnt/config_vol

@@ -1,0 +1,6 @@
+---
+protection_policy:
+  - name: "pp_name_2"
+    display_name: "pp_name_2"
+    local_rpo: "15"  # in minutes, Minimum value is 10 minutes.
+    local_retention: "24h"  # m(inutes), h(ours), d(ays), w(eeks), or y(ears).

@@ -1,0 +1,13 @@
+---
+workdir: "keys"
+key_size: 2048
+
+tenants:
+  - name: tenant_test_1
+    display_name: tenant_test_1
+
+  - name: tenant_test_2
+    display_name: tenant_test_2
+
+  - name: tenant_test_3
+    display_name: tenant_test_3
