@@ -141,6 +141,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import 
     parse_number_with_metric_suffix,
     print_number_with_metric_suffix,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -204,11 +207,8 @@ def get_protection_policy(module, fusion):
 def get_all_haps(fusion):
     """Return set of all existing host access policies or None"""
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-    try:
-        all_haps = hap_api_instance.list_host_access_policies()
-        return set([hap.name for hap in all_haps.items])
-    except purefusion.rest.ApiException:
-        return None
+    all_haps = hap_api_instance.list_host_access_policies()
+    return set([hap.name for hap in all_haps.items])
 
 
 def get_wanted_haps(module):
@@ -236,27 +236,20 @@ def create_volume(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            volume_api_instance = purefusion.VolumesApi(fusion)
-            volume = purefusion.VolumePost(
-                size=size,
-                storage_class=module.params["storage_class"],
-                placement_group=module.params["placement_group"],
-                name=module.params["name"],
-                display_name=display_name,
-            )
-            op = volume_api_instance.create_volume(
-                volume,
-                tenant_name=module.params["tenant"],
-                tenant_space_name=module.params["tenant_space"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Volume '{0}' creation failed: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        volume_api_instance = purefusion.VolumesApi(fusion)
+        volume = purefusion.VolumePost(
+            size=size,
+            storage_class=module.params["storage_class"],
+            placement_group=module.params["placement_group"],
+            name=module.params["name"],
+            display_name=display_name,
+        )
+        op = volume_api_instance.create_volume(
+            volume,
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+        )
+        await_operation(module, fusion, op.id)
 
     return True
 
@@ -265,11 +258,7 @@ def update_host_access_policies(module, fusion, current, patches):
     wanted = module.params
     # 'wanted[...] is not None' to differentiate between empty list and no list
     if wanted["host_access_policies"] is not None:
-        hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-        current_haps = (
-            current.host_access_policies if current.host_access_policies else []
-        )
-        current_haps = set([hap.name for hap in current_haps])
+        current_haps = extract_current_haps(current)
         wanted_haps = get_wanted_haps(module)
         if wanted_haps != current_haps:
             patch = purefusion.VolumePatch(
@@ -350,18 +339,13 @@ def update_protection_policy(module, fusion, current, patches):
 def apply_patches(module, fusion, patches):
     volume_api_instance = purefusion.VolumesApi(fusion)
     for patch in patches:
-        try:
-            op = volume_api_instance.update_volume(
-                patch,
-                volume_name=module.params["name"],
-                tenant_name=module.params["tenant"],
-                tenant_space_name=module.params["tenant_space"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Update volume '{0}' failed: {1}".format(module.params["name"], err)
-            )
+        op = volume_api_instance.update_volume(
+            patch,
+            volume_name=module.params["name"],
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+        )
+        await_operation(module, fusion, op.id)
 
 
 def update_volume(module, fusion):
@@ -423,18 +407,14 @@ def eradicate_volume(module, fusion):
             msg="BUG: inconsistent state, eradicate_volume() cannot be called with current.destroyed=False or any host_access_policies"
         )
 
-    try:
-        volume_api_instance = purefusion.VolumesApi(fusion)
-        op = volume_api_instance.delete_volume(
-            volume_name=module.params["name"],
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["tenant_space"],
-        )
-        await_operation(module, fusion, op.id)
-    except purefusion.rest.ApiException as err:
-        module.fail_json(
-            msg="Eradicate volume '{0}' failed: {1}".format(module.params["name"], err)
-        )
+    volume_api_instance = purefusion.VolumesApi(fusion)
+    op = volume_api_instance.delete_volume(
+        volume_name=module.params["name"],
+        tenant_name=module.params["tenant"],
+        tenant_space_name=module.params["tenant_space"],
+    )
+    await_operation(module, fusion, op.id)
+
     return True
 
 
@@ -547,6 +527,8 @@ def main():
         required_by=required_by,
         supports_check_mode=True,
     )
+
+    install_fusion_exception_hook(module)
 
     state = module.params["state"]
     fusion = get_fusion(module)

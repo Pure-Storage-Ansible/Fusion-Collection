@@ -3,3 +3,7 @@
 tests/output/*
 changelogs/.plugin-cache.yaml
 **/__pycache__/
+
+# files produced by Visual Studio Code
+.vscode/
+.history/
