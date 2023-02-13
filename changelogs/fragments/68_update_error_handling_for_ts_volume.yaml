@@ -1,0 +1,5 @@
+bugfixes:
+  - fusion_ts - error messages now mostly handled by errors_py
+  - fusion_volume - error messages now mostly handled by errors_py
+minor_changes:
+  - errors_py - added opt-in global exception handler which produces simpler and cleaner messages on REST errors
