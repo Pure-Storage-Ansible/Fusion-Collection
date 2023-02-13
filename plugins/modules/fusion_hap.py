@@ -126,6 +126,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -163,22 +166,15 @@ def create_hap(module, fusion):
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     changed = True
     if not module.check_mode:
-        try:
-            op = hap_api_instance.create_host_access_policy(
-                purefusion.HostAccessPoliciesPost(
-                    iqn=module.params["iqn"],
-                    personality=module.params["personality"],
-                    name=module.params["name"],
-                    display_name=module.params["display_name"],
-                )
+        op = hap_api_instance.create_host_access_policy(
+            purefusion.HostAccessPoliciesPost(
+                iqn=module.params["iqn"],
+                personality=module.params["personality"],
+                name=module.params["name"],
+                display_name=module.params["display_name"],
             )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Host Access Policy {0} creation failed: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        )
+        await_operation(module, fusion, op.id)
     module.exit_json(changed=changed)
 
 
@@ -187,17 +183,10 @@ def delete_hap(module, fusion):
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     changed = True
     if not module.check_mode:
-        try:
-            op = hap_api_instance.delete_host_access_policy(
-                host_access_policy_name=module.params["name"]
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Host Access Policy {0} deletion failed: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        op = hap_api_instance.delete_host_access_policy(
+            host_access_policy_name=module.params["name"]
+        )
+        await_operation(module, fusion, op.id)
     module.exit_json(changed=changed)
 
 
@@ -244,6 +233,7 @@ def main():
         required_together=required_together,
         required_if=required_if,
     )
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
 
