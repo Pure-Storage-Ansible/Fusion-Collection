@@ -116,6 +116,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -178,26 +181,19 @@ def create_pg(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            group = purefusion.PlacementGroupPost(
-                availability_zone=module.params["availability_zone"],
-                name=module.params["name"],
-                display_name=display_name,
-                region=module.params["region"],
-                storage_service=module.params["storage_service"],
-            )
-            op = pg_api_instance.create_placement_group(
-                group,
-                tenant_name=module.params["tenant"],
-                tenant_space_name=module.params["tenant_space"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Placement Group {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        group = purefusion.PlacementGroupPost(
+            availability_zone=module.params["availability_zone"],
+            name=module.params["name"],
+            display_name=display_name,
+            region=module.params["region"],
+            storage_service=module.params["storage_service"],
+        )
+        op = pg_api_instance.create_placement_group(
+            group,
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -241,20 +237,13 @@ def update_pg(module, fusion, pg):
 
     if not module.check_mode:
         for patch in patches:
-            try:
-                op = pg_api_instance.update_placement_group(
-                    patch,
-                    tenant_name=module.params["tenant"],
-                    tenant_space_name=module.params["tenant_space"],
-                    placement_group_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update network interface group '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
-                )
+            op = pg_api_instance.update_placement_group(
+                patch,
+                tenant_name=module.params["tenant"],
+                tenant_space_name=module.params["tenant_space"],
+                placement_group_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     changed = len(patches) != 0
 
@@ -266,17 +255,13 @@ def delete_pg(module, fusion):
     changed = True
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     if not module.check_mode:
-        try:
-            op = pg_api_instance.delete_placement_group(
-                placement_group_name=module.params["name"],
-                tenant_name=module.params["tenant"],
-                tenant_space_name=module.params["tenant_space"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
-            module.fail_json(
-                msg="Delete Placement Group {0} failed.".format(module.params["name"])
-            )
+        op = pg_api_instance.delete_placement_group(
+            placement_group_name=module.params["name"],
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+        )
+        await_operation(module, fusion, op.id)
+
     module.exit_json(changed=changed)
 
 
@@ -307,6 +292,8 @@ def main():
     module = AnsibleModule(
         argument_spec, required_if=required_if, supports_check_mode=True
     )
+    install_fusion_exception_hook(module)
+
     if module.params["placement_engine"]:
         module.warn("placement_engine parameter will be deprecated in version 2.0.0")
 
