@@ -104,8 +104,6 @@ try:
 except ImportError:
     HAS_FUSION = False
 
-import math
-import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
