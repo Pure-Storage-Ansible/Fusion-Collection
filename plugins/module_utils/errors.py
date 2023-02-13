@@ -49,9 +49,9 @@ def _get_verbosity(module) -> int:
 
 
 def _extract_rest_call_site(traceback):
-    # extracts first function in traceback that comes from 'fusion.api.*_api',
+    # extracts first function in traceback that comes from 'fusion.api.*_api*',
     # converts its name from something like 'get_volume' to 'Get volume' and returns
-    while traceback is not None:
+    while traceback:
         try:
             frame = traceback.tb_frame
             func_name = (
@@ -72,6 +72,26 @@ def _extract_rest_call_site(traceback):
             pass
         traceback = traceback.tb_next
     return None
+
+
+class DetailsPrinter:
+    def __init__(self, target):
+        self._target = target
+        self._parenthesed = False
+
+    def append(self, what):
+        if not self._parenthesed:
+            self._target += " ("
+            self._parenthesed = True
+        else:
+            self._target += ", "
+
+        self._target += what
+
+    def finish(self):
+        if self._parenthesed:
+            self._target += ")"
+        return self._target
 
 
 def format_fusion_api_exception(exception, traceback=None):
@@ -106,30 +126,14 @@ def format_fusion_api_exception(exception, traceback=None):
     if message:
         output += ", {0}".format(message.replace('"', "'"))
 
-    parenthesed = False
+    details = DetailsPrinter(output)
     if resource_name:
-        if not parenthesed:
-            parenthesed = True
-            output += " ("
-        else:
-            output += ", "
-        output += "resource: '{0}'".format(resource_name)
+        details.append("resource: '{0}'".format(resource_name))
     if code:
-        if not parenthesed:
-            parenthesed = True
-            output += " ("
-        else:
-            output += ", "
-        output += "code: '{0}'".format(code)
+        details.append("code: '{0}'".format(code))
     if request_id:
-        if not parenthesed:
-            output += " ("
-            parenthesed = True
-        else:
-            output += ", "
-        output += "request id: '{0}'".format(request_id)
-    if parenthesed:
-        output += ")"
+        details.append("request id: '{0}'".format(request_id))
+    output = details.finish()
 
     return (output, body)
 
@@ -168,21 +172,12 @@ def format_failed_fusion_operation(op):
     if message:
         output += ", {0}".format(message.replace('"', "'"))
 
-    parenthesed = False
+    details = DetailsPrinter(output)
     if code:
-        if not parenthesed:
-            output += " ("
-            parenthesed = True
-        output += "code: '{0}'".format(code)
+        details.append("code: '{0}'".format(code))
     if operation_id:
-        if not parenthesed:
-            output += " ("
-            parenthesed = True
-        else:
-            output += ", "
-        output += "operation id: '{0}'".format(operation_id)
-    if parenthesed:
-        output += ")"
+        details.append("operation id: '{0}'".format(operation_id))
+    output = details.finish()
 
     return output
 
