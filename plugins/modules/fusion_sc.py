@@ -113,7 +113,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
-    print_number_with_metric_suffix,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
