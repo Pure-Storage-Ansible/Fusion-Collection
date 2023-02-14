@@ -109,8 +109,12 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
 )
 
 
@@ -137,26 +141,19 @@ def create_array(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            array = purefusion.ArrayPost(
-                hardware_type=module.params["hardware_type"],
-                display_name=display_name,
-                host_name=module.params["host_name"],
-                name=module.params["name"],
-                appliance_id=module.params["appliance_id"],
-            )
-            res = array_api_instance.create_array(
-                array,
-                availability_zone_name=module.params["availability_zone"],
-                region_name=module.params["region"],
-            )
-            await_operation(module, fusion, res.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Array '{0}' creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        array = purefusion.ArrayPost(
+            hardware_type=module.params["hardware_type"],
+            display_name=display_name,
+            host_name=module.params["host_name"],
+            name=module.params["name"],
+            appliance_id=module.params["appliance_id"],
+        )
+        res = array_api_instance.create_array(
+            array,
+            availability_zone_name=module.params["availability_zone"],
+            region_name=module.params["region"],
+        )
+        await_operation(module, fusion, res.id)
     return True
 
 
@@ -203,20 +200,13 @@ def update_array(module, fusion):
     if not module.check_mode:
         array_api_instance = purefusion.ArraysApi(fusion)
         for patch in patches:
-            try:
-                op = array_api_instance.update_array(
-                    patch,
-                    availability_zone_name=module.params["availability_zone"],
-                    region_name=module.params["region"],
-                    array_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update array '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
-                )
+            op = array_api_instance.update_array(
+                patch,
+                availability_zone_name=module.params["availability_zone"],
+                region_name=module.params["region"],
+                array_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     changed = len(patches) != 0
     return changed
@@ -226,17 +216,12 @@ def delete_array(module, fusion):
     """Delete Array - not currently available"""
     array_api_instance = purefusion.ArraysApi(fusion)
     if not module.check_mode:
-        try:
-            res = array_api_instance.delete_array(
-                region_name=module.params["region"],
-                availability_zone_name=module.params["availability_zone"],
-                array_name=module.params["name"],
-            )
-            await_operation(module, fusion, res.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Array {0} creation failed.: {1}".format(module.params["name"], err)
-            )
+        res = array_api_instance.delete_array(
+            region_name=module.params["region"],
+            availability_zone_name=module.params["availability_zone"],
+            array_name=module.params["name"],
+        )
+        await_operation(module, fusion, res.id)
     return True
 
 
@@ -268,6 +253,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]
