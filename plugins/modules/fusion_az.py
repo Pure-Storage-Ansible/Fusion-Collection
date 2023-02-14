@@ -40,6 +40,7 @@ options:
     description:
     - Region within which the AZ is created.
     type: str
+    required: true
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -49,6 +50,7 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_az:
     name: foo
     display_name: "foo AZ"
+    region: region1
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 
@@ -56,6 +58,7 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_az:
     name: foo
     state: absent
+    region: region1
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -77,6 +80,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
 )
 
 
@@ -110,18 +116,11 @@ def delete_az(module, fusion):
 
     changed = True
     if not module.check_mode:
-        try:
-            op = az_api_instance.delete_availability_zone(
-                region_name=module.params["region"],
-                availability_zone_name=module.params["name"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Availability Zone {0} deletion failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        op = az_api_instance.delete_availability_zone(
+            region_name=module.params["region"],
+            availability_zone_name=module.params["name"],
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -137,21 +136,15 @@ def create_az(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            azone = purefusion.AvailabilityZonePost(
-                name=module.params["name"],
-                display_name=display_name,
-            )
-            op = az_api_instance.create_availability_zone(
-                azone, region_name=module.params["region"]
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Availability Zone {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+
+        azone = purefusion.AvailabilityZonePost(
+            name=module.params["name"],
+            display_name=display_name,
+        )
+        op = az_api_instance.create_availability_zone(
+            azone, region_name=module.params["region"]
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -163,12 +156,13 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            region=dict(type="str"),
+            region=dict(type="str", required=True),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]
