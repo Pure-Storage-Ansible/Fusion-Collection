@@ -202,7 +202,7 @@ def generate_default_dict(fusion):
                 ).items
             )
             arrays = arrays + len(array_details.items)
-    default_info["appiiances"] = arrays
+    default_info["appliances"] = arrays
     default_info["network_interfaces"] = nics
     default_info["network_interface_groups"] = nigs
 
