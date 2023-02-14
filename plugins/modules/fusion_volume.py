@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# (c) 2023, Simon Dodsley (simon@purestorage.com), Jan Kodera (jkodera@purestorage.com)
+# (c) 2023, Simon Dodsley (simon@purestorage.com), Jan Kodera (jkodera@purestorage.com),
+# Andrej Pajtas (apajtas@purestorage.com)
 # GNU General Public License v3.0+ (see COPYING.GPLv3 or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -73,6 +74,21 @@ options:
         To clear, assign empty list: host_access_policies: []'
     type: list
     elements: str
+  source_volume:
+    description:
+    - The source volume name. It must live within the same tenant space.
+        Cannot be used together with `source_snapshot` or `source_volume_snapshot`.
+    type: str
+  source_snapshot:
+    description:
+    - The source snapshot name. It must live within the same tenant space.
+        Cannot be used together with `source_volume`.
+    type: str
+  source_volume_snapshot:
+    description:
+    - The source volume snapshot name. It must live within the same tenant space.
+        Cannot be used together with `source_volume`.
+    type: str
   rename:
     description:
     - New name for volume.
@@ -86,12 +102,38 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_volume:
     name: foo
     storage_class: fred
+    placement_group: pg
     size: 1T
     tenant: test
     tenant_space: space_1
     state: present
     app_id: key_name
     key_file: "az-admin-private-key.pem"
+
+- name: Create new volume based on a volume from the same tenant space
+  purestorage.fusion.fusion_volume:
+    name: foo
+    storage_class: fred
+    placement_group: pg
+    tenant: test
+    tenant_space: space_1
+    state: present
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+    source_volume: "original_volume_name"
+
+- name: Create new volume based on a volume snapshot from the same tenant space
+  purestorage.fusion.fusion_volume:
+    name: foo
+    storage_class: fred
+    placement_group: pg
+    tenant: test
+    tenant_space: space_1
+    state: present
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+    source_snapshot: "snap"
+    source_volume_snapshot: "vol_snap"
 
 - name: Extend the size of an existing volume named foo
   purestorage.fusion.fusion_volume:
@@ -194,6 +236,33 @@ def get_protection_policy(module, fusion):
         return None
 
 
+def get_volume_by_name(module, fusion, volume_name):
+    """Return Volume or None"""
+    volume_api_instance = purefusion.VolumesApi(fusion)
+    try:
+        return volume_api_instance.get_volume(
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+            volume_name=volume_name,
+        )
+    except purefusion.rest.ApiException:
+        return None
+
+
+def get_volume_snapshot_by_name(module, fusion, snapshot_name, volume_snapshot_name):
+    """Return Volume Snapshot or None"""
+    volume_snapshot_api_instance = purefusion.VolumeSnapshotsApi(fusion)
+    try:
+        return volume_snapshot_api_instance.get_volume_snapshot(
+            tenant_name=module.params["tenant"],
+            tenant_space_name=module.params["tenant_space"],
+            snapshot_name=snapshot_name,
+            volume_snapshot_name=volume_snapshot_name,
+        )
+    except purefusion.rest.ApiException:
+        return None
+
+
 def get_all_haps(fusion):
     """Return set of all existing host access policies or None"""
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
@@ -219,20 +288,22 @@ def extract_current_haps(volume):
 def create_volume(module, fusion):
     """Create Volume"""
 
-    size = parse_number_with_metric_suffix(module, module.params["size"])
-
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
         volume_api_instance = purefusion.VolumesApi(fusion)
+        source_link = get_source_link_from_parameters(module.params)
         volume = purefusion.VolumePost(
-            size=size,
+            size=None  # when cloning a volume, size is not required
+            if source_link
+            else parse_number_with_metric_suffix(module, module.params["size"]),
             storage_class=module.params["storage_class"],
             placement_group=module.params["placement_group"],
             name=module.params["name"],
             display_name=display_name,
+            source_link=source_link,
         )
         op = volume_api_instance.create_volume(
             volume,
@@ -326,6 +397,17 @@ def update_protection_policy(module, fusion, current, patches):
         patches.append(patch)
 
 
+def update_source_link(module, fusion, current, patches):
+    source_link = get_source_link_from_parameters(module.params)
+    if source_link is not None and (
+        current.source is None or current.source.self_link != source_link
+    ):
+        patch = purefusion.VolumePatch(
+            source_link=purefusion.NullableString(source_link)
+        )
+        patches.append(patch)
+
+
 def apply_patches(module, fusion, patches):
     volume_api_instance = purefusion.VolumesApi(fusion)
     for patch in patches:
@@ -366,6 +448,7 @@ def update_volume(module, fusion):
         update_storage_class(module, fusion, current, patches)
         update_placement_group(module, fusion, current, patches)
         update_host_access_policies(module, fusion, current, patches)
+        update_source_link(module, fusion, current, patches)
     elif module.params["state"] == "absent" and not current.destroyed:
         update_size(module, fusion, current, patches)
         update_protection_policy(module, fusion, current, patches)
@@ -373,6 +456,7 @@ def update_volume(module, fusion):
         update_storage_class(module, fusion, current, patches)
         update_placement_group(module, fusion, current, patches)
         update_host_access_policies(module, fusion, current, patches)
+        update_source_link(module, fusion, current, patches)
         update_destroyed(module, fusion, current, patches)
 
     if not module.check_mode:
@@ -408,13 +492,39 @@ def eradicate_volume(module, fusion):
     return True
 
 
+def get_source_link_from_parameters(params):
+    tenant = params["tenant"]
+    tenant_space = params["tenant_space"]
+    volume = params["source_volume"]
+    snapshot = params["source_snapshot"]
+    volume_snapshot = params["source_volume_snapshot"]
+    if (
+        not tenant or not tenant_space
+    ):  # should not happen as those parameters are always required by the ansible module
+        return None
+    if volume:
+        return f"/tenants/{tenant}/tenant-spaces/{tenant_space}/volumes/{volume}"
+    if snapshot and volume_snapshot:
+        return f"/tenants/{tenant}/tenant-spaces/{tenant_space}/snapshots/{snapshot}/volume-snapshots/{volume_snapshot}"
+    return None
+
+
 def validate_arguments(module, fusion):
     """Validates most argument conditions and possible unacceptable argument combinations"""
     volume = get_volume(module, fusion)
     state = module.params["state"]
 
     if state == "present" and not volume:
-        module.fail_on_missing_params(["placement_group", "storage_class", "size"])
+        module.fail_on_missing_params(["placement_group", "storage_class"])
+
+        if (
+            module.params["size"] is None
+            and module.params["source_volume"] is None
+            and module.params["source_snapshot"] is None
+        ):
+            module.fail_json(
+                msg="Either `size` or `source_volume` or `source_snapshot` is required when creating a volume."
+            )
 
     if module.params["placement_group"] and not get_protection_group(module, fusion):
         module.fail_json(
@@ -465,7 +575,7 @@ def validate_arguments(module, fusion):
             msg="'eradicate: true' cannot be used together with 'state: present'"
         )
 
-    if state == "present" and not volume:
+    if state == "present" and not volume and module.params["size"] is not None:
         # would create a volume; check size is lower than storage class limit
         # (let resize checks be handled by the server since they are more complicated)
         size = parse_number_with_metric_suffix(module, module.params["size"])
@@ -477,6 +587,23 @@ def validate_arguments(module, fusion):
                     print_number_with_metric_suffix(size_limit),
                 )
             )
+
+    volume_name = module.params["source_volume"]
+    if volume_name and not get_volume_by_name(module, fusion, volume_name):
+        module.fail_json(msg=f"Volume `{volume_name}` does not exist")
+
+    snapshot_name = module.params["source_snapshot"]
+    volume_snapshot_name = module.params["source_volume_snapshot"]
+    if (
+        snapshot_name
+        and volume_snapshot_name
+        and not get_volume_snapshot_by_name(
+            module, fusion, snapshot_name, volume_snapshot_name
+        )
+    ):
+        module.fail_json(
+            msg=f"Snapshot Volume `{volume_snapshot_name}` from Snapshot '{snapshot_name}' does not exist"
+        )
 
 
 def main():
@@ -505,6 +632,9 @@ def main():
             eradicate=dict(type="bool", default=False),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             size=dict(type="str"),
+            source_volume=dict(type="str"),
+            source_snapshot=dict(type="str"),
+            source_volume_snapshot=dict(type="str"),
         )
     )
 
@@ -512,9 +642,22 @@ def main():
         "placement_group": "storage_class",
     }
 
+    mutually_exclusive = [
+        # a new volume cannot be based on a volume and a snapshot at the same time
+        # also, when cloning a volume, size of original volume is used
+        ("source_volume", "source_snapshot", "size"),
+    ]
+
+    required_together = [
+        # when creating a volume from snapshot, we need to know both snapshot name and snapshot volume name
+        ("source_snapshot", "source_volume_snapshot"),
+    ]
+
     module = AnsibleModule(
         argument_spec,
         required_by=required_by,
+        mutually_exclusive=mutually_exclusive,
+        required_together=required_together,
         supports_check_mode=True,
     )
 
