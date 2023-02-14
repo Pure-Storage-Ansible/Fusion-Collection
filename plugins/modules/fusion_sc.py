@@ -115,7 +115,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import 
     parse_number_with_metric_suffix,
     print_number_with_metric_suffix,
 )
-
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -175,24 +177,17 @@ def create_sc(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            s_class = purefusion.StorageClassPost(
-                name=module.params["name"],
-                size_limit=size_limit,
-                iops_limit=iops_limit,
-                bandwidth_limit=bw_limit,
-                display_name=display_name,
-            )
-            op = sc_api_instance.create_storage_class(
-                s_class, storage_service_name=module.params["storage_service"]
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Storage Class {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        s_class = purefusion.StorageClassPost(
+            name=module.params["name"],
+            size_limit=size_limit,
+            iops_limit=iops_limit,
+            bandwidth_limit=bw_limit,
+            display_name=display_name,
+        )
+        op = sc_api_instance.create_storage_class(
+            s_class, storage_service_name=module.params["storage_service"]
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -215,15 +210,12 @@ def update_sc(module, fusion):
             sclass = purefusion.StorageClassPatch(
                 display_name=purefusion.NullableString(module.params["display_name"])
             )
-            try:
-                op = sc_api_instance.update_storage_class(
-                    sclass,
-                    storage_service_name=module.params["storage_service"],
-                    storage_class_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(msg="Changing display_name failed: {0}".format(err))
+            op = sc_api_instance.update_storage_class(
+                sclass,
+                storage_service_name=module.params["storage_service"],
+                storage_class_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -233,18 +225,11 @@ def delete_sc(module, fusion):
     sc_api_instance = purefusion.StorageClassesApi(fusion)
     changed = True
     if not module.check_mode:
-        try:
-            op = sc_api_instance.delete_storage_class(
-                storage_class_name=module.params["name"],
-                storage_service_name=module.params["storage_service"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Storage Class {0} deletion failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        op = sc_api_instance.delete_storage_class(
+            storage_class_name=module.params["name"],
+            storage_service_name=module.params["storage_service"],
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -265,6 +250,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]

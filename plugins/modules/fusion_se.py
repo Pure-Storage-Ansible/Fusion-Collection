@@ -118,6 +118,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
     is_valid_network,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -175,45 +178,34 @@ def create_se(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            ifaces = []
-            for address in module.params["addresses"]:
-                if module.params["gateway"]:
-                    iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
-                        address=address,
-                        gateway=module.params["gateway"],
-                        network_interface_groups=module.params[
-                            "network_interface_groups"
-                        ],
-                    )
-                else:
-                    iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
-                        address=address,
-                        network_interface_groups=module.params[
-                            "network_interface_groups"
-                        ],
-                    )
-                ifaces.append(iface)
-            op = purefusion.StorageEndpointPost(
-                endpoint_type=module.params["endpoint_type"],
-                iscsi=purefusion.StorageEndpointIscsiPost(
-                    discovery_interfaces=ifaces,
-                ),
-                name=module.params["name"],
-                display_name=display_name,
-            )
-            op = se_api_instance.create_storage_endpoint(
-                op,
-                region_name=module.params["region"],
-                availability_zone_name=module.params["availability_zone"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Storage Endpoint {0} creation failed: {1}".format(
-                    module.params["name"], err
+        ifaces = []
+        for address in module.params["addresses"]:
+            if module.params["gateway"]:
+                iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
+                    address=address,
+                    gateway=module.params["gateway"],
+                    network_interface_groups=module.params["network_interface_groups"],
                 )
-            )
+            else:
+                iface = purefusion.StorageEndpointIscsiDiscoveryInterfacePost(
+                    address=address,
+                    network_interface_groups=module.params["network_interface_groups"],
+                )
+            ifaces.append(iface)
+        op = purefusion.StorageEndpointPost(
+            endpoint_type=module.params["endpoint_type"],
+            iscsi=purefusion.StorageEndpointIscsiPost(
+                discovery_interfaces=ifaces,
+            ),
+            name=module.params["name"],
+            display_name=display_name,
+        )
+        op = se_api_instance.create_storage_endpoint(
+            op,
+            region_name=module.params["region"],
+            availability_zone_name=module.params["availability_zone"],
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -223,19 +215,12 @@ def delete_se(module, fusion):
     changed = True
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
     if not module.check_mode:
-        try:
-            op = se_api_instance.delete_storage_endpoint(
-                region_name=module.params["region"],
-                availability_zone_name=module.params["availability_zone"],
-                storage_endpoint_name=module.params["name"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Delete Storage Endpoint {0} failed: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        op = se_api_instance.delete_storage_endpoint(
+            region_name=module.params["region"],
+            availability_zone_name=module.params["availability_zone"],
+            storage_endpoint_name=module.params["name"],
+        )
+        await_operation(module, fusion, op.id)
     module.exit_json(changed=changed)
 
 
@@ -255,20 +240,13 @@ def update_se(module, fusion, se):
 
     if not module.check_mode:
         for patch in patches:
-            try:
-                op = se_api_instance.update_storage_endpoint(
-                    patch,
-                    region_name=module.params["region"],
-                    availability_zone_name=module.params["availability_zone"],
-                    storage_endpoint_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update storage endpoint '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
-                )
+            op = se_api_instance.update_storage_endpoint(
+                patch,
+                region_name=module.params["region"],
+                availability_zone_name=module.params["availability_zone"],
+                storage_endpoint_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     changed = len(patches) != 0
 
@@ -293,6 +271,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     state = module.params["state"]
     fusion = get_fusion(module)
