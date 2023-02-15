@@ -27,12 +27,17 @@ except ImportError:
 class OperationException(Exception):
     """Raised if an asynchronous Operation fails."""
 
-    def __init__(self, op):
+    def __init__(self, op, http_error: None):
         self._op = op
+        self._http_error = http_error
 
     @property
     def op(self):
         return self._op
+
+    @property
+    def http_error(self):
+        return self._http_error
 
 
 def _get_verbosity(module) -> int:
@@ -138,23 +143,29 @@ def format_fusion_api_exception(exception, traceback=None):
     return (output, body)
 
 
-def format_failed_fusion_operation(op):
+def format_failed_fusion_operation_exception(exception):
     """Formats failed `fusion.Operation` into a simple short form, suitable
     for Ansible error output. Returns a (message: str, body: dict) tuple."""
-    if op.status != "Failed":
-        raise ValueError("BUG: can only format Operation with .status == Failed")
+    op = exception.op
+    http_error = exception.http_error
+    if op.status != "Failed" and not http_error:
+        raise ValueError(
+            "BUG: can only format Operation exception with .status == Failed or http_error != None"
+        )
+
     message = None
     code = None
     operation_name = None
     operation_id = None
 
     try:
-        operation_id = op.id
-        error = op.error
-        message = error.message
-        code = error.pure_code
-        if not code:
-            code = error.http_code
+        if op.status == "Failed":
+            operation_id = op.id
+            error = op.error
+            message = error.message
+            code = error.pure_code
+            if not code:
+                code = error.http_code
         operation_name = op.request_type
     except Exception as e:
         pass
@@ -177,6 +188,9 @@ def format_failed_fusion_operation(op):
         details.append("code: '{0}'".format(code))
     if operation_id:
         details.append("operation id: '{0}'".format(operation_id))
+    if http_error:
+        details.append("HTTP error: '{0}'".format(str(http_error).replace('"', "'")))
+
     output = details.finish()
 
     return output
@@ -233,7 +247,7 @@ def _handle_api_exception(
 def _handle_operation_exception(module, exception, traceback, verbosity):
     op = exception.op
 
-    error_message = format_failed_fusion_operation(op)
+    error_message = format_failed_fusion_operation_exception(exception)
 
     if verbosity > 1:
         module.fail_json(

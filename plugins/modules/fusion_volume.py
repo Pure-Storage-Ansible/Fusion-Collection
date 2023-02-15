@@ -249,7 +249,7 @@ def create_volume(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     return True
 
@@ -345,7 +345,7 @@ def apply_patches(module, fusion, patches):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
 
 def update_volume(module, fusion):
@@ -413,7 +413,7 @@ def eradicate_volume(module, fusion):
         tenant_name=module.params["tenant"],
         tenant_space_name=module.params["tenant_space"],
     )
-    await_operation(module, fusion, op.id)
+    await_operation(module, fusion, op)
 
     return True
 

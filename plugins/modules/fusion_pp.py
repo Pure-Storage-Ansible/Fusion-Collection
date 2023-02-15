@@ -144,7 +144,7 @@ def create_pp(module, fusion):
                 ],
             )
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -157,7 +157,7 @@ def delete_pp(module, fusion):
         op = pp_api_instance.delete_protection_policy(
             protection_policy_name=module.params["name"],
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 

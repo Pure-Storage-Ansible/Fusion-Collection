@@ -15,24 +15,28 @@ try:
 except ImportError:
     pass
 
+from urllib3.exceptions import HTTPError
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     OperationException,
 )
 
 
-def await_operation(module, fusion, op_id, fail_playbook_if_operation_fails=True):
+def await_operation(module, fusion, operation, fail_playbook_if_operation_fails=True):
     """
     Waits for given operation to finish.
     Throws an exception by default if the operation fails.
     """
     op_api = purefusion.OperationsApi(fusion)
-
+    operation_get = None
     while True:
-        op = op_api.get_operation(op_id)
-        if op.status == "Succeeded":
-            return op
-        if op.status == "Failed":
-            if fail_playbook_if_operation_fails:
-                raise OperationException(op)
-            return op
-        time.sleep(int(math.ceil(op.retry_in / 1000)))
+        try:
+            operation_get = op_api.get_operation(operation.id)
+            if operation_get.status == "Succeeded":
+                return operation
+            if operation_get.status == "Failed":
+                if fail_playbook_if_operation_fails:
+                    raise OperationException(operation_get)
+                return operation_get
+        except HTTPError as err:
+            raise OperationException(operation, http_error=err)
+        time.sleep(int(math.ceil(operation_get.retry_in / 1000)))

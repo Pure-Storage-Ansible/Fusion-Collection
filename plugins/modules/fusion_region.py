@@ -113,7 +113,7 @@ def create_region(module, fusion):
             display_name=display_name,
         )
         op = reg_api_instance.create_region(region)
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -126,7 +126,7 @@ def delete_region(module, fusion):
     changed = True
     if not module.check_mode:
         op = reg_api_instance.delete_region(region_name=module.params["name"])
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -149,7 +149,7 @@ def update_region(module, fusion, region):
                 reg,
                 region_name=module.params["name"],
             )
-            await_operation(module, fusion, op.id)
+            await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
