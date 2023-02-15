@@ -95,6 +95,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 
 
 def human_to_principal(fusion, user_id):
@@ -186,17 +189,10 @@ def create_ra(module, fusion):
         scope = human_to_scope(module.params)
         principal = human_to_principal(fusion, module.params["user"])
         assignment = purefusion.RoleAssignmentPost(scope=scope, principal=principal)
-        try:
-            op = ra_api_instance.create_role_assignment(
-                assignment, role_name=module.params["name"]
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
-            module.fail_json(
-                msg="{0} level Role Assignment creation for user {1} failed".format(
-                    module.params["scope"], module.params["user"]
-                )
-            )
+        op = ra_api_instance.create_role_assignment(
+            assignment, role_name=module.params["name"]
+        )
+        await_operation(module, fusion, op.id)
     module.exit_json(changed=changed)
 
 
@@ -206,17 +202,10 @@ def delete_ra(module, fusion):
     ra_api_instance = purefusion.RoleAssignmentsApi(fusion)
     if not module.check_mode:
         ra_name = get_ra(module, fusion).name
-        try:
-            op = ra_api_instance.delete_role_assignment(
-                role_name=module.params["name"], role_assignment_name=ra_name
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
-            module.fail_json(
-                msg="{0} level Role Assignment delete for user {1} failed".format(
-                    module.params["scope"], module.params["user"]
-                )
-            )
+        op = ra_api_instance.delete_role_assignment(
+            role_name=module.params["name"], role_assignment_name=ra_name
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -247,6 +236,7 @@ def main():
     module = AnsibleModule(
         argument_spec, required_if=required_if, supports_check_mode=True
     )
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]
