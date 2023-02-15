@@ -191,7 +191,9 @@ def main():
     state = module.params["state"]
     fusion = get_fusion(module)
     if not get_tenant(module, fusion):
-        module.fail_json(msg="Tenant {0} does not exist")
+        module.fail_json(
+            msg="Tenant {0} does not exist".format(module.params["tenant"])
+        )
     tspace = get_ts(module, fusion)
     if state == "present" and not tspace:
         create_ts(module, fusion)

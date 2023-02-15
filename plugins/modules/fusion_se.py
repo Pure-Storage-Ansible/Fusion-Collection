@@ -276,7 +276,11 @@ def main():
     state = module.params["state"]
     fusion = get_fusion(module)
     if not get_az(module, fusion):
-        module.fail_json(msg="Availability Zone {0} does not exist")
+        module.fail_json(
+            msg="Availability Zone {0} does not exist".format(
+                module.params["availability_zone"]
+            )
+        )
     if module.params["network_interface_groups"] and not get_nifg(module, fusion):
         module.fail_json(
             msg="Not all of the network interface groups exist in the specified AZ"
