@@ -1,0 +1,4 @@
+bugfixes:
+  - fusion_se - add missing 'availability_zone' format param in error message
+  - fusion_nig - add missing 'availability_zone' format param in error message
+  - fusion_ts - add missing 'tenant' format param in error message
