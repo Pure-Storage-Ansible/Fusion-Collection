@@ -15,7 +15,12 @@ try:
 except ImportError:
     pass
 
-from urllib3.exceptions import HTTPError
+
+try:
+    from urllib3.exceptions import HTTPError
+except ImportError:
+    pass
+
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     OperationException,
 )
