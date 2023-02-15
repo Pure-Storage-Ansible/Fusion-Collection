@@ -89,7 +89,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
-
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -117,20 +119,13 @@ def create_ss(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            s_service = purefusion.StorageServicePost(
-                name=module.params["name"],
-                display_name=display_name,
-                hardware_types=module.params["hardware_types"],
-            )
-            op = ss_api_instance.create_storage_service(s_service)
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Storage Service {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        s_service = purefusion.StorageServicePost(
+            name=module.params["name"],
+            display_name=display_name,
+            hardware_types=module.params["hardware_types"],
+        )
+        op = ss_api_instance.create_storage_service(s_service)
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -142,17 +137,10 @@ def delete_ss(module, fusion):
 
     changed = True
     if not module.check_mode:
-        try:
-            op = ss_api_instance.delete_storage_service(
-                storage_service_name=module.params["name"]
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Storage Service {0} deletion failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        op = ss_api_instance.delete_storage_service(
+            storage_service_name=module.params["name"]
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -173,18 +161,11 @@ def update_ss(module, fusion, ss):
 
     if not module.check_mode:
         for patch in patches:
-            try:
-                op = ss_api_instance.update_storage_service(
-                    patch,
-                    storage_service_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update storage service '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
-                )
+            op = ss_api_instance.update_storage_service(
+                patch,
+                storage_service_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     changed = len(patches) != 0
 
@@ -214,6 +195,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]

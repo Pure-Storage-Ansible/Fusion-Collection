@@ -64,6 +64,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     get_fusion,
     fusion_argument_spec,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 
 
 def get_client(module, fusion):
@@ -88,14 +91,7 @@ def delete_client(module, fusion):
 
     changed = True
     if not module.check_mode:
-        try:
-            id_api_instance.delete_api_client(api_client_id=get_client(module, fusion))
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="API Client {0} deletion failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        id_api_instance.delete_api_client(api_client_id=get_client(module, fusion))
     module.exit_json(changed=changed)
 
 
@@ -106,18 +102,11 @@ def create_client(module, fusion):
 
     changed = True
     if not module.check_mode:
-        try:
-            client = purefusion.APIClientPost(
-                public_key=module.params["public_key"],
-                display_name=module.params["name"],
-            )
-            id_api_instance.create_api_client(client)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="API Client {0} creation failed.: {1}".format(
-                    module.params["name"], err
-                )
-            )
+        client = purefusion.APIClientPost(
+            public_key=module.params["public_key"],
+            display_name=module.params["name"],
+        )
+        id_api_instance.create_api_client(client)
 
     module.exit_json(changed=changed)
 
@@ -134,6 +123,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     fusion = get_fusion(module)
     state = module.params["state"]

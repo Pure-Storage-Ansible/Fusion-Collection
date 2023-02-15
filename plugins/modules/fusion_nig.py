@@ -117,6 +117,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.networking impo
     is_valid_network,
     is_address_in_network,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
+    install_fusion_exception_hook,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -163,37 +166,30 @@ def create_nig(module, fusion):
             display_name = module.params["name"]
         else:
             display_name = module.params["display_name"]
-        try:
-            if module.params["group_type"] == "eth":
-                if module.params["gateway"]:
-                    eth = purefusion.NetworkInterfaceGroupEthPost(
-                        prefix=module.params["prefix"],
-                        gateway=module.params["gateway"],
-                        mtu=module.params["mtu"],
-                    )
-                else:
-                    eth = purefusion.NetworkInterfaceGroupEthPost(
-                        prefix=module.params["prefix"],
-                        mtu=module.params["mtu"],
-                    )
-                nig = purefusion.NetworkInterfaceGroupPost(
-                    group_type="eth",
-                    eth=eth,
-                    name=module.params["name"],
-                    display_name=display_name,
+        if module.params["group_type"] == "eth":
+            if module.params["gateway"]:
+                eth = purefusion.NetworkInterfaceGroupEthPost(
+                    prefix=module.params["prefix"],
+                    gateway=module.params["gateway"],
+                    mtu=module.params["mtu"],
                 )
-            op = nig_api_instance.create_network_interface_group(
-                nig,
-                availability_zone_name=module.params["availability_zone"],
-                region_name=module.params["region"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException as err:
-            module.fail_json(
-                msg="Network Interface Group {0} creation failed.: {1}".format(
-                    module.params["name"], err
+            else:
+                eth = purefusion.NetworkInterfaceGroupEthPost(
+                    prefix=module.params["prefix"],
+                    mtu=module.params["mtu"],
                 )
+            nig = purefusion.NetworkInterfaceGroupPost(
+                group_type="eth",
+                eth=eth,
+                name=module.params["name"],
+                display_name=display_name,
             )
+        op = nig_api_instance.create_network_interface_group(
+            nig,
+            availability_zone_name=module.params["availability_zone"],
+            region_name=module.params["region"],
+        )
+        await_operation(module, fusion, op.id)
 
     module.exit_json(changed=changed)
 
@@ -203,19 +199,12 @@ def delete_nig(module, fusion):
     changed = True
     nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
     if not module.check_mode:
-        try:
-            op = nig_api_instance.delete_network_interface_group(
-                availability_zone_name=module.params["availability_zone"],
-                region_name=module.params["region"],
-                network_interface_group_name=module.params["name"],
-            )
-            await_operation(module, fusion, op.id)
-        except purefusion.rest.ApiException:
-            module.fail_json(
-                msg="Delete Network Interface Group {0} failed.".format(
-                    module.params["name"]
-                )
-            )
+        op = nig_api_instance.delete_network_interface_group(
+            availability_zone_name=module.params["availability_zone"],
+            region_name=module.params["region"],
+            network_interface_group_name=module.params["name"],
+        )
+        await_operation(module, fusion, op.id)
     module.exit_json(changed=changed)
 
 
@@ -235,20 +224,13 @@ def update_nig(module, fusion, nig):
 
     if not module.check_mode:
         for patch in patches:
-            try:
-                op = nifg_api_instance.update_network_interface_group(
-                    patch,
-                    availability_zone_name=module.params["availability_zone"],
-                    region_name=module.params["region"],
-                    network_interface_group_name=module.params["name"],
-                )
-                await_operation(module, fusion, op.id)
-            except purefusion.rest.ApiException as err:
-                module.fail_json(
-                    msg="Update network interface group '{0}' failed: {1}".format(
-                        module.params["name"], err
-                    )
-                )
+            op = nifg_api_instance.update_network_interface_group(
+                patch,
+                availability_zone_name=module.params["availability_zone"],
+                region_name=module.params["region"],
+                network_interface_group_name=module.params["name"],
+            )
+            await_operation(module, fusion, op.id)
 
     changed = len(patches) != 0
 
@@ -273,6 +255,7 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
+    install_fusion_exception_hook(module)
 
     state = module.params["state"]
     fusion = get_fusion(module)
