@@ -205,7 +205,7 @@ def create_se(module, fusion):
             region_name=module.params["region"],
             availability_zone_name=module.params["availability_zone"],
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -220,7 +220,7 @@ def delete_se(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             storage_endpoint_name=module.params["name"],
         )
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -246,7 +246,7 @@ def update_se(module, fusion, se):
                 availability_zone_name=module.params["availability_zone"],
                 storage_endpoint_name=module.params["name"],
             )
-            await_operation(module, fusion, op.id)
+            await_operation(module, fusion, op)
 
     changed = len(patches) != 0
 

@@ -102,7 +102,7 @@ def create_tenant(module, fusion):
             display_name=display_name,
         )
         op = api_instance.create_tenant(tenant)
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -128,7 +128,7 @@ def update_tenant(module, fusion):
                 new_tenant,
                 tenant_name=module.params["name"],
             )
-            await_operation(module, fusion, op.id)
+            await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -139,7 +139,7 @@ def delete_tenant(module, fusion):
     api_instance = purefusion.TenantsApi(fusion)
     if not module.check_mode:
         op = api_instance.delete_tenant(tenant_name=module.params["name"])
-        await_operation(module, fusion, op.id)
+        await_operation(module, fusion, op)
 
     module.exit_json(changed=changed)
 
