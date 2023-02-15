@@ -273,7 +273,11 @@ def main():
         )
 
     if not get_az(module, fusion):
-        module.fail_json(msg="Availability Zone {0} does not exist")
+        module.fail_json(
+            msg="Availability Zone {0} does not exist".format(
+                module.params["availability_zone"]
+            )
+        )
 
     nig = get_nig(module, fusion)
 
