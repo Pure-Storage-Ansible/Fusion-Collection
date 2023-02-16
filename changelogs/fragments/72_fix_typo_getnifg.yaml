@@ -1,0 +1,2 @@
+bugfixes:
+  - fusion_se - fix call in get_nifg where provider_subnet was used instead of network_interface_group_name

@@ -134,7 +134,7 @@ def get_nifg(module, fusion):
             nifg_api_instance.get_network_interface_group(
                 region_name=module.params["region"],
                 availability_zone_name=module.params["availability_zone"],
-                provider_subnet=module.params["network_interface_groups"][group],
+                network_interface_group_name=module.params["network_interface_groups"][group],
             )
         except purefusion.rest.ApiException:
             return False
