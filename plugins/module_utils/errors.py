@@ -27,7 +27,7 @@ except ImportError:
 class OperationException(Exception):
     """Raised if an asynchronous Operation fails."""
 
-    def __init__(self, op, http_error: None):
+    def __init__(self, op, http_error=None):
         self._op = op
         self._http_error = http_error
 
