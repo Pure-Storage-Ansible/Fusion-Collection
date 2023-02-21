@@ -612,52 +612,35 @@ def generate_storserv_dict(fusion):
     return ss_dict
 
 
-def generate_se_dict(fusion):
+def generate_se_dict(module, fusion):
     se_dict = {}
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
     regions_api_instance = purefusion.RegionsApi(fusion)
     regions = regions_api_instance.list_regions()
-    for region in range(0, len(regions.items)):
-        azs = az_api_instance.list_availability_zones(
-            region_name=regions.items[region].name
-        )
-        for az in range(0, len(azs.items)):
+    for region in regions.items:
+        azs = az_api_instance.list_availability_zones(region_name=region.name)
+        for az in azs.items:
             endpoints = se_api_instance.list_storage_endpoints(
-                region_name=regions.items[region].name,
-                availability_zone_name=azs.items[az].name,
+                region_name=region.name,
+                availability_zone_name=az.name,
             )
-            for endpoint in range(0, len(endpoints.items)):
-                name = (
-                    regions.items[region].name
-                    + "/"
-                    + azs.items[az].name
-                    + "/"
-                    + endpoints.items[endpoint].name
-                )
+            for endpoint in endpoints.items:
+                name = region.name + "/" + az.name + "/" + endpoint.name
                 se_dict[name] = {
-                    "display_name": endpoints.items[endpoint].display_name,
-                    "endpoint_type": endpoints.items[endpoint].endpoint_type,
+                    "display_name": endpoint.display_name,
+                    "endpoint_type": endpoint.endpoint_type,
                     "iscsi_interfaces": [],
                 }
-                for iface in range(
-                    0, len(endpoints.items[endpoint].iscsi.discovery_interfaces)
-                ):
+                for iface in endpoint.iscsi.discovery_interfaces:
                     se_dict[name]["iscsi_interfaces"].append(
                         {
-                            "address": endpoints.items[endpoint]
-                            .iscsi.discovery_interfaces[iface]
-                            .address,
-                            "gateway": endpoints.items[endpoint]
-                            .iscsi.discovery_interfaces[iface]
-                            .gateway,
-                            "mtu": endpoints.items[endpoint]
-                            .iscsi.discovery_interfaces[iface]
-                            .mtu,
-                            "network_interface_group": endpoints.items[endpoint]
-                            .iscsi.discovery_interfaces[iface]
-                            .network_interface_groups[0]
-                            .name,
+                            "address": iface.address,
+                            "gateway": iface.gateway,
+                            "mtu": iface.mtu,
+                            "network_interface_groups": [
+                                nig.name for nig in iface.network_interface_groups
+                            ],
                         }
                     )
     return se_dict
