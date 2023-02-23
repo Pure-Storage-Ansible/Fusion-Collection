@@ -25,6 +25,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 - fusion_hap: Manage host access policies in Pure Storage Fusion
 - fusion_hw: Create hardware types in Pure Storage Fusion
 - fusion_info: Collect information from Pure Fusion
+- fusion_ni: Manage Network Interfaces in Pure Storage Fusion
 - fusion_nig: Manage Network Interface Groups in Pure Storage Fusion
 - fusion_pg: Manage placement groups in Pure Storage Fusion
 - fusion_pp: Manage protection policies in Pure Storage Fusion
