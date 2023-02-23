@@ -117,7 +117,7 @@ def create_pp(module, fusion):
     """Create Protection Policy"""
 
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
-    local_retention = parse_minutes(module.params["local_retention"])
+    local_retention = parse_minutes(module, module.params["local_retention"])
     if local_retention < 1:
         module.fail_json(msg="Local Retention must be a minimum of 1 minutes")
     if module.params["local_rpo"] < 10:
