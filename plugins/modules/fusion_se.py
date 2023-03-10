@@ -412,7 +412,11 @@ def main():
         )
 
     deprecated_parameters = {"addresses", "gateway", "network_interface_groups"}
-    used_deprecated_parameters = list(deprecated_parameters & module.params.keys())
+    used_deprecated_parameters = [
+        key
+        for key in list(deprecated_parameters & module.params.keys())
+        if module.params[key] is not None
+    ]
 
     if len(used_deprecated_parameters) > 0:
         # user uses deprecated module interface
