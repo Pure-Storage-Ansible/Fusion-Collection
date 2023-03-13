@@ -192,7 +192,7 @@ def create_ra(module, fusion):
         op = ra_api_instance.create_role_assignment(
             assignment, role_name=module.params["name"]
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -205,7 +205,7 @@ def delete_ra(module, fusion):
         op = ra_api_instance.delete_role_assignment(
             role_name=module.params["name"], role_assignment_name=ra_name
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

@@ -40,7 +40,7 @@ class OperationException(Exception):
         return self._http_error
 
 
-def _get_verbosity(module) -> int:
+def _get_verbosity(module):
     # verbosity is a private member and Ansible does not really allow
     # providing extra information only if the user wants it due to ideological
     # reasons, so extract it as carefully as possible and assume non-verbose

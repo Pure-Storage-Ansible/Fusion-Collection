@@ -186,7 +186,7 @@ def create_sc(module, fusion):
         op = sc_api_instance.create_storage_class(
             s_class, storage_service_name=module.params["storage_service"]
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -214,7 +214,7 @@ def update_sc(module, fusion):
                 storage_service_name=module.params["storage_service"],
                 storage_class_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -228,7 +228,7 @@ def delete_sc(module, fusion):
             storage_class_name=module.params["name"],
             storage_service_name=module.params["storage_service"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

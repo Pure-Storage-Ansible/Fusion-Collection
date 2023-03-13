@@ -189,7 +189,7 @@ def create_nig(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -204,7 +204,7 @@ def delete_nig(module, fusion):
             region_name=module.params["region"],
             network_interface_group_name=module.params["name"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -230,7 +230,7 @@ def update_nig(module, fusion, nig):
                 region_name=module.params["region"],
                 network_interface_group_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
