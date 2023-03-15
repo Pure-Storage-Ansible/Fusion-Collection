@@ -26,7 +26,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 )
 
 
-def await_operation(module, fusion, operation, fail_playbook_if_operation_fails=True):
+def await_operation(fusion, operation, fail_playbook_if_operation_fails=True):
     """
     Waits for given operation to finish.
     Throws an exception by default if the operation fails.
@@ -37,7 +37,7 @@ def await_operation(module, fusion, operation, fail_playbook_if_operation_fails=
         try:
             operation_get = op_api.get_operation(operation.id)
             if operation_get.status == "Succeeded":
-                return operation
+                return operation_get
             if operation_get.status == "Failed":
                 if fail_playbook_if_operation_fails:
                     raise OperationException(operation_get)

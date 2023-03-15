@@ -153,7 +153,7 @@ def create_array(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
         )
-        await_operation(module, fusion, res)
+        await_operation(fusion, res)
     return True
 
 
@@ -206,7 +206,7 @@ def update_array(module, fusion):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
     return changed
@@ -221,7 +221,7 @@ def delete_array(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             array_name=module.params["name"],
         )
-        await_operation(module, fusion, res)
+        await_operation(fusion, res)
     return True
 
 
