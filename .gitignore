@@ -7,3 +7,6 @@ changelogs/.plugin-cache.yaml
 # files produced by Visual Studio Code
 .vscode/
 .history/
+
+# files produces by JetBrains IDEs
+.idea
