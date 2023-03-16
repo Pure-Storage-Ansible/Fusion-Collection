@@ -1,2 +1,0 @@
-deprecated_features:
-  - fusion_se - parameters "addresses", "gateway" and "network_interface_groups" are deprecated in favor of "iscsi" and will be removed in version 2.0.0

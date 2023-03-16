@@ -5,6 +5,57 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.4.0
+======
+
+Major Changes
+-------------
+
+- Patching of resource properties was brought to parity with underlying Python SDK, meaning the collection can create/update/delete all resource properties the SDK can
+- fusion_volume - fixed and reorganized, arguments changed
+
+Minor Changes
+-------------
+
+- errors_py - added opt-in global exception handler which produces simpler and cleaner messages on REST errors
+- removed dependency on Python `netaddr` package
+
+Deprecated Features
+-------------------
+
+- fusion_hw - hardware module is being removed as changing hardware type has never been supported by Pure Storage Fusion
+- fusion_info - nigs subset is deprecated in favor of network_interface_groups and will be removed in the version 1.7.0 (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/46).
+- fusion_info - placements subset is deprecated in favor of placement_groups and will be removed in the version 1.7.0 (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/62).
+- fusion_pg - placement_engine option is deprecated because Fusion API does not longer support this parameter It will be removed in the version 2.0.0 (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/53).
+- fusion_se - parameters "addresses", "gateway" and "network_interface_groups" are deprecated in favor of "iscsi" and will be removed in version 2.0.0
+- fusion_tn - tenant networks are being replaced by storage endpoints ```fusion_se``` and Network Interface Groups ```fusion_nig```
+
+Bugfixes
+--------
+
+- fusion_api_client - error messages now mostly handled by errors_py
+- fusion_hap - could not delete host access policy without iqn option. Now it needs only name option for deletion (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/55)
+- fusion_hap - error messages now mostly handled by errors_py
+- fusion_hap - uppercase names were not supported. Now uppercase names are allowed (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/55)
+- fusion_info - fixes typo in output 'appiiances' -> 'appliances'
+- fusion_info - network_interface_groups subset returned nothing. Now it collects the same information as nigs subset (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/46).
+- fusion_info - placements subset returned nothing. Now it collects the same information as placement_groups subset (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/62).
+- fusion_nig - add missing 'availability_zone' format param in error message
+- fusion_nig - error messages now mostly handled by errors_py
+- fusion_pg - create_pg always broke runtime. Now it executes and creates placement group successfully (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/53).
+- fusion_pg - error messages now mostly handled by errors_py
+- fusion_pp - error messages now mostly handled by errors_py
+- fusion_pp - fix call to parse_minutes where we were missing a required argument
+- fusion_sc - error messages now mostly handled by errors_py
+- fusion_se - add missing 'availability_zone' format param in error message
+- fusion_se - error messages now mostly handled by errors_py
+- fusion_se - fix call in get_nifg where provider_subnet was used instead of network_interface_group_name
+- fusion_ss - error messages now mostly handled by errors_py
+- fusion_tenant - error messages now mostly handled by errors_py
+- fusion_ts - add missing 'tenant' format param in error message
+- fusion_ts - error messages now mostly handled by errors_py
+- fusion_volume - error messages now mostly handled by errors_py
+
 v1.3.0
 ======
 
