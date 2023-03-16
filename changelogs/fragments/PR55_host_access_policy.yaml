@@ -1,5 +1,0 @@
-bugfixes:
-  - fusion_hap - could not delete host access policy without iqn option. Now it needs only name option for deletion
-    (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/55)
-  - fusion_hap - uppercase names were not supported. Now uppercase names are allowed
-    (https://github.com/Pure-Storage-Ansible/Fusion-Collection/pull/55)

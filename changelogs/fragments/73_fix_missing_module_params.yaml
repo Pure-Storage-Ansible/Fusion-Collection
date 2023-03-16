@@ -1,2 +1,0 @@
-bugfixes:
-  - fusion_pp - fix call to parse_minutes where we were missing a required argument

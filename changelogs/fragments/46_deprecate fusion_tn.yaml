@@ -1,2 +1,0 @@
-deprecated_features:
-  - fusion_tn - tenant networks are being replaced by storage endpoints ```fusion_se``` and Network Interface Groups ```fusion_nig```
