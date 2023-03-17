@@ -5,6 +5,9 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.4.1
+======
+
 v1.4.0
 ======
 

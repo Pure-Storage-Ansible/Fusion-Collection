@@ -174,3 +174,5 @@ releases:
       - PR55_host_access_policy.yaml
       - PR62_fix_placements.yaml
     release_date: '2023-03-16'
+  1.4.1:
+    release_date: '2023-03-17'
