@@ -302,7 +302,7 @@ def create_se(module, fusion):
             module.params["region"],
             module.params["availability_zone"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=True)
 
