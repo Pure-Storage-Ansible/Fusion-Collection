@@ -205,7 +205,7 @@ def update_ni(module, fusion, ni):
                 array_name=module.params["array"],
                 net_intf_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
