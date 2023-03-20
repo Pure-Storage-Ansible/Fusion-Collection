@@ -67,7 +67,7 @@ EXAMPLES = r"""
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 
-- name: Create new protection policy foo
+- name: Delete protection policy foo
   purestorage.fusion.fusion_pp:
     name: foo
     state: absent

@@ -51,7 +51,7 @@ EXAMPLES = r"""
 - name: Create new storage service foo
   purestorage.fusion.fusion_ss:
     name: foo
-    hardware_type:
+    hardware_types:
     - flash-array-x
     - flash-array-x-optane
     display_name: "test class"
