@@ -103,7 +103,7 @@ EXAMPLES = r"""
     key_file: "az-admin-private-key.pem"
 
 - name: Delete host access policy
-  purestorage.flasharray.purefa_host:
+  purestorage.fusion.fusion_hap:
     name: foo
     state: absent
     app_id: key_name
