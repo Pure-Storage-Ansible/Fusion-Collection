@@ -1,0 +1,84 @@
+# Prepare dependencies
+- name: Create new tenat foo_tenant
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    display_name: "tenant foo"
+  environment: "{{ test_env }}"
+
+- name: Create new tenant space foo_tenant_space for tenant_foo
+  purestorage.fusion.fusion_ts:
+    name: foo_tenant_space
+    tenant: foo_tenant
+    state: present
+  environment: "{{ test_env }}"
+
+- name: Create new storage service foo_service
+  purestorage.fusion.fusion_ss:
+    name: foo_service
+    hardware_types:
+      - flash-array-x
+    display_name: "test class"
+  environment: "{{ test_env }}"
+
+
+# Test storage classes
+
+- name: Create new storage class foo_sc
+  purestorage.fusion.fusion_sc:
+    name: foo_sc
+    size_limit: 100G
+    iops_limit: 100000
+    bw_limit: 25M
+    storage_service: foo_service
+    display_name: "test class"
+  environment: "{{ test_env }}"
+
+
+- name: Collect storage classes and verify the class exists
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: storage_classes
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_sc' in fusion_info['fusion_info']['storageclass']"
+
+- name: Delete storage class
+  purestorage.fusion.fusion_sc:
+    name: foo_sc
+    storage_service: foo_service
+    state: absent
+  environment: "{{ test_env }}"
+
+- name: Collect storage classes and verify the class does not exist
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: storage_classes
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_sc' not in fusion_info['fusion_info']['storageclass']"
+
+
+# Teardown dependencies
+
+- name: Delete storage service foo_service
+  purestorage.fusion.fusion_ss:
+    name: foo_service
+    state: absent
+    hardware_types:
+      - flash-array-x
+  environment: "{{ test_env }}"
+
+- name: Delete foo_tenant_space
+  purestorage.fusion.fusion_ts:
+    name: foo_tenant_space
+    tenant: foo_tenant
+    state: absent
+  environment: "{{ test_env }}"
+
+- name: Delete tenat foo
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    state: absent
+  environment: "{{ test_env }}"
