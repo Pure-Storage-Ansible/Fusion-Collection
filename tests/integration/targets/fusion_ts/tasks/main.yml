@@ -13,7 +13,13 @@
     name: foo_tenant_space
     tenant: foo_tenant
     state: present
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect tenant spaces and check the tenant space exists
   purestorage.fusion.fusion_info:
@@ -29,7 +35,13 @@
     name: foo_tenant_space
     tenant: foo_tenant
     state: absent
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect tenant spaces and check the tenant space does not exist
   purestorage.fusion.fusion_info:

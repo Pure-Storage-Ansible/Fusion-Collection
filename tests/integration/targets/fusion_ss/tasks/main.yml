@@ -21,7 +21,13 @@
     hardware_types:
       - flash-array-x
     display_name: "test class"
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 
 - name: Collect storage services and check the service exists
@@ -39,7 +45,13 @@
     state: absent
     hardware_types:
       - flash-array-x
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect storage services and check the service does not exist
   purestorage.fusion.fusion_info:

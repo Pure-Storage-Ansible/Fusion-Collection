@@ -4,7 +4,13 @@
     local_rpo: 10
     local_retention: 4d
     display_name: "foo pp"
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect protection policies and check the policy exists
   purestorage.fusion.fusion_info:
@@ -21,7 +27,13 @@
     local_rpo: 10
     local_retention: 4d
     state: absent
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect protection policies and check the policy does not exist
   purestorage.fusion.fusion_info:

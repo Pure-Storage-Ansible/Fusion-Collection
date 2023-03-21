@@ -13,7 +13,7 @@
     name: "foo_group"
     availability_zone: test_az
     region: pure-us-west
-    state: present  # or absent
+    state: present
     mtu: 1500
     gateway: 172.17.17.1
     prefix: 172.17.17.0/24
@@ -34,7 +34,13 @@
       - address: "172.17.1.2/24"
         gateway: "172.17.1.1"
         network_interface_groups: ["foo_group"]
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect storage endpoints and verify the endpoint exists
   environment: "{{ test_env }}"
@@ -57,7 +63,13 @@
       - address: "172.17.1.2/24"
         gateway: "172.17.1.1"
         network_interface_groups: ["foo_group"]
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect storage endpoints and verify the endpoint does not exist
   environment: "{{ test_env }}"

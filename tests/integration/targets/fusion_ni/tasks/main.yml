@@ -6,12 +6,18 @@
     name: "interface_group1"
     availability_zone: az1
     region: pure-us-west
-    state: present  # or absent
+    state: present
     mtu: 1500
     gateway: 172.17.1.1
     prefix: 172.17.1.0/24
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
 
+# Test network interfaces
 
 - name: Patch the network interface
   purestorage.fusion.fusion_ni:
@@ -28,3 +34,4 @@
   ansible.builtin.assert:
     that:
       - result is success
+      - result is changed

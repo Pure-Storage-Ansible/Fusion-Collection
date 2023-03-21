@@ -31,7 +31,13 @@
     bw_limit: 25M
     storage_service: foo_service
     display_name: "test class"
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 
 - name: Collect storage classes and verify the class exists
@@ -48,7 +54,13 @@
     name: foo_sc
     storage_service: foo_service
     state: absent
+  register: result
   environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
 
 - name: Collect storage classes and verify the class does not exist
   environment: "{{ test_env }}"
