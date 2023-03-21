@@ -84,17 +84,12 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 
 
 def get_region(module, fusion):
     """Get Region or None"""
-    region_api_instance = purefusion.RegionsApi(fusion)
-    try:
-        return region_api_instance.get_region(
-            region_name=module.params["name"],
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_region(module, fusion, module.params["name"])
 
 
 def create_region(module, fusion):
