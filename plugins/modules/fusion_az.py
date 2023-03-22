@@ -78,6 +78,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_region,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -88,25 +92,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 
 def get_az(module, fusion):
     """Get Availability Zone or None"""
-    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    try:
-        return az_api_instance.get_availability_zone(
-            availability_zone_name=module.params["name"],
-            region_name=module.params["region"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_region(module, fusion):
-    """Get Region or None"""
-    region_api_instance = purefusion.RegionsApi(fusion)
-    try:
-        return region_api_instance.get_region(
-            region_name=module.params["region"],
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_az(module, fusion, availability_zone_name=module.params["name"])
 
 
 def delete_az(module, fusion):

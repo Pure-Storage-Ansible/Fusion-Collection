@@ -92,6 +92,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -99,13 +100,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 
 def get_ss(module, fusion):
     """Return Storage Service or None"""
-    ss_api_instance = purefusion.StorageServicesApi(fusion)
-    try:
-        return ss_api_instance.get_storage_service(
-            storage_service_name=module.params["name"]
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_ss(module, fusion, storage_service_name=module.params["name"])
 
 
 def create_ss(module, fusion):

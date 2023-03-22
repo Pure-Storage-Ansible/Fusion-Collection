@@ -80,6 +80,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_tenant,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -87,23 +91,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 
 def get_ts(module, fusion):
     """Tenant Space or None"""
-    ts_api_instance = purefusion.TenantSpacesApi(fusion)
-    try:
-        return ts_api_instance.get_tenant_space(
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["name"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_tenant(module, fusion):
-    """Return Tenant or None"""
-    api_instance = purefusion.TenantsApi(fusion)
-    try:
-        return api_instance.get_tenant(tenant_name=module.params["tenant"])
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_ts(module, fusion, tenant_space_name=module.params["name"])
 
 
 def create_ts(module, fusion):

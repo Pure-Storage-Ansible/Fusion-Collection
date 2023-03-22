@@ -94,6 +94,11 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_array,
+    get_az,
+    get_region,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
     is_valid_network,
 )
@@ -103,42 +108,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
-
-
-def get_region(module, fusion):
-    """Get Region or None"""
-    region_api_instance = purefusion.RegionsApi(fusion)
-    try:
-        return region_api_instance.get_region(
-            region_name=module.params["region"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_az(module, fusion):
-    """Get Availability Zone or None"""
-    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    try:
-        return az_api_instance.get_availability_zone(
-            region_name=module.params["region"],
-            availability_zone_name=module.params["availability_zone"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_array(module, fusion):
-    """Return Array or None"""
-    array_api_instance = purefusion.ArraysApi(fusion)
-    try:
-        return array_api_instance.get_array(
-            region_name=module.params["region"],
-            availability_zone_name=module.params["availability_zone"],
-            array_name=module.params["array"],
-        )
-    except purefusion.rest.ApiException:
-        return None
 
 
 def get_ni(module, fusion):
