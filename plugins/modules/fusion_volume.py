@@ -326,9 +326,10 @@ def update_size(module, fusion, current, patches):
 
 def update_protection_policy(module, fusion, current, patches):
     wanted = module.params
+    current_policy = [current.protection_policy.name if current.protection_policy else None]
     if (
-        wanted["protection_policy"]
-        and wanted["protection_policy"] != current.protection_policy.name
+        wanted["protection_policy"] is not None
+        and wanted["protection_policy"] != current_policy
     ):
         patch = purefusion.VolumePatch(
             protection_policy=purefusion.NullableString(wanted["protection_policy"])
