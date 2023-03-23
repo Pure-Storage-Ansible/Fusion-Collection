@@ -1,0 +1,37 @@
+# TODO: Currently not possible to remove network interface group from network interface
+
+# Prepare
+- name: Create new network interface group foo in AZ bar
+  purestorage.fusion.fusion_nig:
+    name: "interface_group1"
+    availability_zone: az1
+    region: pure-us-west
+    state: present
+    mtu: 1500
+    gateway: 172.17.1.1
+    prefix: 172.17.1.0/24
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+
+# Test network interfaces
+
+- name: Patch the network interface
+  purestorage.fusion.fusion_ni:
+    name: ct0.eth4
+    region: pure-us-west
+    availability_zone: az1
+    array: doubleagent-2
+    eth: 172.17.1.2/24
+    enabled: true
+    network_interface_group: "interface_group1"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed

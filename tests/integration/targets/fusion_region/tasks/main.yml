@@ -1,0 +1,35 @@
+- name: Create Region foo_region
+  purestorage.fusion.fusion_region:
+    name: "foo_region"
+    display_name: "foo Region"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Update Region display_name
+  purestorage.fusion.fusion_region:
+    name: "foo_region"
+    display_name: "new foo Region"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Delete Region
+  purestorage.fusion.fusion_region:
+    name: "foo_region"
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed

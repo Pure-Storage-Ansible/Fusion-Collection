@@ -1,0 +1,48 @@
+- name: Create new network interface group
+  purestorage.fusion.fusion_nig:
+    name: "foo_group"
+    availability_zone: az1
+    region: pure-us-west
+    state: present
+    mtu: 1500
+    gateway: 172.17.17.1
+    prefix: 172.17.17.0/24
+  environment: "{{ test_env }}"
+  register: result
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect network_interface_groups and check the group exist
+  purestorage.fusion.fusion_info:
+    gather_subset: network_interface_groups
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'pure-us-west/az1/foo_group' in fusion_info['fusion_info']['network_interface_groups']"
+
+- name: Delete network interface group
+  purestorage.fusion.fusion_nig:
+    name: "foo_group"
+    availability_zone: az1
+    region: pure-us-west
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect network_interface_groups and check the group does not exist
+  purestorage.fusion.fusion_info:
+    gather_subset: network_interface_groups
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'pure-us-west/az1/foo_group' not in fusion_info['fusion_info']['network_interface_groups']"
