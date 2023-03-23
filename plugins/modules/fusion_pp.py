@@ -67,7 +67,7 @@ EXAMPLES = r"""
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 
-- name: Create new protection policy foo
+- name: Delete protection policy foo
   purestorage.fusion.fusion_pp:
     name: foo
     state: absent
@@ -117,7 +117,7 @@ def create_pp(module, fusion):
     """Create Protection Policy"""
 
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
-    local_retention = parse_minutes(module.params["local_retention"])
+    local_retention = parse_minutes(module, module.params["local_retention"])
     if local_retention < 1:
         module.fail_json(msg="Local Retention must be a minimum of 1 minutes")
     if module.params["local_rpo"] < 10:
@@ -144,7 +144,7 @@ def create_pp(module, fusion):
                 ],
             )
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -157,7 +157,7 @@ def delete_pp(module, fusion):
         op = pp_api_instance.delete_protection_policy(
             protection_policy_name=module.params["name"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

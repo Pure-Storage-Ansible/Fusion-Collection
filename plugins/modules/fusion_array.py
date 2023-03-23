@@ -110,6 +110,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -120,15 +121,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 
 def get_array(module, fusion):
     """Return Array or None"""
-    array_api_instance = purefusion.ArraysApi(fusion)
-    try:
-        return array_api_instance.get_array(
-            array_name=module.params["name"],
-            availability_zone_name=module.params["availability_zone"],
-            region_name=module.params["region"],
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_array(module, fusion, array_name=module.params["name"])
 
 
 def create_array(module, fusion):
@@ -153,7 +146,7 @@ def create_array(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
         )
-        await_operation(module, fusion, res)
+        await_operation(fusion, res)
     return True
 
 
@@ -206,7 +199,7 @@ def update_array(module, fusion):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
     return changed
@@ -221,7 +214,7 @@ def delete_array(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             array_name=module.params["name"],
         )
-        await_operation(module, fusion, res)
+        await_operation(fusion, res)
     return True
 
 

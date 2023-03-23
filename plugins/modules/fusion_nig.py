@@ -120,6 +120,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.networking impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_az,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -133,18 +136,6 @@ def get_nig(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
             network_interface_group_name=module.params["name"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_az(module, fusion):
-    """Availability Zone or None"""
-    az_api_instance = purefusion.AvailabilityZonesApi(fusion)
-    try:
-        return az_api_instance.get_availability_zone(
-            availability_zone_name=module.params["availability_zone"],
-            region_name=module.params["region"],
         )
     except purefusion.rest.ApiException:
         return None
@@ -189,7 +180,7 @@ def create_nig(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -204,7 +195,7 @@ def delete_nig(module, fusion):
             region_name=module.params["region"],
             network_interface_group_name=module.params["name"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -230,7 +221,7 @@ def update_nig(module, fusion, nig):
                 region_name=module.params["region"],
                 network_interface_group_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 

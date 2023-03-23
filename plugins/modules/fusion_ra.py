@@ -98,6 +98,10 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_tenant,
+    get_ts,
+)
 
 
 def human_to_principal(fusion, user_id):
@@ -158,27 +162,6 @@ def get_ra(module, fusion):
         return None
 
 
-def get_tenant(module, fusion):
-    """Return tenant or None"""
-    t_api_instance = purefusion.TenantsApi(fusion)
-    try:
-        return t_api_instance.get_tenant(tenant_name=module.params["tenant"])
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_ts(module, fusion):
-    """Return tenant space or None"""
-    ts_api_instance = purefusion.TenantSpacesApi(fusion)
-    try:
-        return ts_api_instance.get_tenant_space(
-            tenant_space_name=module.params["tenant_space"],
-            tenant_name=module.params["tenant"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
 def create_ra(module, fusion):
     """Create Role Assignment"""
 
@@ -192,7 +175,7 @@ def create_ra(module, fusion):
         op = ra_api_instance.create_role_assignment(
             assignment, role_name=module.params["name"]
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -205,7 +188,7 @@ def delete_ra(module, fusion):
         op = ra_api_instance.delete_role_assignment(
             role_name=module.params["name"], role_assignment_name=ra_name
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

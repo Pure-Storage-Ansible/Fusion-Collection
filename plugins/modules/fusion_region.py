@@ -84,17 +84,12 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 
 
 def get_region(module, fusion):
     """Get Region or None"""
-    region_api_instance = purefusion.RegionsApi(fusion)
-    try:
-        return region_api_instance.get_region(
-            region_name=module.params["name"],
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_region(module, fusion, module.params["name"])
 
 
 def create_region(module, fusion):
@@ -113,7 +108,7 @@ def create_region(module, fusion):
             display_name=display_name,
         )
         op = reg_api_instance.create_region(region)
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -126,7 +121,7 @@ def delete_region(module, fusion):
     changed = True
     if not module.check_mode:
         op = reg_api_instance.delete_region(region_name=module.params["name"])
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -149,7 +144,7 @@ def update_region(module, fusion, region):
                 reg,
                 region_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

@@ -51,7 +51,7 @@ EXAMPLES = r"""
 - name: Create new storage service foo
   purestorage.fusion.fusion_ss:
     name: foo
-    hardware_type:
+    hardware_types:
     - flash-array-x
     - flash-array-x-optane
     display_name: "test class"
@@ -92,6 +92,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -99,13 +100,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 
 def get_ss(module, fusion):
     """Return Storage Service or None"""
-    ss_api_instance = purefusion.StorageServicesApi(fusion)
-    try:
-        return ss_api_instance.get_storage_service(
-            storage_service_name=module.params["name"]
-        )
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_ss(module, fusion, storage_service_name=module.params["name"])
 
 
 def create_ss(module, fusion):
@@ -125,7 +120,7 @@ def create_ss(module, fusion):
             hardware_types=module.params["hardware_types"],
         )
         op = ss_api_instance.create_storage_service(s_service)
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -140,7 +135,7 @@ def delete_ss(module, fusion):
         op = ss_api_instance.delete_storage_service(
             storage_service_name=module.params["name"]
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -165,7 +160,7 @@ def update_ss(module, fusion, ss):
                 patch,
                 storage_service_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 

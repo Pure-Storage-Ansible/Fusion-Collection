@@ -73,6 +73,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils import getters
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -80,11 +81,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 
 def get_tenant(module, fusion):
     """Return Tenant or None"""
-    api_instance = purefusion.TenantsApi(fusion)
-    try:
-        return api_instance.get_tenant(tenant_name=module.params["name"])
-    except purefusion.rest.ApiException:
-        return None
+    return getters.get_tenant(module, fusion, tenant_name=module.params["name"])
 
 
 def create_tenant(module, fusion):
@@ -102,7 +99,7 @@ def create_tenant(module, fusion):
             display_name=display_name,
         )
         op = api_instance.create_tenant(tenant)
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -128,7 +125,7 @@ def update_tenant(module, fusion):
                 new_tenant,
                 tenant_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -139,7 +136,7 @@ def delete_tenant(module, fusion):
     api_instance = purefusion.TenantsApi(fusion)
     if not module.check_mode:
         op = api_instance.delete_tenant(tenant_name=module.params["name"])
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

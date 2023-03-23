@@ -119,42 +119,14 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
+    get_az,
+    get_tenant,
+    get_ts,
+)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
-
-
-def get_ts(module, fusion):
-    """Tenant Space or None"""
-    ts_api_instance = purefusion.TenantSpacesApi(fusion)
-    try:
-        return ts_api_instance.get_tenant_space(
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["tenant_space"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_az(module, fusion):
-    """Availability Zone or None"""
-    api_instance = purefusion.AvailabilityZonesApi(fusion)
-    try:
-        return api_instance.get_availability_zone(
-            availability_zone_name=module.params["availability_zone"],
-            region_name=module.params["region"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_tenant(module, fusion):
-    """Return Tenant or None"""
-    api_instance = purefusion.TenantsApi(fusion)
-    try:
-        return api_instance.get_tenant(tenant_name=module.params["tenant"])
-    except purefusion.rest.ApiException:
-        return None
 
 
 def get_pg(module, fusion):
@@ -193,7 +165,7 @@ def create_pg(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 
@@ -243,7 +215,7 @@ def update_pg(module, fusion, pg):
                 tenant_space_name=module.params["tenant_space"],
                 placement_group_name=module.params["name"],
             )
-            await_operation(module, fusion, op)
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
@@ -260,7 +232,7 @@ def delete_pg(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
 
     module.exit_json(changed=changed)
 

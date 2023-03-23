@@ -103,7 +103,7 @@ EXAMPLES = r"""
     key_file: "az-admin-private-key.pem"
 
 - name: Delete host access policy
-  purestorage.flasharray.purefa_host:
+  purestorage.fusion.fusion_hap:
     name: foo
     state: absent
     app_id: key_name
@@ -174,7 +174,7 @@ def create_hap(module, fusion):
                 display_name=module.params["display_name"],
             )
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 
@@ -186,7 +186,7 @@ def delete_hap(module, fusion):
         op = hap_api_instance.delete_host_access_policy(
             host_access_policy_name=module.params["name"]
         )
-        await_operation(module, fusion, op)
+        await_operation(fusion, op)
     module.exit_json(changed=changed)
 
 

@@ -1,2 +1,0 @@
-deprecated_features:
-  - fusion_hw - hardware module is being removed as changing hardware type has never been supported by Pure Storage Fusion
