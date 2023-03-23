@@ -1,0 +1,41 @@
+- name: Create new tenat foo_tenant
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    display_name: "tenant foo"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect tenants and check the tenant exists
+  purestorage.fusion.fusion_info:
+    gather_subset: tenants
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_tenant' in fusion_info['fusion_info']['tenants']"
+
+- name: Delete tenat foo
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect tenants and check the tenant does notexist
+  purestorage.fusion.fusion_info:
+    gather_subset: tenants
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_tenant' not in fusion_info['fusion_info']['tenants']"

@@ -1,0 +1,45 @@
+- name: Create new protection policy foo_pp
+  purestorage.fusion.fusion_pp:
+    name: foo_pp
+    local_rpo: 10
+    local_retention: 4d
+    display_name: "foo pp"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect protection policies and check the policy exists
+  purestorage.fusion.fusion_info:
+    gather_subset: protection_policies
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_pp' in fusion_info['fusion_info']['protection_policies']"
+
+- name: Delete protection policy foo_pp
+  purestorage.fusion.fusion_pp:
+    name: foo_pp
+    local_rpo: 10
+    local_retention: 4d
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect protection policies and check the policy does not exist
+  purestorage.fusion.fusion_info:
+    gather_subset: protection_policies
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_pp' not in fusion_info['fusion_info']['protection_policies']"

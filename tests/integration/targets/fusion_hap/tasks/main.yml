@@ -1,0 +1,42 @@
+- name: Create new Linux host access policy
+  purestorage.fusion.fusion_hap:
+    name: hap_foo
+    personality: linux
+    iqn: "iqn.2005-03.com.RedHat:linux-host1"
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect hosts and check the host exists
+  purestorage.fusion.fusion_info:
+    gather_subset: hosts
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'hap_foo' in fusion_info['fusion_info']['hosts']"
+
+- name: Delete host access policy
+  purestorage.fusion.fusion_hap:
+    name: hap_foo
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect hosts and check the host does not exist
+  purestorage.fusion.fusion_info:
+    gather_subset: hosts
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'hap_foo' not in fusion_info['fusion_info']['hosts']"

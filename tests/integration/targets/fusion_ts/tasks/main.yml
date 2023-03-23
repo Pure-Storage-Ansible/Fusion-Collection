@@ -1,0 +1,62 @@
+# Prepare dependencies
+- name: Create new tenat foo_tenant
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    display_name: "tenant foo"
+  environment: "{{ test_env }}"
+
+
+# Test tenant spaces
+
+- name: Create new tenant space foo_tenant_space for tenant_foo
+  purestorage.fusion.fusion_ts:
+    name: foo_tenant_space
+    tenant: foo_tenant
+    state: present
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect tenant spaces and check the tenant space exists
+  purestorage.fusion.fusion_info:
+    gather_subset: tenant_spaces
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_tenant/foo_tenant_space' in fusion_info['fusion_info']['tenant_spaces']"
+
+- name: Delete foo_tenant_space
+  purestorage.fusion.fusion_ts:
+    name: foo_tenant_space
+    tenant: foo_tenant
+    state: absent
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect tenant spaces and check the tenant space does not exist
+  purestorage.fusion.fusion_info:
+    gather_subset: tenant_spaces
+  register: fusion_info
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_tenant/foo_tenant_space' not in fusion_info['fusion_info']['tenant_spaces']"
+
+
+# Teardown dependencies
+
+- name: Delete tenat foo
+  purestorage.fusion.fusion_tenant:
+    name: foo_tenant
+    state: absent
+  environment: "{{ test_env }}"

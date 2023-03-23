@@ -1,0 +1,100 @@
+# Prepare dependencies
+
+- name: Create Availability Zone
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_az:
+    name: "test_az"
+    display_name: "foo AZ"
+    region: pure-us-west
+  register: result
+
+- name: Create new network interface group
+  purestorage.fusion.fusion_nig:
+    name: "foo_group"
+    availability_zone: test_az
+    region: pure-us-west
+    state: present
+    mtu: 1500
+    gateway: 172.17.17.1
+    prefix: 172.17.17.0/24
+  environment: "{{ test_env }}"
+
+
+# Test storage classes
+
+- name: Create new Storage Endpoint
+  purestorage.fusion.fusion_se:
+    state: present  # or absent
+    region: pure-us-west
+    name: foo_se
+    display_name: "foo se"
+    availability_zone: test_az
+    endpoint_type: iscsi
+    iscsi:
+      - address: "172.17.1.2/24"
+        gateway: "172.17.1.1"
+        network_interface_groups: ["foo_group"]
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect storage endpoints and verify the endpoint exists
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: storage_endpoints
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'pure-us-west/test_az/foo_se' in fusion_info['fusion_info']['storage_endpoints']"
+
+- name: Delete Storage Endpoint
+  purestorage.fusion.fusion_se:
+    state: absent
+    region: pure-us-west
+    name: foo_se
+    display_name: "foo se"
+    availability_zone: test_az
+    endpoint_type: iscsi
+    iscsi:
+      - address: "172.17.1.2/24"
+        gateway: "172.17.1.1"
+        network_interface_groups: ["foo_group"]
+  register: result
+  environment: "{{ test_env }}"
+- name: Validate the task
+  ansible.builtin.assert:
+    that:
+      - result is success
+      - result is changed
+
+- name: Collect storage endpoints and verify the endpoint does not exist
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: storage_endpoints
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'pure-us-west/test_az/foo_se' not in fusion_info['fusion_info']['storage_endpoints']"
+
+
+# Teardown dependencies
+
+- name: Delete network interface group
+  purestorage.fusion.fusion_nig:
+    name: "foo_group"
+    availability_zone: test_az
+    region: pure-us-west
+    state: absent
+  environment: "{{ test_env }}"
+
+- name: Delete AZ
+  purestorage.fusion.fusion_az:
+    name: "test_az"
+    state: absent
+    region: pure-us-west
+  register: result
+  environment: "{{ test_env }}"
