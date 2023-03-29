@@ -1,0 +1,2 @@
+bugfixes:
+  - fusion_volume - protection policy can now be unset by using "" as name
