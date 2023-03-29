@@ -46,11 +46,10 @@ options:
   local_retention:
     description:
     - Retention Duration for periodic snapshots.
-    - Minimum value is 1 minute.
+    - Minimum value is 10 minutes.
     - Value can be provided as m(inutes), h(ours),
       d(ays), w(eeks), or y(ears).
     - If no unit is provided, minutes are assumed.
-    - Must be between 1MB/s and 512GB/s.
     type: str
     required: true
 extends_documentation_fragment:
