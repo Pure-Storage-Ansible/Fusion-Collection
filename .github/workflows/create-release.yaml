@@ -1,0 +1,108 @@
+name: Release Collection
+
+on: workflow_dispatch
+jobs:
+  create_github_release:
+    runs-on: ubuntu-latest
+    environment: fusion-env
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get version from galaxy.yml
+        run: |
+          RELEASE_VERSION=$(grep 'version:' galaxy.yml | awk '{print $2}')
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+
+      - name: Check if tag exists
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          trap "exit 0" EXIT
+          response=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/git/ref/tags/$RELEASE_VERSION)
+          if [[ "$response" == *"$RELEASE_VERSION"* ]]; then
+            trap "exit 1" EXIT
+            echo "Error: Tag $RELEASE_VERSION already exists"
+            exit 1 
+          fi
+
+      - name: Extract changelog
+        run: |
+          awk -v version="$RELEASE_VERSION" '
+          BEGIN { targetVersionFound = 0; previousVersionFound = 0 }
+          {
+            if (match($0, "^v"version) > 0) {
+              targetVersionFound = 1;
+            } else if (targetVersionFound && match($0, "^v") > 0) {
+              previousVersionFound = 1;
+            }
+
+            if (targetVersionFound && !previousVersionFound) {
+              print $0;
+            }
+          }
+          ' CHANGELOG.rst > changelog
+
+      - name: Create a release
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release create "${{ env.RELEASE_VERSION }}" --title "Fusion Collection v${{ env.RELEASE_VERSION }}" --notes-file changelog
+
+  publish_collection:
+    runs-on: ubuntu-latest
+    environment: fusion-env
+    needs: create_github_release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint yamllint
+
+      - name: Build Ansible Collection
+        run: ansible-galaxy collection build
+
+      - name: Release to Ansible Galaxy
+        run: ansible-galaxy collection publish --api-key=${{ secrets.ANSIBLE_GALAXY_API_KEY }} ./purestorage-fusion-${{ env.RELEASE_VERSION }}.tar.gz
+
+      - name: Create config for Automation Hub
+        run: |
+          cat << EOF > ansible.cfg
+          [galaxy]
+          server_list = rh_automation_hub
+          [galaxy_server.rh_automation_hub]
+          url=${{ secrets.RH_AUTOMATION_HUB_URL }}
+          auth_url=${{ secrets.RH_SSO_URL }}
+          token=${{ secrets.RH_AUTOMATION_HUB_TOKEN }}
+          EOF
+
+      - name: Release to Automation Hub
+        run: ansible-galaxy collection publish ./purestorage-fusion-${{ env.RELEASE_VERSION }}.tar.gz
+
+  create_execution_release:
+    needs: publish_collection
+    runs-on: ubuntu-latest
+    environment: fusion-env
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get Fusion Execution Environment repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.EXECUTION_ENVIROMENT_API_KEY }}
+          repository: Pure-Storage-Ansible/Fusion-Execution-Environment
+          path: ./fusion-execution-environment
+
+      - name: Create an execution environment release
+        env:
+          GITHUB_TOKEN: ${{ secrets.EXECUTION_ENVIROMENT_API_KEY }}
+        run: cd ./fusion-execution-environment && gh release create "${{ env.RELEASE_VERSION }}" --title "Fusion Ansible Execution Environment v${{ env.RELEASE_VERSION }}"
