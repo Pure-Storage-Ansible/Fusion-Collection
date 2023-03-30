@@ -243,6 +243,7 @@ def create_volume(module, fusion):
             placement_group=module.params["placement_group"],
             name=module.params["name"],
             display_name=display_name,
+            protection_policy=module.params["protection_policy"],
         )
         op = volume_api_instance.create_volume(
             volume,
