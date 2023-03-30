@@ -99,6 +99,27 @@ def test_parsing_valid_time_period():
     assert parse_minutes(module, "14D") == 14 * 24 * 60
     assert parse_minutes(module, "1W") == 7 * 24 * 60
     assert parse_minutes(module, "12Y") == 12 * 365 * 24 * 60
+    assert (
+        parse_minutes(module, "10Y20W30D40H50M")
+        == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60 + 30 * 24 * 60 + 40 * 60 + 50
+    )
+    assert (
+        parse_minutes(module, "10Y20W30D40H")
+        == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60 + 30 * 24 * 60 + 40 * 60
+    )
+    assert (
+        parse_minutes(module, "10Y20W30D")
+        == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60 + 30 * 24 * 60
+    )
+    assert parse_minutes(module, "10Y20W") == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60
+    assert (
+        parse_minutes(module, "20W30D40H50M")
+        == 20 * 7 * 24 * 60 + 30 * 24 * 60 + 40 * 60 + 50
+    )
+    assert parse_minutes(module, "30D40H50M") == 30 * 24 * 60 + 40 * 60 + 50
+    assert parse_minutes(module, "40H50M") == 40 * 60 + 50
+    assert parse_minutes(module, "30D50M") == 30 * 24 * 60 + 50
+    assert parse_minutes(module, "20W40H") == 20 * 7 * 24 * 60 + 40 * 60
 
 
 def test_parsing_invalid_time_period():
@@ -109,5 +130,19 @@ def test_parsing_invalid_time_period():
         assert parse_minutes(module, "1s")
     with pytest.raises(MockException):
         assert parse_minutes(module, "1S")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "1V")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "0M")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "0H10M")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "0H10M")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "0D10H10M")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "01W10D10H10M")
+    with pytest.raises(MockException):
+        assert parse_minutes(module, "01Y0H10M")
     with pytest.raises(MockException):
         assert parse_minutes(module, "1V")
