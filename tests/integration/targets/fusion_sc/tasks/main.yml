@@ -78,8 +78,6 @@
   purestorage.fusion.fusion_ss:
     name: foo_service
     state: absent
-    hardware_types:
-      - flash-array-x
   environment: "{{ test_env }}"
 
 - name: Delete foo_tenant_space

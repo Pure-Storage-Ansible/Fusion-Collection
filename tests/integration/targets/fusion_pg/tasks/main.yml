@@ -54,9 +54,6 @@
     name: foo_pg
     tenant: foo_tenant
     tenant_space: foo_tenant_space
-    region: pure-us-west
-    availability_zone: az1
-    storage_service: foo_service
     state: absent
   register: result
   environment: "{{ test_env }}"
@@ -82,8 +79,6 @@
   purestorage.fusion.fusion_ss:
     name: foo_service
     state: absent
-    hardware_types:
-      - flash-array-x
   environment: "{{ test_env }}"
 
 - name: Delete foo_tenant_space

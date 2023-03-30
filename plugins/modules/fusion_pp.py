@@ -42,7 +42,6 @@ options:
     - Value should be specified in minutes.
     - Minimum value is 10 minutes.
     type: int
-    required: true
   local_retention:
     description:
     - Retention Duration for periodic snapshots.
@@ -51,7 +50,6 @@ options:
       d(ays), w(eeks), or y(ears).
     - If no unit is provided, minutes are assumed.
     type: str
-    required: true
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -168,8 +166,8 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            local_rpo=dict(type="int", required=True),
-            local_retention=dict(type="str", required=True),
+            local_rpo=dict(type="int"),
+            local_retention=dict(type="str"),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )
@@ -181,6 +179,7 @@ def main():
     policy = get_pp(module, fusion)
 
     if not policy and state == "present":
+        module.fail_on_missing_params(["local_rpo", "local_retention"])
         create_pp(module, fusion)
     elif policy and state == "absent":
         delete_pp(module, fusion)
