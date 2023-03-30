@@ -50,7 +50,7 @@ def parse_duration(period):
         return int(period)
 
     match = duration_pattern.match(period.upper())
-    if not match:
+    if not match or period == "":
         raise ValueError("Invalid format")
 
     durations = {
