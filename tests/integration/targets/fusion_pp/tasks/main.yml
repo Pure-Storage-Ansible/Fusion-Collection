@@ -24,8 +24,6 @@
 - name: Delete protection policy foo_pp
   purestorage.fusion.fusion_pp:
     name: foo_pp
-    local_rpo: 10
-    local_retention: 4d
     state: absent
   register: result
   environment: "{{ test_env }}"

@@ -43,8 +43,6 @@
   purestorage.fusion.fusion_ss:
     name: foo_service
     state: absent
-    hardware_types:
-      - flash-array-x
   register: result
   environment: "{{ test_env }}"
 - name: Validate the task

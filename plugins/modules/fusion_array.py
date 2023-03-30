@@ -51,17 +51,14 @@ options:
     description:
     - Hardware type to which the storage class applies.
     choices: [ flash-array-x, flash-array-c, flash-array-x-optane, flash-array-xl ]
-    required: true
     type: str
   host_name:
     description:
     - Management IP address of the array, or FQDN.
-    required: true
     type: str
   appliance_id:
     description:
     - Appliance ID of the array.
-    required: true
     type: str
   maintenance_mode:
     description:
@@ -227,11 +224,10 @@ def main():
             availability_zone=dict(type="str", required=True, aliases=["az"]),
             display_name=dict(type="str"),
             region=dict(type="str", required=True),
-            appliance_id=dict(type="str", required=True),
-            host_name=dict(type="str", required=True),
+            appliance_id=dict(type="str"),
+            host_name=dict(type="str"),
             hardware_type=dict(
                 type="str",
-                required=True,
                 choices=[
                     "flash-array-x",
                     "flash-array-c",
@@ -254,6 +250,7 @@ def main():
 
     changed = False
     if not array and state == "present":
+        module.fail_on_missing_params(["hardware_type", "host_name", "appliance_id"])
         changed = create_array(module, fusion) | update_array(
             module, fusion
         )  # update is run to set properties which cannot be set on creation and instead use defaults
