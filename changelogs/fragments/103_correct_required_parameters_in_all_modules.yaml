@@ -4,4 +4,4 @@ bugfixes:
   - fusion_pg - correct required parameters
   - fusion_pp - correct required parameters
   - fusion_sc - correct required parameters
-  - fusion_ss - correct required parameters
+  - fusion_ss - allow updating hardware types, correct required parameters

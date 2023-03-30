@@ -153,6 +153,16 @@ def update_ss(module, fusion, ss):
         )
         patches.append(patch)
 
+    if module.params["hardware_types"] and sorted(
+        module.params["hardware_types"]
+    ) != sorted(ss.hardware_types):
+        patch = purefusion.StorageServicePatch(
+            hardware_types=purefusion.NullableStringArray(
+                module.params["hardware_types"]
+            ),
+        )
+        patches.append(patch)
+
     if not module.check_mode:
         for patch in patches:
             op = ss_api_instance.update_storage_service(
