@@ -166,12 +166,14 @@ def create_hap(module, fusion):
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     changed = True
     if not module.check_mode:
+        display_name = module.params["display_name"] or module.params["name"]
+
         op = hap_api_instance.create_host_access_policy(
             purefusion.HostAccessPoliciesPost(
                 iqn=module.params["iqn"],
                 personality=module.params["personality"],
                 name=module.params["name"],
-                display_name=module.params["display_name"],
+                display_name=display_name,
             )
         )
         await_operation(fusion, op)
