@@ -10,4 +10,4 @@
         state: present  # or absent
         name: "az2"
         display_name: "az2"
-        region: pure-us-west 
+        region: pure-us-west
