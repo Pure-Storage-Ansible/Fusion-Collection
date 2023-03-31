@@ -50,13 +50,11 @@ options:
     description:
     - The name of the region the availability zone is in.
     type: str
-    required: true
   availability_zone:
     aliases: [ az ]
     description:
     - The name of the availability zone the placement group is in.
     type: str
-    required: true
   storage_service:
     description:
     - The name of the storage service to create the placement group for.
@@ -94,8 +92,6 @@ EXAMPLES = r"""
     name: foo
     tenant: test
     tenant_space: space_1
-    region: region1
-    availability_zone: az1
     state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
@@ -120,7 +116,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     install_fusion_exception_hook,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_az,
     get_tenant,
     get_ts,
 )
@@ -246,8 +241,8 @@ def main():
             display_name=dict(type="str"),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
-            region=dict(type="str", required=True),
-            availability_zone=dict(type="str", aliases=["az"], required=True),
+            region=dict(type="str"),
+            availability_zone=dict(type="str", aliases=["az"]),
             storage_service=dict(type="str"),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             array=dict(type="str"),
@@ -272,14 +267,13 @@ def main():
     state = module.params["state"]
     fusion = get_fusion(module)
     pgroup = get_pg(module, fusion)
-    if not (
-        get_az(module, fusion) and get_tenant(module, fusion) and get_ts(module, fusion)
-    ):
+    if not (get_tenant(module, fusion) and get_ts(module, fusion)):
         module.fail_json(
-            msg="Please check the values for `availability_zone`, `tenant` "
-            "and `tenant_space` to ensure they all exit and have appropriate relationships."
+            msg="Please check the values for `tenant` and `tenant_space` "
+            "to ensure they all exit and have appropriate relationships."
         )
     if state == "present" and not pgroup:
+        module.fail_on_missing_params(["region", "availability_zone"])
         create_pg(module, fusion)
     if state == "present" and pgroup:
         update_pg(module, fusion, pgroup)

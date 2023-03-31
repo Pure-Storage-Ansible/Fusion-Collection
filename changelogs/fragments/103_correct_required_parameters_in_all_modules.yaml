@@ -1,0 +1,7 @@
+bugfixes:
+  - fusion_array - correct required parameters
+  - fusion_hw - correct required parameters
+  - fusion_pg - correct required parameters
+  - fusion_pp - correct required parameters
+  - fusion_sc - correct required parameters
+  - fusion_ss - allow updating hardware types, correct required parameters

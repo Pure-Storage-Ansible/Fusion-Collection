@@ -64,6 +64,7 @@ options:
     description:
     - Storage service to which the storage class belongs.
     type: str
+    required: true
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
@@ -84,6 +85,7 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_sc:
     name: foo
     display_name: "main class"
+    storage_service: service1
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 
@@ -235,7 +237,7 @@ def main():
             iops_limit=dict(type="str"),
             bw_limit=dict(type="str"),
             size_limit=dict(type="str"),
-            storage_service=dict(type="str"),
+            storage_service=dict(type="str", required=True),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
     )

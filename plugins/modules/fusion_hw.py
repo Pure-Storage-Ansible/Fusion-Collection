@@ -28,7 +28,6 @@ options:
     description:
     - The name of the hardware type.
     type: str
-    required: true
   state:
     description:
     - Define whether the hardware type should exist or not.
@@ -45,26 +44,17 @@ options:
     description:
     - Volume size limit in M, G, T or P units.
     type: str
-    required: true
   array_type:
     description:
     - The array type for the hardware type.
     choices: [ FA//X, FA//C ]
     type: str
-    required: true
 extends_documentation_fragment:
 - purestorage.fusion.purestorage.fusion
 """
 
+# this module does nothing, thus no example is provided
 EXAMPLES = r"""
-- name: Create new hardware type foo
-  purestorage.fusion.fusion_hw:
-    name: foo
-    array_type: "FA//X"
-    media_type: NVME
-    display_name: "NVME arrays"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""
@@ -81,10 +71,10 @@ def main():
     argument_spec = fusion_argument_spec()
     argument_spec.update(
         dict(
-            name=dict(type="str", required=True),
+            name=dict(type="str"),
             display_name=dict(type="str"),
-            array_type=dict(type="str", choices=["FA//X", "FA//C"], required=True),
-            media_type=dict(type="str", required=True),
+            array_type=dict(type="str", choices=["FA//X", "FA//C"]),
+            media_type=dict(type="str"),
             state=dict(type="str", default="present", choices=["present"]),
         )
     )
