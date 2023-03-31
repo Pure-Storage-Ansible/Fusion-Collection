@@ -166,7 +166,7 @@ class TestArrayWorkflow:
     @patch(f"{current_module}.fusion_array.purefusion.ArraysApi.__new__")
     @patch(f"{current_module}.fusion_array.AnsibleModule")
     @patch(f"{current_module}.fusion_array.get_array")
-    def test_create_az_with_disp_name_successfully(
+    def test_create_array_with_disp_name_successfully(
         self, get_array, mock_ansible, mock_array_api, mock_op_api
     ):
         """

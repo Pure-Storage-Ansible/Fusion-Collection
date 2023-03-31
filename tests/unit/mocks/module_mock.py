@@ -19,18 +19,20 @@ class ModuleFailed(Exception):
 
 
 class ModuleMock(MagicMock):
-    def __init__(self, params, check_mode=False, exit_json=None, fail_json=None):
+    def __init__(self, params, check_mode=False):
         super().__init__()
 
         self.params = params
         self.check_mode = check_mode
 
-        if exit_json is None:
-            self.exit_json = MagicMock()
-        else:
-            self.exit_json = exit_json
+        # mocking exit_json function, so we can check if it was successfully called
+        self.exit_json = MagicMock()
 
-        if fail_json is None:
-            self.fail_json = MagicMock()
-        else:
-            self.fail_json = fail_json
+    def fail_json(self, **kwargs):
+        raise ModuleFailed(str(kwargs))
+
+    def fail_on_missing_params(self, required_params=None):
+        if required_params is not None:
+            for param in required_params:
+                if param not in self.params:
+                    raise ModuleFailed(f"Parameter '{param}' is missing")

@@ -49,6 +49,7 @@ jobs:
       run: |
         python${{ matrix.python }} -m pip install --upgrade pip
         python${{ matrix.python }} -m pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+        python${{ matrix.python }} -m pip install purefusion pytest
 
     - name: Run sanity tests
       run: |
@@ -57,3 +58,6 @@ jobs:
         rsync -av . ansible_collections/purestorage/fusion --exclude ansible_collection/purestorage/fusion
         cd ansible_collections/purestorage/fusion
         ansible-test sanity -v --color --python ${{ matrix.python-version }} --docker
+
+    - name: Run unit tests
+      run: python -m pytest --import-mode=append tests

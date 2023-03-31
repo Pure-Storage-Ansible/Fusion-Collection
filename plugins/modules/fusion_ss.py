@@ -39,7 +39,6 @@ options:
   hardware_types:
     description:
     - Hardware types to which the storage service applies.
-    required: true
     type: list
     elements: str
     choices: [ flash-array-x, flash-array-c, flash-array-x-optane, flash-array-xl ]
@@ -154,6 +153,16 @@ def update_ss(module, fusion, ss):
         )
         patches.append(patch)
 
+    if module.params["hardware_types"] and sorted(
+        module.params["hardware_types"]
+    ) != sorted(ss.hardware_types):
+        patch = purefusion.StorageServicePatch(
+            hardware_types=purefusion.NullableStringArray(
+                module.params["hardware_types"]
+            ),
+        )
+        patches.append(patch)
+
     if not module.check_mode:
         for patch in patches:
             op = ss_api_instance.update_storage_service(
@@ -176,7 +185,6 @@ def main():
             display_name=dict(type="str"),
             hardware_types=dict(
                 type="list",
-                required=True,
                 elements="str",
                 choices=[
                     "flash-array-x",
@@ -197,6 +205,7 @@ def main():
     s_service = get_ss(module, fusion)
 
     if not s_service and state == "present":
+        module.fail_on_missing_params(["hardware_types"])
         create_ss(module, fusion)
     elif s_service and state == "present":
         update_ss(module, fusion, s_service)
