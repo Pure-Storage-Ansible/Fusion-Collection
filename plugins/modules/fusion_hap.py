@@ -60,7 +60,7 @@ options:
     description:
     - Define which operating system the host is.
     default: linux
-    choices: ['linux','hpux', 'vms', 'aix', 'esxi', 'solaris', 'hitachi-vsp', 'oracle-vm-server']
+    choices: ['linux', 'windows', 'hpux', 'vms', 'aix', 'esxi', 'solaris', 'hitachi-vsp', 'oracle-vm-server']
   target_user:
     type: str
     description:
@@ -211,6 +211,7 @@ def main():
                 default="linux",
                 choices=[
                     "linux",
+                    "windows",
                     "hpux",
                     "vms",
                     "aix",
