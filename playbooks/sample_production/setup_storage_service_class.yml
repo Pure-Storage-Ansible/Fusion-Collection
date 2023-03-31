@@ -7,7 +7,7 @@
 
   tasks:
     - name: Import storage service/class variables
-      ansible.builtin.include_vars: ../vars/group_vars/storage_service_class.yml
+      ansible.builtin.include_vars: ../inventory/group_vars/storage_service_class.yml
 
     - name: Check private key exists
       ansible.builtin.stat:

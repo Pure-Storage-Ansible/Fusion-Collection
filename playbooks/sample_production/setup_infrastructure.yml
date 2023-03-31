@@ -3,7 +3,7 @@
   hosts: localhost
   tasks:
     - name: Import infrastructure variables
-      ansible.builtin.include_vars: ../vars/group_vars/infrastructure.yml
+      ansible.builtin.include_vars: ../inventory/group_vars/infrastructure.yml
 
     - name: Check private key exists
       ansible.builtin.stat:
