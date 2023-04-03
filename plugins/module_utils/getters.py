@@ -7,11 +7,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-try:
-    import fusion as purefusion
-except ImportError:
-    pass
-
+import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
+import fusion as purefusion
 
 def get_array(module, fusion, array_name=None):
     """Return Array or None"""

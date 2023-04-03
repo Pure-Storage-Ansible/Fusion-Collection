@@ -70,11 +70,8 @@ fusion_info:
   type: complex
 """
 
-HAS_FUSION = True
-try:
-    import fusion as purefusion
-except ImportError:
-    HAS_FUSION = False
+import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
+import fusion as purefusion
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
