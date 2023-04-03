@@ -6,7 +6,7 @@
 
   tasks:
     - name: Import protection policy variables
-      ansible.builtin.include_vars: ../inventory/group_vars/protection_policies.yml
+      ansible.builtin.include_vars: ./inventory/group_vars/protection_policies.yml
 
     - name: Check private key exists
       ansible.builtin.stat:
