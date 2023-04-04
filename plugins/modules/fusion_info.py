@@ -773,8 +773,8 @@ def generate_users_dict(module, fusion):
     return users_info
 
 
-@_api_permission_denied_handler("hardware")
-def generate_hardware_dict(module, fusion):
+@_api_permission_denied_handler("hardware_types")
+def generate_hardware_types_dict(module, fusion):
     hardware_info = {}
     api_instance = purefusion.HardwareTypesApi(fusion)
     hw_types = api_instance.list_hardware_types()
@@ -1057,7 +1057,7 @@ def main():
     if "minimum" in subset or "all" in subset:
         info["default"] = generate_default_dict(module, fusion)
     if "hardware_types" in subset or "all" in subset:
-        info["hardware"] = generate_hardware_dict(module, fusion)
+        info["hardware_types"] = generate_hardware_types_dict(module, fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(module, fusion)
     if "zones" in subset or "all" in subset:
