@@ -33,8 +33,7 @@ from ansible_collections.purestorage.fusion.tests.unit.mocks.array_mock import (
 from urllib3.exceptions import HTTPError
 from ansible_collections.purestorage.fusion.plugins.modules import fusion_array
 
-fusion_array.install_fusion_exception_hook = MagicMock()
-fusion_array.get_fusion = MagicMock()
+fusion_array.setup_fusion = MagicMock()
 current_module = (
     "ansible_collections.purestorage.fusion.tests.unit.modules.test_fusion_array"
 )

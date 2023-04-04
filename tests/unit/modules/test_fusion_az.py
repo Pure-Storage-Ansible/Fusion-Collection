@@ -30,8 +30,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 from urllib3.exceptions import HTTPError
 from ansible_collections.purestorage.fusion.plugins.modules import fusion_az
 
-fusion_az.install_fusion_exception_hook = MagicMock()
-fusion_az.get_fusion = MagicMock()
+fusion_az.setup_fusion = MagicMock()
 current_module = (
     "ansible_collections.purestorage.fusion.tests.unit.modules.test_fusion_az"
 )
