@@ -7,31 +7,29 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import sys
 import re
 import importlib
 import importlib.metadata
-import json
 
-# This file exists because Ansible currently cannot declare dependencies on Python modules
-# when imported. When imported, it fails with Ansible-compatible message if requirements
-# listed below are not installed
+# This file exists because Ansible currently cannot declare dependencies on Python modules.
 # see https://github.com/ansible/ansible/issues/62733 for more info about lack of req support
 
 #############################
 
 # 'module_name, package_name, version_requirements' triplets
 DEPENDENCIES = [
-    ("fusion", "purefusion", ">=1.0.11,<2.0")
+    ("fusion", "purefusion", ">=1.0.11,<2.0"),
+    ("urllib3", "urllib3", None),
 ]
 
 #############################
+
 
 # returns tuple (MAJOR, MINOR, PATCH)
 def _parse_version(val):
     # regexes for this were really ugly
     try:
-        parts = val.split('.')
+        parts = val.split(".")
         if len(parts) < 2 or len(parts) > 3:
             return None
         major = int(parts[0])
@@ -42,8 +40,9 @@ def _parse_version(val):
         else:
             patch = None
         return (major, minor, patch)
-    except:
+    except Exception:
         return None
+
 
 # returns list of tuples [(COMPARATOR, (MAJOR, MINOR, PATCH)),...]
 def _parse_version_requirements(val):
@@ -56,15 +55,17 @@ def _parse_version_requirements(val):
             ver = match.group(2)
             ver_tuple = _parse_version(ver)
             if not ver_tuple:
-                raise ValueError("invalid version {}".format(ver))
+                raise ValueError("invalid version {0}".format(ver))
             reqs.append((op, ver_tuple))
         return reqs
     except Exception as e:
-        raise ValueError("invalid version requirement '{}' {}".format(val, e))
+        raise ValueError("invalid version requirement '{0}' {1}".format(val, e))
+
 
 def _compare_version(op, ver, req):
     def _cmp(a, b):
-        return (a > b) - (a < b) 
+        return (a > b) - (a < b)
+
     major = _cmp(ver[0], req[0])
     minor = _cmp(ver[1], req[1])
     patch = None
@@ -73,13 +74,16 @@ def _compare_version(op, ver, req):
     result = {
         ">=": major > 0 or (major == 0 and (minor > 0 or patch is None or patch >= 0)),
         "<=": major < 0 or (major == 0 and (minor < 0 or patch is None or patch <= 0)),
-        ">": major > 0 or (major == 0 and (minor > 0 or patch is not None and patch > 0)),
-        "<": major < 0 or (major == 0 and (minor < 0 or patch is not None and patch < 0)),
+        ">": major > 0
+        or (major == 0 and (minor > 0 or patch is not None and patch > 0)),
+        "<": major < 0
+        or (major == 0 and (minor < 0 or patch is not None and patch < 0)),
         "=": major == 0 and minor == 0 and (patch is None or patch == 0),
         "==": major == 0 and minor == 0 and (patch is None or patch == 0),
         "!=": major != 0 or minor != 0 or (patch is not None and patch != 0),
     }.get(op)
     return result
+
 
 def _version_satisfied(version, requirements):
     version = _parse_version(version)
@@ -89,31 +93,32 @@ def _version_satisfied(version, requirements):
             return False
     return True
 
-def _simulate_fail_json(msg, **kwargs):
-    # this is run while module.fail_json() is not available yet
-    # fake it as closely as possible
-
-    kwargs['failed'] = True
-    kwargs['msg'] = msg
-
-    print('\n{}'.format(json.dumps(kwargs)))
-    sys.exit(1)
 
 # poor helper to work around the fact Ansible is unable to manage python dependencies
-def require_import(module, package=None, version_requirements=None):
+def _check_import(ansible_module, module, package=None, version_requirements=None):
     try:
-        importlib.import_module(module)
+        mod = importlib.import_module(module)
     except ImportError:
-        _simulate_fail_json("Error: Python package '{}' required and missing".format(module))
+        ansible_module.fail_json(
+            msg="Error: Python package '{0}' required and missing".format(module)
+        )
 
     if package and version_requirements:
-        version = importlib.metadata.version(package)
         # silently ignore version checks and hope for the best if we can't fetch
-        # package version since we don't know how the user installs packages
-        if version and not _version_satisfied(version, version_requirements):
-            _simulate_fail_json("Error: Python package '{}' version '{}' does not satisfy requirements '{}'".format(module, version, version_requirements))
+        # the package version since we can't know how the user installs packages
+        try:
+            version = importlib.metadata.version(package)
+            if version and not _version_satisfied(version, version_requirements):
+                ansible_module.fail_json(
+                    msg="Error: Python package '{0}' version '{1}' does not satisfy requirements '{2}'".format(
+                        module, version, version_requirements
+                    )
+                )
+        except Exception:
+            pass  # ignore package loads
+    return None
 
-# this actually validates required dependencies right here so we don't have to do it in modules
-# as the dependencies are known and static
-for (module, package, requirements) in DEPENDENCIES:
-    require_import(module, package, requirements)
+
+def check_dependencies(ansible_module):
+    for module, package, version_requirements in DEPENDENCIES:
+        _check_import(ansible_module, module, package, version_requirements)

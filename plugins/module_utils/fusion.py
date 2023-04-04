@@ -32,8 +32,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
-import fusion
+try:
+    import fusion
+except ImportError:
+    pass
 
 from os import environ
 import platform
@@ -55,9 +57,7 @@ def get_fusion(module):
     key_file = module.params["key_file"]
     config = fusion.Configuration()
     config.host = environ.get("FUSION_HOST", config.host)
-    config.token_endpoint = environ.get(
-        "FUSION_TOKEN_ENDPOINT", config.token_endpoint
-    )
+    config.token_endpoint = environ.get("FUSION_TOKEN_ENDPOINT", config.token_endpoint)
     if app_id and key_file:
         try:
             config.issuer_id = app_id

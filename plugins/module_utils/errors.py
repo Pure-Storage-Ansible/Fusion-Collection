@@ -7,16 +7,16 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
-
-import fusion as purefusion
-import urllib3
+try:
+    import fusion as purefusion
+    import urllib3
+except ImportError:
+    pass
 
 import sys
 import json
 import re
 import traceback as trace
-
 
 
 class OperationException(Exception):

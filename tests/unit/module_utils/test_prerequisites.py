@@ -11,10 +11,11 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites i
     _parse_version,
     _parse_version_requirements,
     _compare_version,
-    _version_satisfied
+    _version_satisfied,
 )
 
 import pytest
+
 
 def test_version():
     # VALID
@@ -33,6 +34,7 @@ def test_version():
     assert _parse_version("1.0.1.0") is None
     assert _parse_version("1.0.1.a") is None
 
+
 def test_requirements():
     # VALID
     assert _parse_version_requirements(">= 1.0") == [(">=", (1, 0, None))]
@@ -44,11 +46,27 @@ def test_requirements():
     assert _parse_version_requirements("== 5.3.1") == [("==", (5, 3, 1))]
     assert _parse_version_requirements("< 4.1.2") == [("<", (4, 1, 2))]
     assert _parse_version_requirements("> 1.3.4") == [(">", (1, 3, 4))]
-    assert _parse_version_requirements("> 1.3.4, < 2.0") == [(">", (1, 3, 4)), ("<", (2, 0, None))]
-    assert _parse_version_requirements(">1.3.4 , <2.0") == [(">", (1, 3, 4)), ("<", (2, 0, None))]
-    assert _parse_version_requirements("> 1.3.4 ,< 2.0") == [(">", (1, 3, 4)), ("<", (2, 0, None))]
-    assert _parse_version_requirements(">1.3.4,<2.0") == [(">", (1, 3, 4)), ("<", (2, 0, None))]
-    assert _parse_version_requirements(">1.3.4,<2.0, != 3.4.1") == [(">", (1, 3, 4)), ("<", (2, 0, None)), ("!=", (3, 4, 1))]
+    assert _parse_version_requirements("> 1.3.4, < 2.0") == [
+        (">", (1, 3, 4)),
+        ("<", (2, 0, None)),
+    ]
+    assert _parse_version_requirements(">1.3.4 , <2.0") == [
+        (">", (1, 3, 4)),
+        ("<", (2, 0, None)),
+    ]
+    assert _parse_version_requirements("> 1.3.4 ,< 2.0") == [
+        (">", (1, 3, 4)),
+        ("<", (2, 0, None)),
+    ]
+    assert _parse_version_requirements(">1.3.4,<2.0") == [
+        (">", (1, 3, 4)),
+        ("<", (2, 0, None)),
+    ]
+    assert _parse_version_requirements(">1.3.4,<2.0, != 3.4.1") == [
+        (">", (1, 3, 4)),
+        ("<", (2, 0, None)),
+        ("!=", (3, 4, 1)),
+    ]
     # INVALID
     with pytest.raises(ValueError):
         _parse_version_requirements(">>1.3.4")
@@ -61,40 +79,39 @@ def test_requirements():
     with pytest.raises(ValueError):
         _parse_version_requirements("=<1.3.4")
 
+
 def test_version_satisfied():
-    assert _version_satisfied("1.0", ">=1.0, <2.0") == True
-    assert _version_satisfied("1.0.1", ">=1.0, <2.0") == True
-    assert _version_satisfied("2.0", ">=1.0, <2.0") == False
-    assert _version_satisfied("2.0.0", ">=1.0, <2.0") == False
-    assert _version_satisfied("2.0.1", ">=1.0, <2.0") == False
-    assert _version_satisfied("1.0.0", ">=1.0.0") == True
-    assert _version_satisfied("1.0", ">=1.0.0") == True
-    assert _version_satisfied("1.0", ">=1.0") == True
-    assert _version_satisfied("1.0.1", ">=1.0") == True
-    assert _version_satisfied("1.0.1", ">=1.0.0") == True
-    assert _version_satisfied("1.0.1", "<=1.0.0") == False
-    assert _version_satisfied("1.0.0", "<=1.0.0") == True
-    assert _version_satisfied("1.0", "<=1.0.0") == True
-    assert _version_satisfied("1.0", "<=1.0.1") == True
-    assert _version_satisfied("1.0", "<=1.0") == True
-    assert _version_satisfied("1.0", "<1.0") == False
-    assert _version_satisfied("1.0.0", "<1.0") == False
-    assert _version_satisfied("1.0.0", "<1.1") == True
-    assert _version_satisfied("1.0.0", "<1.0.1") == True
-    assert _version_satisfied("1.0", ">1.0") == False
-    assert _version_satisfied("1.0.1", ">1.0") == False
-    assert _version_satisfied("1.0", ">1.0.0") == False
-    assert _version_satisfied("1.0.0", ">1.0.0") == False
-    assert _version_satisfied("1.0.1", ">1.0.0") == True
-    assert _version_satisfied("1.0", "==1.0") == True
-    assert _version_satisfied("1.0", "=1.0") == True
-    assert _version_satisfied("1.0.0", "==1.0") == True
-    assert _version_satisfied("1.0.1", "==1.0") == True
-    assert _version_satisfied("1.0", "==1.0.0") == True
-    assert _version_satisfied("1.0", "==1.0.1") == False
-    assert _version_satisfied("1.0", "!=1.0.1") == True
-    assert _version_satisfied("1.0", "!=1.0.0") == False
-    assert _version_satisfied("1.0.1", "!=1.0") == False
-    assert _version_satisfied("1.0", "!=1.0") == False
-
-
+    assert _version_satisfied("1.0", ">=1.0, <2.0") is True
+    assert _version_satisfied("1.0.1", ">=1.0, <2.0") is True
+    assert _version_satisfied("2.0", ">=1.0, <2.0") is False
+    assert _version_satisfied("2.0.0", ">=1.0, <2.0") is False
+    assert _version_satisfied("2.0.1", ">=1.0, <2.0") is False
+    assert _version_satisfied("1.0.0", ">=1.0.0") is True
+    assert _version_satisfied("1.0", ">=1.0.0") is True
+    assert _version_satisfied("1.0", ">=1.0") is True
+    assert _version_satisfied("1.0.1", ">=1.0") is True
+    assert _version_satisfied("1.0.1", ">=1.0.0") is True
+    assert _version_satisfied("1.0.1", "<=1.0.0") is False
+    assert _version_satisfied("1.0.0", "<=1.0.0") is True
+    assert _version_satisfied("1.0", "<=1.0.0") is True
+    assert _version_satisfied("1.0", "<=1.0.1") is True
+    assert _version_satisfied("1.0", "<=1.0") is True
+    assert _version_satisfied("1.0", "<1.0") is False
+    assert _version_satisfied("1.0.0", "<1.0") is False
+    assert _version_satisfied("1.0.0", "<1.1") is True
+    assert _version_satisfied("1.0.0", "<1.0.1") is True
+    assert _version_satisfied("1.0", ">1.0") is False
+    assert _version_satisfied("1.0.1", ">1.0") is False
+    assert _version_satisfied("1.0", ">1.0.0") is False
+    assert _version_satisfied("1.0.0", ">1.0.0") is False
+    assert _version_satisfied("1.0.1", ">1.0.0") is True
+    assert _version_satisfied("1.0", "==1.0") is True
+    assert _version_satisfied("1.0", "=1.0") is True
+    assert _version_satisfied("1.0.0", "==1.0") is True
+    assert _version_satisfied("1.0.1", "==1.0") is True
+    assert _version_satisfied("1.0", "==1.0.0") is True
+    assert _version_satisfied("1.0", "==1.0.1") is False
+    assert _version_satisfied("1.0", "!=1.0.1") is True
+    assert _version_satisfied("1.0", "!=1.0.0") is False
+    assert _version_satisfied("1.0.1", "!=1.0") is False
+    assert _version_satisfied("1.0", "!=1.0") is False

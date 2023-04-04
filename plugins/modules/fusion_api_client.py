@@ -53,16 +53,17 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
-import fusion as purefusion
+try:
+    import fusion as purefusion
+except ImportError:
+    pass
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 
 
@@ -120,9 +121,8 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
-    install_fusion_exception_hook(module)
+    fusion = setup_fusion(module)
 
-    fusion = get_fusion(module)
     state = module.params["state"]
     client = get_client(module, fusion)
     if not client and state == "present":

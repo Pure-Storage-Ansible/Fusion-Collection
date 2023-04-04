@@ -10,9 +10,11 @@ __metaclass__ = type
 import time
 import math
 
-import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
-import fusion as purefusion
-from urllib3.exceptions import HTTPError
+try:
+    import fusion as purefusion
+    from urllib3.exceptions import HTTPError
+except ImportError:
+    pass
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     OperationException,

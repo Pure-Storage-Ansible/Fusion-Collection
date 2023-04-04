@@ -65,6 +65,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
     fusion_argument_spec,
 )
 
+
 def main():
     """Main code"""
     argument_spec = fusion_argument_spec()

@@ -80,20 +80,21 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-import ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites
-import fusion as purefusion
+try:
+    import fusion as purefusion
+except ImportError:
+    pass
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
     get_tenant,
@@ -216,9 +217,8 @@ def main():
     module = AnsibleModule(
         argument_spec, required_if=required_if, supports_check_mode=True
     )
-    install_fusion_exception_hook(module)
+    fusion = setup_fusion(module)
 
-    fusion = get_fusion(module)
     state = module.params["state"]
     if not human_to_principal(fusion, module.params["user"]):
         module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
