@@ -787,8 +787,8 @@ def generate_hardware_types_dict(module, fusion):
     return hardware_info
 
 
-@_api_permission_denied_handler("storageclass")
-def generate_storageclass_dict(module, fusion):
+@_api_permission_denied_handler("storage_classes")
+def generate_sc_dict(module, fusion):
     sc_info = {}
     ss_api_instance = purefusion.StorageServicesApi(fusion)
     sc_api_instance = purefusion.StorageClassesApi(fusion)
@@ -1078,7 +1078,7 @@ def main():
                 "The 'placements' subset is deprecated and will be removed in the version 1.7.0"
             )
     if "storage_classes" in subset or "all" in subset:
-        info["storageclass"] = generate_storageclass_dict(module, fusion)
+        info["storage_classes"] = generate_sc_dict(module, fusion)
     if "interfaces" in subset or "all" in subset:
         info["interfaces"] = generate_nics_dict(module, fusion)
     if "hosts" in subset or "all" in subset:

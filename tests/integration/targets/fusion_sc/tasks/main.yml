@@ -47,7 +47,7 @@
   register: fusion_info
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'foo_sc' in fusion_info['fusion_info']['storageclass']"
+    that: "'foo_sc' in fusion_info['fusion_info']['storage_classes']"
 
 - name: Delete storage class
   purestorage.fusion.fusion_sc:
@@ -69,7 +69,7 @@
   register: fusion_info
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'foo_sc' not in fusion_info['fusion_info']['storageclass']"
+    that: "'foo_sc' not in fusion_info['fusion_info']['storage_classes']"
 
 
 # Teardown dependencies
