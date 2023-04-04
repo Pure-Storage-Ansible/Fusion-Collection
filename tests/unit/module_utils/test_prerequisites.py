@@ -10,7 +10,6 @@ __metaclass__ = type
 from ansible_collections.purestorage.fusion.plugins.module_utils.prerequisites import (
     _parse_version,
     _parse_version_requirements,
-    _compare_version,
     _version_satisfied,
 )
 
