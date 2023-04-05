@@ -771,8 +771,8 @@ def generate_users_dict(module, fusion):
     return users_info
 
 
-@_api_permission_denied_handler("hardware")
-def generate_hardware_dict(module, fusion):
+@_api_permission_denied_handler("hardware_types")
+def generate_hardware_types_dict(module, fusion):
     hardware_info = {}
     api_instance = purefusion.HardwareTypesApi(fusion)
     hw_types = api_instance.list_hardware_types()
@@ -785,8 +785,8 @@ def generate_hardware_dict(module, fusion):
     return hardware_info
 
 
-@_api_permission_denied_handler("storageclass")
-def generate_storageclass_dict(module, fusion):
+@_api_permission_denied_handler("storage_classes")
+def generate_sc_dict(module, fusion):
     sc_info = {}
     ss_api_instance = purefusion.StorageServicesApi(fusion)
     sc_api_instance = purefusion.StorageClassesApi(fusion)
@@ -1050,7 +1050,7 @@ def main():
     if "minimum" in subset or "all" in subset:
         info["default"] = generate_default_dict(module, fusion)
     if "hardware_types" in subset or "all" in subset:
-        info["hardware"] = generate_hardware_dict(module, fusion)
+        info["hardware_types"] = generate_hardware_types_dict(module, fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(module, fusion)
     if "zones" in subset or "all" in subset:
@@ -1071,7 +1071,7 @@ def main():
                 "The 'placements' subset is deprecated and will be removed in the version 1.7.0"
             )
     if "storage_classes" in subset or "all" in subset:
-        info["storageclass"] = generate_storageclass_dict(module, fusion)
+        info["storage_classes"] = generate_sc_dict(module, fusion)
     if "interfaces" in subset or "all" in subset:
         info["interfaces"] = generate_nics_dict(module, fusion)
     if "hosts" in subset or "all" in subset:
