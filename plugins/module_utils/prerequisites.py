@@ -25,8 +25,15 @@ DEPENDENCIES = [
 #############################
 
 
-# returns tuple (MAJOR, MINOR, PATCH)
 def _parse_version(val):
+    """
+    Parse a package version.
+    Takes in either MAJOR.MINOR or MAJOR.MINOR.PATCH form. PATCH
+    can have additional suffixes, e.g. '-prerelease', 'a1', ...
+
+    :param val: a string representation of the package version
+    :returns: tuple of ints (MAJOR, MINOR, PATCH) or None if not parsed
+    """
     # regexes for this were really ugly
     try:
         parts = val.split(".")
@@ -46,6 +53,12 @@ def _parse_version(val):
 
 # returns list of tuples [(COMPARATOR, (MAJOR, MINOR, PATCH)),...]
 def _parse_version_requirements(val):
+    """
+    Parse package requirements.
+
+    :param val: a string in the form ">=1.0.11,<2.0"
+    :returns: list of tuples in the form [(">=", (1, 0, 11)), ("<", (2, 0, None))] or None if not parsed
+    """
     reqs = []
     try:
         parts = val.split(",")
@@ -63,6 +76,15 @@ def _parse_version_requirements(val):
 
 
 def _compare_version(op, ver, req):
+    """
+    Compare two versions.
+
+    :param op: a string, one of comparators ">=", "<=", "=", "==", ">" or "<"
+    :param ver: version tuple in _parse_version() return form
+    :param req: version tuple in _parse_version() return form
+    :returns: True if ver 'op' req; False otherwise
+    """
+
     def _cmp(a, b):
         return (a > b) - (a < b)
 
@@ -86,6 +108,14 @@ def _compare_version(op, ver, req):
 
 
 def _version_satisfied(version, requirements):
+    """
+    Checks whether version matches given version requirements.
+
+    :param version: a string, in input form to _parse_version()
+    :param requirements: as string, in input form to _parse_version_requirements()
+    :returns: True if 'version' matches 'requirements'; False otherwise
+    """
+
     version = _parse_version(version)
     requirements = _parse_version_requirements(requirements)
     for req in requirements:
@@ -96,6 +126,15 @@ def _version_satisfied(version, requirements):
 
 # poor helper to work around the fact Ansible is unable to manage python dependencies
 def _check_import(ansible_module, module, package=None, version_requirements=None):
+    """
+    Tries to import a module and optionally validates its package version.
+    Calls AnsibleModule.fail_json() if not satisfied.
+
+    :param ansible_module: an AnsibleModule instance
+    :param module: a string with module name to try to import
+    :param package: a string, package to check version for; must be specified with 'version_requirements'
+    :param version_requirements: a string, version requirements for 'package' 
+    """
     try:
         mod = importlib.import_module(module)
     except ImportError:
@@ -116,7 +155,6 @@ def _check_import(ansible_module, module, package=None, version_requirements=Non
                 )
         except Exception:
             pass  # ignore package loads
-    return None
 
 
 def check_dependencies(ansible_module):
