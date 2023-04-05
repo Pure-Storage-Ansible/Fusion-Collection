@@ -133,7 +133,7 @@ def _check_import(ansible_module, module, package=None, version_requirements=Non
     :param ansible_module: an AnsibleModule instance
     :param module: a string with module name to try to import
     :param package: a string, package to check version for; must be specified with 'version_requirements'
-    :param version_requirements: a string, version requirements for 'package' 
+    :param version_requirements: a string, version requirements for 'package'
     """
     try:
         mod = importlib.import_module(module)
