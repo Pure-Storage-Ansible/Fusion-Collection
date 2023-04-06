@@ -9,6 +9,7 @@ __metaclass__ = type
 
 try:
     import fusion as purefusion
+    import urllib3
 except ImportError:
     pass
 
@@ -16,12 +17,6 @@ import sys
 import json
 import re
 import traceback as trace
-
-_HAS_URLLIB = True
-try:
-    import urllib3
-except ImportError:
-    _HAS_URLLIB = False
 
 
 class OperationException(Exception):
@@ -279,7 +274,7 @@ def _except_hook_callback(module, original_hook, type, value, traceback):
         )
     elif type == OperationException:
         _handle_operation_exception(module, value, traceback, verbosity)
-    elif _HAS_URLLIB and issubclass(type, urllib3.exceptions.HTTPError):
+    elif issubclass(type, urllib3.exceptions.HTTPError):
         _handle_http_exception(module, value, traceback, verbosity)
 
     # if we bubbled here the handlers were not able to process the exception

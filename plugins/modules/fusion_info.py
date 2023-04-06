@@ -70,19 +70,17 @@ fusion_info:
   type: complex
 """
 
-HAS_FUSION = True
 try:
     import fusion as purefusion
 except ImportError:
-    HAS_FUSION = False
+    pass
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 import time
 import http
@@ -1013,12 +1011,7 @@ def main():
     module = AnsibleModule(argument_spec, supports_check_mode=True)
 
     # will handle all errors (except #403 which should be handled in code)
-    install_fusion_exception_hook(module)
-
-    if not HAS_FUSION:
-        module.fail_json(msg="fusion SDK required for this module")
-
-    fusion = get_fusion(module)
+    fusion = setup_fusion(module)
 
     subset = [test.lower() for test in module.params["gather_subset"]]
     valid_subsets = (

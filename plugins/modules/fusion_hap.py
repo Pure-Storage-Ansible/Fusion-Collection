@@ -113,21 +113,19 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-HAS_FUSION = True
 try:
     import fusion as purefusion
 except ImportError:
-    HAS_FUSION = False
+    pass
 
 import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
 
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
@@ -236,9 +234,7 @@ def main():
         required_together=required_together,
         required_if=required_if,
     )
-    install_fusion_exception_hook(module)
-
-    fusion = get_fusion(module)
+    fusion = setup_fusion(module)
 
     hap_pattern = re.compile("^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?$")
     iqn_pattern = re.compile(

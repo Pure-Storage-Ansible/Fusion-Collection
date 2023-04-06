@@ -32,11 +32,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-HAS_FUSION = True
 try:
     import fusion
 except ImportError:
-    HAS_FUSION = False
+    pass
 
 from os import environ
 import platform
@@ -56,40 +55,35 @@ def get_fusion(module):
     }
     app_id = module.params["app_id"]
     key_file = module.params["key_file"]
-    if HAS_FUSION:
-        config = fusion.Configuration()
-        config.host = environ.get("FUSION_HOST", config.host)
-        config.token_endpoint = environ.get(
-            "FUSION_TOKEN_ENDPOINT", config.token_endpoint
-        )
-        if app_id and key_file:
-            try:
-                config.issuer_id = app_id
-                config.private_key_file = key_file
-                client = fusion.ApiClient(config)
-                client.set_default_header("User-Agent", user_agent)
-            except Exception:
-                module.fail_json(msg="Unknown failure. Please contact Pure Support")
-        elif environ.get("FUSION_APP_ID") and environ.get("FUSION_PRIVATE_KEY_FILE"):
-            try:
-                config.issuer_id = environ.get("FUSION_APP_ID")
-                config.private_key_file = environ.get("FUSION_PRIVATE_KEY_FILE")
-                client = fusion.ApiClient(config)
-                client.set_default_header("User-Agent", user_agent)
-            except Exception:
-                module.fail_json(msg="Unknown failure. Please contact Pure Support")
-        else:
-            module.fail_json(
-                msg="You must set FUSION_APP_ID and FUSION_PRIVATE_KEY_FILE environment variables "
-                "or the app_id and key_file module arguments"
-            )
+    config = fusion.Configuration()
+    config.host = environ.get("FUSION_HOST", config.host)
+    config.token_endpoint = environ.get("FUSION_TOKEN_ENDPOINT", config.token_endpoint)
+    if app_id and key_file:
         try:
-            api_instance = fusion.DefaultApi(client)
-            api_instance.get_version()
-        except Exception as err:
-            module.fail_json(msg="Fusion authentication failed: {0}".format(err))
+            config.issuer_id = app_id
+            config.private_key_file = key_file
+            client = fusion.ApiClient(config)
+            client.set_default_header("User-Agent", user_agent)
+        except Exception:
+            module.fail_json(msg="Unknown failure. Please contact Pure Support")
+    elif environ.get("FUSION_APP_ID") and environ.get("FUSION_PRIVATE_KEY_FILE"):
+        try:
+            config.issuer_id = environ.get("FUSION_APP_ID")
+            config.private_key_file = environ.get("FUSION_PRIVATE_KEY_FILE")
+            client = fusion.ApiClient(config)
+            client.set_default_header("User-Agent", user_agent)
+        except Exception:
+            module.fail_json(msg="Unknown failure. Please contact Pure Support")
     else:
-        module.fail_json(msg="fusion SDK is not installed.")
+        module.fail_json(
+            msg="You must set FUSION_APP_ID and FUSION_PRIVATE_KEY_FILE environment variables "
+            "or the app_id and key_file module arguments"
+        )
+    try:
+        api_instance = fusion.DefaultApi(client)
+        api_instance.get_version()
+    except Exception as err:
+        module.fail_json(msg="Fusion authentication failed: {0}".format(err))
     return client
 
 

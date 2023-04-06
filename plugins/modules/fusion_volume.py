@@ -126,23 +126,21 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-HAS_FUSION = True
 try:
     import fusion as purefusion
 except ImportError:
-    HAS_FUSION = False
+    pass
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
     print_number_with_metric_suffix,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
@@ -529,11 +527,9 @@ def main():
         required_by=required_by,
         supports_check_mode=True,
     )
-
-    install_fusion_exception_hook(module)
+    fusion = setup_fusion(module)
 
     state = module.params["state"]
-    fusion = get_fusion(module)
 
     volume = get_volume(module, fusion)
 

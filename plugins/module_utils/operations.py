@@ -12,11 +12,6 @@ import math
 
 try:
     import fusion as purefusion
-except ImportError:
-    pass
-
-
-try:
     from urllib3.exceptions import HTTPError
 except ImportError:
     pass

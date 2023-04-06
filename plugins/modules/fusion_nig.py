@@ -100,16 +100,13 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-
-HAS_FUSION = True
 try:
     import fusion as purefusion
 except ImportError:
-    HAS_FUSION = False
+    pass
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    get_fusion,
     fusion_argument_spec,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
@@ -117,8 +114,8 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.networking impo
     is_valid_network,
     is_address_in_network,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
-    install_fusion_exception_hook,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
     get_az,
@@ -246,10 +243,9 @@ def main():
     )
 
     module = AnsibleModule(argument_spec, supports_check_mode=True)
-    install_fusion_exception_hook(module)
+    fusion = setup_fusion(module)
 
     state = module.params["state"]
-    fusion = get_fusion(module)
     if module.params["prefix"] and not is_valid_network(module.params["prefix"]):
         module.fail_json(
             msg="`prefix` '{0}' is not a valid address in CIDR notation".format(
