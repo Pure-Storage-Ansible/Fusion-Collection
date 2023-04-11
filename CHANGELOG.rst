@@ -5,6 +5,28 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.4.2
+======
+
+Minor Changes
+-------------
+
+- added Python package dependency checks in prerequisites.py
+- fusion_hap - added missing "windows" personality type
+
+Bugfixes
+--------
+
+- fusion_array - correct required parameters
+- fusion_hap - display name has now default value set to the value of name
+- fusion_hw - correct required parameters
+- fusion_pg - correct required parameters
+- fusion_pp - correct required parameters
+- fusion_sc - correct required parameters
+- fusion_ss - allow updating hardware types, correct required parameters
+- fusion_tn - fix attribute error
+- fusion_volume - protection policy can now be unset by using "" as name
+
 v1.4.1
 ======
 
