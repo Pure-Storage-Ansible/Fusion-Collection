@@ -105,24 +105,3 @@ jobs:
 
       - name: Release to Automation Hub
         run: ansible-galaxy collection publish ./purestorage-fusion-${{ env.RELEASE_VERSION }}.tar.gz
-
-  create_execution_release:
-    needs: publish_collection_to_galaxy
-    runs-on: ubuntu-latest
-    environment: fusion-env
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Get Fusion Execution Environment repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          token: ${{ secrets.EXECUTION_ENVIROMENT_API_KEY }}
-          repository: Pure-Storage-Ansible/Fusion-Execution-Environment
-          path: ./fusion-execution-environment
-
-      - name: Create an execution environment release
-        env:
-          GITHUB_TOKEN: ${{ secrets.EXECUTION_ENVIROMENT_API_KEY }}
-        run: cd ./fusion-execution-environment && gh release create "${{ env.RELEASE_VERSION }}" --title "Fusion Ansible Execution Environment v${{ env.RELEASE_VERSION }}"
