@@ -1,9 +1,0 @@
----
-- name: Smoke test
-  hosts: localhost
-  tasks:
-   - name: Collect basic information as part of smoke test
-     purestorage.fusion.fusion_info:
-      gather_subset: minimum
-      app_id: "{{ ansible_env.API_CLIENT }}"
-      key_file: "{{ ansible_env.PRIV_KEY_FILE }}"
