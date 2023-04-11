@@ -107,7 +107,7 @@ jobs:
         run: ansible-galaxy collection publish ./purestorage-fusion-${{ env.RELEASE_VERSION }}.tar.gz
 
   create_execution_release:
-    needs: [publish_collection_to_galaxy, publish_collection_to_automation_hub]
+    needs: publish_collection_to_galaxy
     runs-on: ubuntu-latest
     environment: fusion-env
     steps:
