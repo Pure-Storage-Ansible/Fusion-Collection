@@ -17,6 +17,7 @@
         key_file: "{{ ansible_env.PRIV_KEY_FILE }}"
         state: present  # or absent
         name: az1
+        region: region1
         display_name: "az1"
 
     - name: Create new network interface group
