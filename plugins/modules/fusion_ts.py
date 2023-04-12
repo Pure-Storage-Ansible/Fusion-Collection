@@ -79,9 +79,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
     setup_fusion,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils import getters
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_tenant,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -174,11 +171,8 @@ def main():
     fusion = setup_fusion(module)
 
     state = module.params["state"]
-    if not get_tenant(module, fusion):
-        module.fail_json(
-            msg="Tenant {0} does not exist".format(module.params["tenant"])
-        )
     tspace = get_ts(module, fusion)
+
     if state == "present" and not tspace:
         create_ts(module, fusion)
     elif state == "present" and tspace:

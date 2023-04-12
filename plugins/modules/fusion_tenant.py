@@ -102,14 +102,11 @@ def create_tenant(module, fusion):
     module.exit_json(changed=changed)
 
 
-def update_tenant(module, fusion):
+def update_tenant(module, fusion, tenant):
     """Update Tenant settings"""
     changed = False
     api_instance = purefusion.TenantsApi(fusion)
 
-    tenant = api_instance.get_tenant(
-        tenant_name=module.params["name"],
-    )
     if (
         module.params["display_name"]
         and module.params["display_name"] != tenant.display_name
@@ -159,7 +156,7 @@ def main():
     if not tenant and state == "present":
         create_tenant(module, fusion)
     elif tenant and state == "present":
-        update_tenant(module, fusion)
+        update_tenant(module, fusion, tenant)
     elif tenant and state == "absent":
         delete_tenant(module, fusion)
     else:

@@ -117,9 +117,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import 
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_ss,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -145,7 +142,7 @@ def create_sc(module, fusion):
     if not module.params["size_limit"]:
         module.params["size_limit"] = "4P"
     if not module.params["iops_limit"]:
-        module.params["iops_limit"] = "100000000"
+        module.params["iops_limit"] = "10000000"
     if not module.params["bw_limit"]:
         module.params["bw_limit"] = "512G"
     size_limit = parse_number_with_metric_suffix(module, module.params["size_limit"])
@@ -155,11 +152,11 @@ def create_sc(module, fusion):
         )
     )
     bw_limit = parse_number_with_metric_suffix(module, module.params["bw_limit"])
-    if bw_limit not in range(1048576, 549755813889):  # 1MB/s to 512GB/s
+    if bw_limit < 1048576 or bw_limit > 549755813888:  # 1MB/s to 512GB/s
         module.fail_json(msg="Bandwidth limit is not within the required range")
-    if 100 > iops_limit > 10000000:
+    if iops_limit < 100 or iops_limit > 10000000:
         module.fail_json(msg="IOPs limit is not within the required range")
-    if size_limit not in range(1048576, 4503599627370497):  # 1MB to 4PB
+    if size_limit < 1048576 or size_limit > 4503599627370496:  # 1MB to 4PB
         module.fail_json(msg="Size limit is not within the required range")
 
     changed = True
@@ -183,15 +180,11 @@ def create_sc(module, fusion):
     module.exit_json(changed=changed)
 
 
-def update_sc(module, fusion):
+def update_sc(module, fusion, s_class):
     """Update Storage Class settings"""
     changed = False
     sc_api_instance = purefusion.StorageClassesApi(fusion)
 
-    s_class = sc_api_instance.get_storage_class(
-        storage_class_name=module.params["name"],
-        storage_service_name=module.params["storage_service"],
-    )
     if (
         module.params["display_name"]
         and module.params["display_name"] != s_class.display_name
@@ -246,22 +239,10 @@ def main():
     state = module.params["state"]
     s_class = get_sc(module, fusion)
 
-    if not s_class and not module.params["storage_service"]:
-        module.fail_json(
-            msg="`hardware_type` is required when creating a new Storage Class"
-        )
-
-    if module.params["storage_service"] and not get_ss(module, fusion):
-        module.fail_json(
-            msg="Storage Service Type {0} does not exist".format(
-                module.params["storage_service"]
-            )
-        )
-
     if not s_class and state == "present":
         create_sc(module, fusion)
     elif s_class and state == "present":
-        update_sc(module, fusion)
+        update_sc(module, fusion, s_class)
     elif s_class and state == "absent":
         delete_sc(module, fusion)
     else:

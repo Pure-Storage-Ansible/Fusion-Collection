@@ -163,9 +163,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.networking impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_az,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -173,23 +170,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 
 #######################################################################
 # DEPRECATED CODE SECTION STARTS
-
-
-def get_nifg(module, fusion):
-    """Check all Network Interface Groups"""
-    nifg_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
-    for group in range(0, len(module.params["network_interface_groups"])):
-        try:
-            nifg_api_instance.get_network_interface_group(
-                region_name=module.params["region"],
-                availability_zone_name=module.params["availability_zone"],
-                network_interface_group_name=module.params["network_interface_groups"][
-                    group
-                ],
-            )
-        except purefusion.rest.ApiException:
-            return False
-    return True
 
 
 def create_se_old(module, fusion):
@@ -240,22 +220,6 @@ def create_se_old(module, fusion):
 #######################################################################
 
 
-def check_nifgs_exist(module, fusion):
-    """Check all Network Interface Groups exist"""
-    nifg_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
-    for endpoint in module.params["iscsi"]:
-        for nig in endpoint["network_interface_groups"]:
-            try:
-                nifg_api_instance.get_network_interface_group(
-                    region_name=module.params["region"],
-                    availability_zone_name=module.params["availability_zone"],
-                    network_interface_group_name=nig,
-                )
-            except purefusion.rest.ApiException:
-                return False
-    return True
-
-
 def get_se(module, fusion):
     """Storage Endpoint or None"""
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
@@ -288,8 +252,8 @@ def create_se(module, fusion):
         )
         op = se_api_instance.create_storage_endpoint(
             storage_endpoint,
-            module.params["region"],
-            module.params["availability_zone"],
+            region_name=module.params["region"],
+            availability_zone_name=module.params["availability_zone"],
         )
         await_operation(fusion, op)
 
@@ -392,12 +356,6 @@ def main():
     fusion = setup_fusion(module)
 
     state = module.params["state"]
-    if not get_az(module, fusion):
-        module.fail_json(
-            msg="Availability Zone {0} does not exist".format(
-                module.params["availability_zone"]
-            )
-        )
 
     deprecated_parameters = {"addresses", "gateway", "network_interface_groups"}
     used_deprecated_parameters = [
@@ -413,10 +371,6 @@ def main():
                 f"{param_name} is deprecated and will be removed in the version 2.0"
             )
 
-        if module.params["network_interface_groups"] and not get_nifg(module, fusion):
-            module.fail_json(
-                msg="Not all of the network interface groups exist in the specified AZ"
-            )
         if module.params["addresses"]:
             for address in module.params["addresses"]:
                 if not is_valid_network(address):
@@ -441,10 +395,6 @@ def main():
             delete_se(module, fusion)
     else:
         # user uses new module interface
-        if not check_nifgs_exist(module, fusion):
-            module.fail_json(
-                msg="Not all of the network interface groups exist in the specified AZ"
-            )
         if module.params["iscsi"]:
             for endpoint in module.params["iscsi"]:
                 address = endpoint["address"]
