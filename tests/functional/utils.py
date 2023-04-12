@@ -64,6 +64,10 @@ class AnsibleExitJson(Exception):
     def changed(self):
         return self.kwargs["changed"]
 
+    @property
+    def fusion_info(self):
+        return self.kwargs["fusion_info"] if "fusion_info" in self.kwargs else None
+
 
 class AnsibleFailJson(Exception):
     """
