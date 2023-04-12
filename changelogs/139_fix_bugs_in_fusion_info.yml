@@ -1,0 +1,2 @@
+bugfixes:
+  - fusion_info - fix runtime errors caused when listing `interfaces`, `arrays` and `snapshots` dicts

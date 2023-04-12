@@ -16,9 +16,9 @@ short_description: Collect information from Pure Fusion
 description:
   - Collect information from a Pure Fusion environment.
   - By default, the module will collect basic
-    information including counts for arrays, availabiliy_zones, volunmes, snapshots
+    information including counts for arrays, availability_zones, volumes, snapshots
     . Fleet capacity and data reduction rates are also provided.
-  - Additional information can be collected based on the configured set of arguements.
+  - Additional information can be collected based on the configured set of arguments.
 author:
   - Pure Storage ansible Team (@sdodsley) <pure-ansible-team@purestorage.com>
 notes:
@@ -537,9 +537,7 @@ def generate_nics_dict(module, fusion):
                         "mac_address": nic.eth.mac_address,
                         "gateway": nic.eth.gateway,
                         "mtu": nic.eth.mtu,
-                        "network_interface_group": nics.items[
-                            nic
-                        ].network_interface_group.name,
+                        "network_interface_group": nic.network_interface_group.name,
                         "availability_zone": nic.availability_zone.name,
                     }
     return nics_info
@@ -587,7 +585,7 @@ def generate_array_dict(module, fusion):
                     region_name=region.name,
                 )
                 array_info[array_name] = {
-                    "region": regions.region.name,
+                    "region": region.name,
                     "availability_zone": az.name,
                     "host_name": array.host_name,
                     "maintenance_mode": array.maintenance_mode,
@@ -884,7 +882,7 @@ def generate_nigs_dict(module, fusion):
 
 
 @_api_permission_denied_handler("snapshots")
-def generate_snap_dict(module, fusion):
+def generate_snap_dicts(module, fusion):
     snap_dict = {}
     vsnap_dict = {}
     tenant_api_instance = purefusion.TenantsApi(fusion)
@@ -1038,12 +1036,11 @@ def main():
         "network_interface_groups",
         "api_clients",
     )
-    subset_test = (test in valid_subsets for test in subset)
-    if not all(subset_test):
-        module.fail_json(
-            msg="value must gather_subset must be one or more of: %s, got: %s"
-            % (",".join(valid_subsets), ",".join(subset))
-        )
+    for option in subset:
+        if option not in valid_subsets:
+            module.fail_json(
+                msg=f"value gather_subset must be one or more of: {','.join(valid_subsets)}, got: {','.join(subset)}\nvalue {option} is not allowed"
+            )
 
     info = {}
 
@@ -1093,7 +1090,11 @@ def main():
                 "The 'nigs' subset is deprecated and will be removed in the version 1.7.0"
             )
     if "snapshots" in subset or "all" in subset:
-        info["snapshots"], info["volume_snapshots"] = generate_snap_dict(module, fusion)
+        snap_dicts = generate_snap_dicts(module, fusion)
+        if snap_dicts is not None:
+            info["snapshots"], info["volume_snapshots"] = snap_dicts
+        else:
+            info["snapshots"], info["volume_snapshots"] = None, None
 
     module.exit_json(changed=False, fusion_info=info)
 
