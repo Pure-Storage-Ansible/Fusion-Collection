@@ -50,8 +50,8 @@ def module_args():
         "hardware_type": "flash-array-x",
         "maintenance_mode": False,
         "unavailable_mode": False,
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
 
 
@@ -89,8 +89,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'region` is missing
         {
@@ -103,8 +103,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'availability_zone` is missing
         {
@@ -117,8 +117,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -132,8 +132,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -148,8 +148,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # parameter 'hardware_type` has incorrect value
         {
@@ -163,8 +163,8 @@ def current_array(module_args):
             "hardware_type": "hdd-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # parameter 'maintenance_mode` has incorrect value
         {
@@ -178,8 +178,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": "string",
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # parameter 'unavailable_mode` has incorrect value
         {
@@ -193,8 +193,8 @@ def current_array(module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": "string",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -242,8 +242,8 @@ def test_module_fails_on_wrong_parameters(m_array_api, m_op_api, module_args):
             "host_name": "array_1",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'host_name` for creating resource is missing
         {
@@ -256,8 +256,8 @@ def test_module_fails_on_wrong_parameters(m_array_api, m_op_api, module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'appliance_id` for creating resource is missing
         {
@@ -270,8 +270,8 @@ def test_module_fails_on_wrong_parameters(m_array_api, m_op_api, module_args):
             "hardware_type": "flash-array-x",
             "maintenance_mode": False,
             "unavailable_mode": False,
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )

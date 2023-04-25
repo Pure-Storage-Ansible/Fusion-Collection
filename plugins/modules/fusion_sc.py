@@ -78,24 +78,24 @@ EXAMPLES = r"""
     bw_limit: 25M
     storage_service: service1
     display_name: "test class"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Update storage class (only display_name change is supported)
   purestorage.fusion.fusion_sc:
     name: foo
     display_name: "main class"
     storage_service: service1
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete storage class
   purestorage.fusion.fusion_sc:
     name: foo
     storage_service: service1
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

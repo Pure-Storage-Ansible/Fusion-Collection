@@ -51,16 +51,16 @@ EXAMPLES = r"""
     name: foo
     tenant: bar
     state: present
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete tenant space foo in tenant bar
   purestorage.fusion.fusion_ts:
     name: foo
     tenant: bar
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

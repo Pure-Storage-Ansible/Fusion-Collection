@@ -43,8 +43,8 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Collect default set of information
   purestorage.fusion.fusion_info:
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
     register: fusion_info
 
 - name: Show default information
@@ -55,8 +55,8 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_info:
     gather_subset:
       - all
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Show all information
   ansible.builtin.debug:

@@ -84,8 +84,8 @@ EXAMPLES = r"""
     gateway: 10.21.200.1
     prefix: 10.21.200.0/24
     state: present
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete network interface group foo in AZ bar
   purestorage.fusion.fusion_nig:
@@ -93,8 +93,8 @@ EXAMPLES = r"""
     availability_zone: bar
     region: region1
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

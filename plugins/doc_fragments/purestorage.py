@@ -22,21 +22,23 @@ notes:
     # Documentation fragment for Fusion
     FUSION = r"""
 options:
-  key_file:
+  private_key_file:
+    aliases: [ key_file ]
     description:
       - Path to the private key file
       - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
-  app_id:
+  issuer_id:
+    aliases: [ app_id ]
     description:
       - Application ID from Pure1 Registration page
       - eg. pure1:apikey:dssf2331sd
-      - Defaults to the set environment variable under FUSION_APP_ID
+      - Defaults to the set environment variable under FUSION_ISSUER_ID
     type: str
 notes:
   - This module requires the I(purefusion) Python library
-  - You must set C(FUSION_APP_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
-    if I(app_id) and I(key_file) arguments are not passed to the module directly
+  - You must set C(FUSION_ISSUER_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
+    if I(issuer_id) and I(private_key_file) arguments are not passed to the module directly
 requirements:
   - python >= 3.8
   - purefusion

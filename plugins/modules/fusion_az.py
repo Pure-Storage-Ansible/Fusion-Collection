@@ -51,16 +51,16 @@ EXAMPLES = r"""
     name: foo
     display_name: "foo AZ"
     region: region1
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete AZ foo
   purestorage.fusion.fusion_az:
     name: foo
     state: absent
     region: region1
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

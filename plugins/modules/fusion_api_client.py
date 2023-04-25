@@ -46,8 +46,8 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_api_client:
     name: "foo client"
     public_key: "{{lookup('file', 'public_pem_file') }}"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

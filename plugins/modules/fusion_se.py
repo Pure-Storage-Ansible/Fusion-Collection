@@ -116,8 +116,8 @@ EXAMPLES = r"""
           - subnet-0
           - subnet-1
     state: present
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete storage endpoint foo in AZ bar
   purestorage.fusion.fusion_se:
@@ -125,8 +125,8 @@ EXAMPLES = r"""
     availability_zone: bar
     region: us-west
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: (DEPRECATED) Create new storage endpoint foo in AZ bar
   purestorage.fusion.fusion_se:
@@ -140,8 +140,8 @@ EXAMPLES = r"""
     network_interface_groups:
       - subnet-0
     state: present
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

@@ -84,8 +84,8 @@ EXAMPLES = r"""
     region: region1
     storage_service: storage_service_1
     state: present
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete placement group foo
   purestorage.fusion.fusion_pg:
@@ -93,8 +93,8 @@ EXAMPLES = r"""
     tenant: test
     tenant_space: space_1
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

@@ -47,16 +47,16 @@ basic.AnsibleModule.fail_json = fail_json
             "state": "present",
             "region": "region1",
             "display_name": "Availability Zone 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'region` is missing
         {
             "state": "present",
             "name": "az1",
             "display_name": "Availability Zone 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -64,8 +64,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "az1",
             "region": "region1",
             "display_name": "Availability Zone 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -74,8 +74,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "az1",
             "region": "region1",
             "display_name": "Availability Zone 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -116,8 +116,8 @@ def test_az_create(m_az_api, m_op_api):
         "name": "az1",
         "region": "region1",
         "display_name": "Availability Zone 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -163,8 +163,8 @@ def test_az_create_without_display_name(m_az_api, m_op_api):
         "state": "present",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -217,8 +217,8 @@ def test_az_create_exception(m_az_api, m_op_api, exec_original, exec_catch):
         "state": "present",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -262,8 +262,8 @@ def test_az_create_op_fails(m_az_api, m_op_api):
         "state": "present",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -314,8 +314,8 @@ def test_az_create_op_exception(m_az_api, m_op_api, exec_original, exec_catch):
         "state": "present",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -361,8 +361,8 @@ def test_az_update(m_az_api, m_op_api):
         "name": "az1",
         "region": "region1",
         "display_name": "Availability Zone 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,
@@ -444,8 +444,8 @@ def test_az_present_not_changed(m_az_api, m_op_api):
         "name": "az1",
         "region": "region1",
         "display_name": "Availability Zone 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,
@@ -495,8 +495,8 @@ def test_az_absent_not_changed(m_az_api, m_op_api):
         "name": "az1",
         "region": "region1",
         "display_name": "Availability Zone 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -536,8 +536,8 @@ def test_az_delete(m_az_api, m_op_api):
         "state": "absent",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,
@@ -596,8 +596,8 @@ def test_az_delete_exception(m_az_api, m_op_api, exec_original, exec_catch):
         "state": "absent",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,
@@ -647,8 +647,8 @@ def test_az_delete_op_fails(m_az_api, m_op_api):
         "state": "absent",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,
@@ -705,8 +705,8 @@ def test_az_delete_op_exception(m_az_api, m_op_api, exec_original, exec_catch):
         "state": "absent",
         "name": "az1",
         "region": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_az = {
         "id": 1,

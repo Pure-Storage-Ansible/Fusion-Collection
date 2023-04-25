@@ -53,8 +53,8 @@ def module_args():
                 "network_interface_groups": ["subnet-0", "subnet-1"],
             }
         ],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
 
 
@@ -93,8 +93,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'region` is missing
         {
@@ -110,8 +110,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'availability_zone` is missing
         {
@@ -127,8 +127,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -145,8 +145,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -164,8 +164,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # parameter 'endpoint_type` has incorrect value
         {
@@ -182,8 +182,8 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )

@@ -75,8 +75,8 @@ EXAMPLES = r"""
     eth: 10.21.200.124/24
     enabled: true
     network_interface_group: subnet-0
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""
