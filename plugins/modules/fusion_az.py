@@ -77,9 +77,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 )
 
 from ansible_collections.purestorage.fusion.plugins.module_utils import getters
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_region,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -150,10 +147,6 @@ def main():
 
     state = module.params["state"]
     azone = get_az(module, fusion)
-    if not get_region(module, fusion):
-        module.fail_json(
-            msg="Region {0} does not exist.".format(module.params["region"])
-        )
 
     if not azone and state == "present":
         create_az(module, fusion)
