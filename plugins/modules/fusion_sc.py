@@ -142,7 +142,7 @@ def create_sc(module, fusion):
     if not module.params["size_limit"]:
         module.params["size_limit"] = "4P"
     if not module.params["iops_limit"]:
-        module.params["iops_limit"] = "10000000"
+        module.params["iops_limit"] = "100000000"
     if not module.params["bw_limit"]:
         module.params["bw_limit"] = "512G"
     size_limit = parse_number_with_metric_suffix(module, module.params["size_limit"])
@@ -154,7 +154,7 @@ def create_sc(module, fusion):
     bw_limit = parse_number_with_metric_suffix(module, module.params["bw_limit"])
     if bw_limit < 1048576 or bw_limit > 549755813888:  # 1MB/s to 512GB/s
         module.fail_json(msg="Bandwidth limit is not within the required range")
-    if iops_limit < 100 or iops_limit > 10000000:
+    if iops_limit < 100 or iops_limit > 100_000_000:
         module.fail_json(msg="IOPs limit is not within the required range")
     if size_limit < 1048576 or size_limit > 4503599627370496:  # 1MB to 4PB
         module.fail_json(msg="Size limit is not within the required range")

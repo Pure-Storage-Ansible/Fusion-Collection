@@ -123,7 +123,7 @@ def test_module_fails_on_wrong_parameters(m_sc_api, m_op_api, module_args):
 @patch("fusion.StorageClassesApi")
 @pytest.mark.parametrize(
     "iops_arg,iops_exp",
-    [("2000000", 2000000), (None, 10000000)],
+    [("2000000", 2_000_000), (None, 100_000_000)],
 )
 @pytest.mark.parametrize(
     "bw_arg,bw_exp",
@@ -247,7 +247,7 @@ def test_sc_create_without_display_name(m_sc_api, m_op_api):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.StorageClassesApi")
-@pytest.mark.parametrize("iops_arg", [-100, 99, 10000001])
+@pytest.mark.parametrize("iops_arg", [-100, 99, 100_000_001])
 def test_sc_create_iops_out_of_range(m_sc_api, m_op_api, iops_arg):
     module_args = {
         "state": "present",
