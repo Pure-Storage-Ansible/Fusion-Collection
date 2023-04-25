@@ -63,8 +63,8 @@ ansible-galaxy collection install purestorage.fusion
   - name: Collect information for Pure Storage fleet in Pure1
     purestorage.fusion.fusion_info:
       gather_subset: all
-      app_id: <Pure1 API Application ID>
-      key_file: <private key file name>
+      issuer_id: <Pure1 API Application ID>
+      private_key_file: <private key file name>
 ```
 
 ## Contributing to this collection

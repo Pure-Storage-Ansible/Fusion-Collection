@@ -38,8 +38,8 @@ def default_module_az_params(state="present", display_name="foo_az"):
         "name": "foo",
         "region": "region1",
         "display_name": display_name,
-        "app_id": "ABCD12345",
-        "key_file": "az-admin-private-key.pem",
+        "issuer_id": "ABCD12345",
+        "private_key_file": "az-admin-private-key.pem",
     }
     return module_params
 

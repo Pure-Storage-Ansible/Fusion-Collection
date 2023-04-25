@@ -50,8 +50,8 @@ basic.AnsibleModule.fail_json = fail_json
             "bw_limit": "256G",
             "size_limit": "2P",
             "storage_service": "ss1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required parameter 'storage_service` is missing
         {
@@ -61,8 +61,8 @@ basic.AnsibleModule.fail_json = fail_json
             "iops_limit": "2000000",
             "bw_limit": "256G",
             "size_limit": "2P",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -73,8 +73,8 @@ basic.AnsibleModule.fail_json = fail_json
             "bw_limit": "256G",
             "size_limit": "2P",
             "storage_service": "ss1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -86,8 +86,8 @@ basic.AnsibleModule.fail_json = fail_json
             "bw_limit": "256G",
             "size_limit": "2P",
             "storage_service": "ss1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -144,8 +144,8 @@ def test_sc_create(
         "bw_limit": bw_arg,
         "size_limit": size_arg,
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -198,8 +198,8 @@ def test_sc_create_without_display_name(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     parsed_size = 2251799813685248
     parsed_bandwidth = 274877906944
@@ -257,8 +257,8 @@ def test_sc_create_iops_out_of_range(m_sc_api, m_op_api, iops_arg):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -302,8 +302,8 @@ def test_sc_create_bw_out_of_range(m_sc_api, m_op_api, bw_arg):
         "bw_limit": bw_arg,
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -347,8 +347,8 @@ def test_sc_create_size_out_of_range(m_sc_api, m_op_api, size_arg):
         "bw_limit": "256G",
         "size_limit": size_arg,
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -398,8 +398,8 @@ def test_sc_create_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     parsed_size = 2251799813685248
     parsed_bandwidth = 274877906944
@@ -454,8 +454,8 @@ def test_sc_create_op_fails(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     parsed_size = 2251799813685248
     parsed_bandwidth = 274877906944
@@ -517,8 +517,8 @@ def test_sc_create_op_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     parsed_size = 2251799813685248
     parsed_bandwidth = 274877906944
@@ -573,8 +573,8 @@ def test_sc_update(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -644,8 +644,8 @@ def test_sc_update_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -706,8 +706,8 @@ def test_sc_update_op_fails(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -775,8 +775,8 @@ def test_sc_update_op_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -837,8 +837,8 @@ def test_sc_present_not_changed(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -895,8 +895,8 @@ def test_sc_absent_not_changed(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -941,8 +941,8 @@ def test_sc_update_limits_not_changed(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -999,8 +999,8 @@ def test_sc_delete(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -1067,8 +1067,8 @@ def test_sc_delete_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -1126,8 +1126,8 @@ def test_sc_delete_op_fails(m_sc_api, m_op_api):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,
@@ -1192,8 +1192,8 @@ def test_sc_delete_op_exception(m_sc_api, m_op_api, exec_original, exec_catch):
         "bw_limit": "256G",
         "size_limit": "2P",
         "storage_service": "ss1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_sc = {
         "id": 1,

@@ -88,8 +88,8 @@ EXAMPLES = r"""
     host_name: foo_array
     display_name: "foo array"
     appliance_id: 1227571-198887878-35016350232000707
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

@@ -46,16 +46,16 @@ basic.AnsibleModule.fail_json = fail_json
         {
             "state": "present",
             "display_name": "Region 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
             "state": "present",
             "name": "region1",
             "display_name": "Region 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -63,8 +63,8 @@ basic.AnsibleModule.fail_json = fail_json
             "state": "cool",
             "name": "region1",
             "display_name": "Region 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -103,8 +103,8 @@ def test_region_create(m_region_api, m_op_api):
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -145,8 +145,8 @@ def test_region_create_without_display_name(m_region_api, m_op_api):
     module_args = {
         "state": "present",
         "name": "region1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -195,8 +195,8 @@ def test_region_create_exception(m_region_api, m_op_api, exec_original, exec_cat
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -236,8 +236,8 @@ def test_region_create_op_fails(m_region_api, m_op_api):
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -284,8 +284,8 @@ def test_region_create_op_exception(m_region_api, m_op_api, exec_original, exec_
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -325,8 +325,8 @@ def test_region_update(m_region_api, m_op_api):
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -382,8 +382,8 @@ def test_region_update_exception(m_region_api, m_op_api, exec_original, exec_cat
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -430,8 +430,8 @@ def test_region_update_op_fails(m_region_api, m_op_api):
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -485,8 +485,8 @@ def test_region_update_op_exception(m_region_api, m_op_api, exec_original, exec_
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -533,8 +533,8 @@ def test_region_present_not_changed(m_region_api, m_op_api):
         "state": "present",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -578,8 +578,8 @@ def test_region_absent_not_changed(m_region_api, m_op_api):
         "state": "absent",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -617,8 +617,8 @@ def test_region_delete(m_region_api, m_op_api):
         "state": "absent",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -669,8 +669,8 @@ def test_region_delete_exception(m_region_api, m_op_api, exec_original, exec_cat
         "state": "absent",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -712,8 +712,8 @@ def test_region_delete_op_fails(m_region_api, m_op_api):
         "state": "absent",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,
@@ -762,8 +762,8 @@ def test_region_delete_op_exception(m_region_api, m_op_api, exec_original, exec_
         "state": "absent",
         "name": "region1",
         "display_name": "Region 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_region = {
         "id": 1,

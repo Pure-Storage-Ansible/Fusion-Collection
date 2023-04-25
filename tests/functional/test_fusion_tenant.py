@@ -46,16 +46,16 @@ basic.AnsibleModule.fail_json = fail_json
         {
             "state": "present",
             "display_name": "Tenant 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
             "state": "present",
             "name": "tenant1",
             "display_name": "Tenant 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -63,8 +63,8 @@ basic.AnsibleModule.fail_json = fail_json
             "state": "cool",
             "name": "tenant1",
             "display_name": "Tenant 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -103,8 +103,8 @@ def test_tenant_create(m_tenant_api, m_op_api):
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -146,8 +146,8 @@ def test_tenant_create_without_display_name(m_tenant_api, m_op_api):
     module_args = {
         "state": "present",
         "name": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -197,8 +197,8 @@ def test_tenant_create_exception(m_tenant_api, m_op_api, exec_original, exec_cat
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -239,8 +239,8 @@ def test_tenant_create_op_fails(m_tenant_api, m_op_api):
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -288,8 +288,8 @@ def test_tenant_create_op_exception(m_tenant_api, m_op_api, exec_original, exec_
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -330,8 +330,8 @@ def test_tenant_update(m_tenant_api, m_op_api):
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -387,8 +387,8 @@ def test_tenant_update_exception(m_tenant_api, m_op_api, exec_original, exec_cat
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -435,8 +435,8 @@ def test_tenant_update_op_fails(m_tenant_api, m_op_api):
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -490,8 +490,8 @@ def test_tenant_update_op_exception(m_tenant_api, m_op_api, exec_original, exec_
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -538,8 +538,8 @@ def test_tenant_present_not_changed(m_tenant_api, m_op_api):
         "state": "present",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -583,8 +583,8 @@ def test_tenant_absent_not_changed(m_tenant_api, m_op_api):
         "state": "absent",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -622,8 +622,8 @@ def test_tenant_delete(m_tenant_api, m_op_api):
         "state": "absent",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -674,8 +674,8 @@ def test_tenant_delete_exception(m_tenant_api, m_op_api, exec_original, exec_cat
         "state": "absent",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -717,8 +717,8 @@ def test_tenant_delete_op_fails(m_tenant_api, m_op_api):
         "state": "absent",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,
@@ -767,8 +767,8 @@ def test_tenant_delete_op_exception(m_tenant_api, m_op_api, exec_original, exec_
         "state": "absent",
         "name": "tenant1",
         "display_name": "Tenant 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_tenant = {
         "id": 1,

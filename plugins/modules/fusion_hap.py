@@ -99,15 +99,15 @@ EXAMPLES = r"""
     name: foo
     personality: aix
     iqn: "iqn.2005-03.com.RedHat:linux-host1"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete host access policy
   purestorage.fusion.fusion_hap:
     name: foo
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""
