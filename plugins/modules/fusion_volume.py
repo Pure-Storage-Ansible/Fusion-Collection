@@ -103,16 +103,6 @@ EXAMPLES = r"""
     issuer_id: key_name
     private_key_file: "az-admin-private-key.pem"
 
-- name: Rename volume named foo to bar
-  purestorage.fusion.fusion_volume:
-    name: foo
-    rename: bar
-    tenant: test
-    tenant_space: space_1
-    state: absent
-    issuer_id: key_name
-    private_key_file: "az-admin-private-key.pem"
-
 - name: Delete volume named foo
   purestorage.fusion.fusion_volume:
     name: foo
