@@ -31,6 +31,11 @@ options:
     default: present
     choices: [ present, absent ]
     type: str
+  display_name:
+    description:
+    - The human name of the API Client.
+    - If not provided, defaults to I(name).
+    type: str
   public_key:
     description:
     - The API clients PEM formatted (Base64 encoded) RSA public key.
@@ -46,6 +51,13 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_api_client:
     name: "foo client"
     public_key: "{{lookup('file', 'public_pem_file') }}"
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
+- name: Delete API client foo
+  purestorage.fusion.fusion_api_client:
+    name: "foo client"
+    state: absent
     app_id: key_name
     key_file: "az-admin-private-key.pem"
 """
@@ -75,7 +87,7 @@ def get_client(module, fusion):
         for client in range(0, len(clients)):
             if (
                 clients[client].public_key == module.params["public_key"]
-                and clients[client].display_name == module.params["name"]
+                and clients[client].name == module.params["name"]
             ):
                 return clients[client].id
         return False
@@ -102,7 +114,7 @@ def create_client(module, fusion):
     if not module.check_mode:
         client = purefusion.APIClientPost(
             public_key=module.params["public_key"],
-            display_name=module.params["name"],
+            display_name=module.params["display_name"] or module.params["name"],
         )
         id_api_instance.create_api_client(client)
 
@@ -115,6 +127,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
+            display_name=dict(type="str"),
             public_key=dict(type="str", required=True),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )
