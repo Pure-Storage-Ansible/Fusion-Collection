@@ -47,8 +47,8 @@ basic.AnsibleModule.fail_json = fail_json
             "state": "present",
             "display_name": "Storage Service 1",
             "hardware_types": ["flash-array-x"],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -56,8 +56,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "ss1",
             "display_name": "Storage Service 1",
             "hardware_types": ["flash-array-x"],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -66,8 +66,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "ss1",
             "display_name": "Storage Service 1",
             "hardware_types": ["flash-array-x"],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # parameter 'hardware_types` has incorrect value
         {
@@ -75,8 +75,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "ss1",
             "display_name": "Storage Service 1",
             "hardware_types": ["hdd-array-x"],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -116,8 +116,8 @@ def test_ss_create(m_ss_api, m_op_api):
         "name": "ss1",
         "display_name": "Storage Service 1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -163,8 +163,8 @@ def test_ss_create_without_display_name(m_ss_api, m_op_api):
         "state": "present",
         "name": "ss1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -210,8 +210,8 @@ def test_array_create_without_hardware_type(m_ss_api, m_op_api):
         "state": "present",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -257,8 +257,8 @@ def test_ss_create_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "name": "ss1",
         "display_name": "Storage Service 1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -303,8 +303,8 @@ def test_ss_create_op_fails(m_ss_api, m_op_api):
         "name": "ss1",
         "display_name": "Storage Service 1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -356,8 +356,8 @@ def test_ss_create_op_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "name": "ss1",
         "display_name": "Storage Service 1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -402,8 +402,8 @@ def test_ss_update(m_ss_api, m_op_api):
         "name": "ss1",
         "display_name": "Storage Service 1",
         "hardware_types": ["flash-array-x"],
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -464,8 +464,8 @@ def test_ss_update_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "state": "present",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -517,8 +517,8 @@ def test_ss_update_op_fails(m_ss_api, m_op_api):
         "state": "present",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -577,8 +577,8 @@ def test_ss_update_op_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "state": "present",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -630,8 +630,8 @@ def test_ss_present_not_changed(m_ss_api, m_op_api):
         "state": "present",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -680,8 +680,8 @@ def test_ss_absent_not_changed(m_ss_api, m_op_api):
         "state": "absent",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -721,8 +721,8 @@ def test_ss_delete(m_ss_api, m_op_api):
         "state": "absent",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -780,8 +780,8 @@ def test_ss_delete_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "state": "absent",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -830,8 +830,8 @@ def test_ss_delete_op_fails(m_ss_api, m_op_api):
         "state": "absent",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,
@@ -887,8 +887,8 @@ def test_ss_delete_op_exception(m_ss_api, m_op_api, exec_original, exec_catch):
         "state": "absent",
         "name": "ss1",
         "display_name": "Storage Service 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ss = {
         "id": 1,

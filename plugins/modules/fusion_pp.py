@@ -61,15 +61,15 @@ EXAMPLES = r"""
     local_rpo: 10
     local_retention: 4d
     display_name: "foo pp"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete protection policy foo
   purestorage.fusion.fusion_pp:
     name: foo
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

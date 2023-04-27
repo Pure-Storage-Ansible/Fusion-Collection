@@ -47,16 +47,16 @@ basic.AnsibleModule.fail_json = fail_json
             "state": "present",
             "display_name": "Tenanct Space 1",
             "tenant": "tenant1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # required tenant 'name` is missing
         {
             "state": "present",
             "name": "tenantspace1",
             "display_name": "Tenanct Space 1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
         # unknown parameter 'extra' is provided
         {
@@ -64,8 +64,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "tenantspace1",
             "display_name": "Tenanct Space 1",
             "tenant": "tenant1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
             "extra": "value",
         },
         # parameter 'state` has incorrect value
@@ -74,8 +74,8 @@ basic.AnsibleModule.fail_json = fail_json
             "name": "tenantspace1",
             "display_name": "Tenanct Space 1",
             "tenant": "tenant1",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
         },
     ],
 )
@@ -115,8 +115,8 @@ def test_ts_create(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -163,8 +163,8 @@ def test_ts_create_without_display_name(m_ts_api, m_op_api):
         "state": "present",
         "name": "tenantspace1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -219,8 +219,8 @@ def test_ts_create_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -266,8 +266,8 @@ def test_ts_create_op_fails(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -320,8 +320,8 @@ def test_ts_create_op_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -367,8 +367,8 @@ def test_ts_update(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -432,8 +432,8 @@ def test_ts_update_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -488,8 +488,8 @@ def test_ts_update_op_fails(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -551,8 +551,8 @@ def test_ts_update_op_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -607,8 +607,8 @@ def test_ts_present_not_changed(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "display_name": "Tenanct Space 1",
         "tenant": "tenant1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -659,8 +659,8 @@ def test_ts_absent_not_changed(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "tenant": "tenant1",
         "display_name": "Tenanct Space 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     set_module_args(module_args)
 
@@ -702,8 +702,8 @@ def test_ts_delete(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "tenant": "tenant1",
         "display_name": "Tenanct Space 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -764,8 +764,8 @@ def test_ts_delete_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "tenant": "tenant1",
         "display_name": "Tenanct Space 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -817,8 +817,8 @@ def test_ts_delete_op_fails(m_ts_api, m_op_api):
         "name": "tenantspace1",
         "tenant": "tenant1",
         "display_name": "Tenanct Space 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,
@@ -877,8 +877,8 @@ def test_ts_delete_op_exception(m_ts_api, m_op_api, exec_original, exec_catch):
         "name": "tenantspace1",
         "tenant": "tenant1",
         "display_name": "Tenanct Space 1",
-        "app_id": "ABCD1234",
-        "key_file": "private-key.pem",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
     }
     current_ts = {
         "id": 1,

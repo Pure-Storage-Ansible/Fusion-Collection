@@ -45,15 +45,15 @@ EXAMPLES = r"""
   purestorage.fusion.fusion_tenant:
     name: foo
     display_name: "tenant foo"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete tenat foo
   purestorage.fusion.fusion_tenant:
     name: foo
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

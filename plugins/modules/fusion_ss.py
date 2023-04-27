@@ -54,8 +54,8 @@ EXAMPLES = r"""
     - flash-array-x
     - flash-array-x-optane
     display_name: "test class"
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Update storage service
   purestorage.fusion.fusion_ss:
@@ -63,15 +63,15 @@ EXAMPLES = r"""
     display_name: "main class"
     hardware_types:
     - flash-array-c
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete storage service
   purestorage.fusion.fusion_ss:
     name: foo
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""

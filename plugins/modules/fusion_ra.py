@@ -35,7 +35,7 @@ options:
     description:
     - The username to assign the role to.
     - Currently this only supports the Pure1 App ID.
-    - This should be provide in the same format as I(app_id).
+    - This should be provide in the same format as I(issuer_id).
     required: true
     type: str
   scope:
@@ -64,8 +64,8 @@ EXAMPLES = r"""
     name: foo
     user: key_name
     tenant: bar
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 
 - name: Delete role foo from user in tenant bar
   purestorage.fusion.fusion_ra:
@@ -73,8 +73,8 @@ EXAMPLES = r"""
     user: key_name
     tenant: bar
     state: absent
-    app_id: key_name
-    key_file: "az-admin-private-key.pem"
+    issuer_id: key_name
+    private_key_file: "az-admin-private-key.pem"
 """
 
 RETURN = r"""
