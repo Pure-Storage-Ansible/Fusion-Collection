@@ -406,38 +406,6 @@ def test_az_update(m_az_api, m_op_api):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.AvailabilityZonesApi")
-@pytest.mark.parametrize(
-    "exec_original,exec_catch",
-    [
-        (purefusion.rest.ApiException, purefusion.rest.ApiException),
-        (HTTPError, HTTPError),
-    ],
-)
-def test_az_update_exception(m_az_api, m_op_api, exec_original, exec_catch):
-    pass  # TODO implement when Availability Zone have PATCH method
-
-
-@patch("fusion.OperationsApi")
-@patch("fusion.AvailabilityZonesApi")
-def test_az_update_op_fails(m_az_api, m_op_api):
-    pass  # TODO implement when Availability Zone have PATCH method
-
-
-@patch("fusion.OperationsApi")
-@patch("fusion.AvailabilityZonesApi")
-@pytest.mark.parametrize(
-    "exec_original,exec_catch",
-    [
-        (purefusion.rest.ApiException, purefusion.rest.ApiException),
-        (HTTPError, OperationException),
-    ],
-)
-def test_az_update_op_exception(m_az_api, m_op_api, exec_original, exec_catch):
-    pass  # TODO implement when Availability Zone have PATCH method
-
-
-@patch("fusion.OperationsApi")
-@patch("fusion.AvailabilityZonesApi")
 def test_az_present_not_changed(m_az_api, m_op_api):
     module_args = {
         "state": "present",
