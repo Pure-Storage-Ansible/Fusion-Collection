@@ -38,6 +38,7 @@ except ImportError:
     pass
 
 from os import environ
+from urllib.parse import urljoin
 import platform
 
 TOKEN_EXCHANGE_URL = "https://api.pure1.purestorage.com/oauth2/1.0/token"
@@ -57,6 +58,7 @@ PARAM_KEY_FILE = "key_file"  # replaced by PARAM_PRIVATE_KEY_FILE
 ENV_APP_ID = "FUSION_APP_ID"  # replaced by ENV_ISSUER_ID
 ENV_HOST = "FUSION_HOST"  # replaced by ENV_API_HOST
 DEP_VER = "2.0.0"
+BASE_PATH = "/api/v1"
 
 
 def _env_deprecation_warning(module, old_env, new_env, vers):
@@ -102,7 +104,9 @@ def get_fusion(module):
     key_file = module.params[PARAM_PRIVATE_KEY_FILE]
 
     config = fusion.Configuration()
-    config.host = environ.get(ENV_API_HOST, environ.get(ENV_HOST, config.host))
+    if ENV_API_HOST in environ or ENV_HOST in environ:
+        host_url = environ.get(ENV_API_HOST, environ.get(ENV_HOST))
+        config.host = urljoin(host_url, BASE_PATH)
     config.token_endpoint = environ.get(ENV_TOKEN_ENDPOINT, config.token_endpoint)
 
     if issuer_id is not None and key_file is not None:
