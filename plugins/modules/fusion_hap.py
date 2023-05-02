@@ -135,14 +135,11 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 def _check_iqn(module, fusion):
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     hosts = hap_api_instance.list_host_access_policies().items
-    for host in range(0, len(hosts)):
-        if (
-            hosts[host].iqn == module.params["iqn"]
-            and hosts[host].name != module.params["name"]
-        ):
+    for host in hosts:
+        if host.iqn == module.params["iqn"] and host.name != module.params["name"]:
             module.fail_json(
                 msg="Supplied IQN {0} already used by host access polivy {1}".format(
-                    module.params["iqn"], hosts[host].name
+                    module.params["iqn"], host.name
                 )
             )
 
@@ -151,12 +148,11 @@ def get_host(module, fusion):
     """Return host or None"""
     hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
     try:
-        hap_api_instance.get_host_access_policy(
+        return hap_api_instance.get_host_access_policy(
             host_access_policy_name=module.params["name"]
         )
-        return True
     except purefusion.rest.ApiException:
-        return False
+        return None
 
 
 def create_hap(module, fusion):
@@ -295,18 +291,18 @@ def main():
             )
         )
 
+    if module.params["iqn"] is not None and not iqn_pattern.match(module.params["iqn"]):
+        module.fail_json(
+            msg="IQN {0} is not a valid iSCSI IQN".format(module.params["name"])
+        )
+
     state = module.params["state"]
     host = get_host(module, fusion)
     _check_iqn(module, fusion)
 
-    if not host and state == "present":
-        if not iqn_pattern.match(module.params["iqn"]):
-            module.fail_json(
-                msg="IQN {0} is not a valid iSCSI IQN".format(module.params["name"])
-            )
-
+    if host is None and state == "present":
         create_hap(module, fusion)
-    elif host and state == "absent":
+    elif host is not None and state == "absent":
         delete_hap(module, fusion)
 
     module.exit_json(changed=False)
