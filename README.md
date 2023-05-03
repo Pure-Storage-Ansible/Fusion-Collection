@@ -67,6 +67,8 @@ ansible-galaxy collection install purestorage.fusion
       private_key_file: <private key file name>
 ```
 
+You can find more examples in our [example-playbooks](https://github.com/PureStorage-OpenConnect/ansible-playbook-examples/tree/master/fusion) repository.
+
 ## Contributing to this collection
 
 Ongoing development efforts and contributions to this collection are tracked as issues in this repository.
