@@ -46,11 +46,12 @@ USER_AGENT_BASE = "Ansible"
 
 PARAM_ISSUER_ID = "issuer_id"
 PARAM_PRIVATE_KEY_FILE = "private_key_file"
+PARAM_ACCESS_TOKEN = "access_token"
 ENV_ISSUER_ID = "FUSION_ISSUER_ID"
 ENV_API_HOST = "FUSION_API_HOST"
 ENV_PRIVATE_KEY_FILE = "FUSION_PRIVATE_KEY_FILE"
 ENV_TOKEN_ENDPOINT = "FUSION_TOKEN_ENDPOINT"
-
+ENV_ACCESS_TOKEN = "FUSION_ACCESS_TOKEN"
 # will be deprecated in 2.0.0
 PARAM_APP_ID = "app_id"  # replaced by PARAM_ISSUER_ID
 PARAM_KEY_FILE = "key_file"  # replaced by PARAM_PRIVATE_KEY_FILE
@@ -100,39 +101,42 @@ def get_fusion(module):
 
     issuer_id = module.params[PARAM_ISSUER_ID]
     key_file = module.params[PARAM_PRIVATE_KEY_FILE]
+    access_token = module.params[PARAM_ACCESS_TOKEN]
 
     config = fusion.Configuration()
     config.host = environ.get(ENV_API_HOST, environ.get(ENV_HOST, config.host))
     config.token_endpoint = environ.get(ENV_TOKEN_ENDPOINT, config.token_endpoint)
-
-    if issuer_id is not None and key_file is not None:
-        try:
-            config.issuer_id = issuer_id
-            config.private_key_file = key_file
-            client = fusion.ApiClient(config)
-            client.set_default_header("User-Agent", user_agent)
-        except Exception:
-            module.fail_json(msg="Unknown failure. Please contact Pure Support")
+    
+    if access_token is not None:
+        config.access_token = access_token
+    elif issuer_id is not None and key_file is not None:
+        config.issuer_id = issuer_id
+        config.private_key_file = key_file
+    elif ENV_ACCESS_TOKEN in environ:
+        config.access_token = environ.get(ENV_ACCESS_TOKEN)
     elif (
         ENV_ISSUER_ID in environ or ENV_APP_ID in environ
     ) and ENV_PRIVATE_KEY_FILE in environ:
-        try:
-            config.issuer_id = environ.get(ENV_ISSUER_ID, environ.get(ENV_APP_ID))
-            config.private_key_file = environ.get(ENV_PRIVATE_KEY_FILE)
-            client = fusion.ApiClient(config)
-            client.set_default_header("User-Agent", user_agent)
-        except Exception:
-            module.fail_json(msg="Unknown failure. Please contact Pure Support")
+        config.issuer_id = environ.get(ENV_ISSUER_ID, environ.get(ENV_APP_ID))
+        config.private_key_file = environ.get(ENV_PRIVATE_KEY_FILE)
     else:
         module.fail_json(
-            msg=f"You must set {ENV_ISSUER_ID} and f{ENV_PRIVATE_KEY_FILE} environment variables "
-            f"or the {PARAM_ISSUER_ID} and f{PARAM_PRIVATE_KEY_FILE} module arguments"
+            msg=f"You must set either {ENV_ISSUER_ID} and f{ENV_PRIVATE_KEY_FILE} or {ENV_ACCESS_TOKEN} environment variables. "
+            f"Or module arguments either {PARAM_ISSUER_ID} and f{PARAM_PRIVATE_KEY_FILE} or {ENV_ACCESS_TOKEN}"
         )
+        
+    try:
+        client = fusion.ApiClient(config)
+        client.set_default_header("User-Agent", user_agent)
+    except Exception:
+            module.fail_json(msg="Unknown failure. Please contact Pure Support")
+        
     try:
         api_instance = fusion.DefaultApi(client)
         api_instance.get_version()
     except Exception as err:
         module.fail_json(msg="Fusion authentication failed: {0}".format(err))
+        
     return client
 
 
@@ -161,5 +165,8 @@ def fusion_argument_spec():
                     collection_name="purefusion.fusion",
                 )
             ],
+        ),
+        access_token=dict(
+            no_log=True,
         ),
     )
