@@ -113,10 +113,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_tenant,
-    get_ts,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -140,7 +136,6 @@ def create_pg(module, fusion):
 
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
 
-    changed = True
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -160,7 +155,7 @@ def create_pg(module, fusion):
         )
         await_operation(fusion, op)
 
-    module.exit_json(changed=changed)
+    return True
 
 
 def update_display_name(module, fusion, patches, pg):
@@ -211,13 +206,11 @@ def update_pg(module, fusion, pg):
             await_operation(fusion, op)
 
     changed = len(patches) != 0
-
-    module.exit_json(changed=changed)
+    return changed
 
 
 def delete_pg(module, fusion):
     """Delete Placement Group"""
-    changed = True
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     if not module.check_mode:
         op = pg_api_instance.delete_placement_group(
@@ -227,7 +220,7 @@ def delete_pg(module, fusion):
         )
         await_operation(fusion, op)
 
-    module.exit_json(changed=changed)
+    return True
 
 
 def main():
@@ -253,31 +246,32 @@ def main():
         )
     )
 
-    required_if = [["state", "present", ["storage_service"]]]
-    module = AnsibleModule(
-        argument_spec, required_if=required_if, supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec, supports_check_mode=True)
     fusion = setup_fusion(module)
 
     if module.params["placement_engine"]:
         module.warn("placement_engine parameter will be deprecated in version 2.0.0")
 
+    changed = False
+
     state = module.params["state"]
     pgroup = get_pg(module, fusion)
-    if not (get_tenant(module, fusion) and get_ts(module, fusion)):
-        module.fail_json(
-            msg="Please check the values for `tenant` and `tenant_space` "
-            "to ensure they all exit and have appropriate relationships."
-        )
-    if state == "present" and not pgroup:
-        module.fail_on_missing_params(["region", "availability_zone"])
-        create_pg(module, fusion)
-    if state == "present" and pgroup:
-        update_pg(module, fusion, pgroup)
-    elif state == "absent" and pgroup:
-        delete_pg(module, fusion)
 
-    module.exit_json(changed=False)
+    if state == "present" and not pgroup:
+        module.fail_on_missing_params(
+            ["region", "availability_zone", "storage_service"]
+        )
+        changed = create_pg(module, fusion) or changed
+        if module.params["array"]:
+            # changing placement requires additional update
+            pgroup = get_pg(module, fusion)
+            changed = update_pg(module, fusion, pgroup) or changed
+    elif state == "present" and pgroup:
+        changed = update_pg(module, fusion, pgroup) or changed
+    elif state == "absent" and pgroup:
+        changed = delete_pg(module, fusion) or changed
+
+    module.exit_json(changed=changed)
 
 
 if __name__ == "__main__":

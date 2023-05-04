@@ -41,7 +41,7 @@ options:
     - Recovery Point Objective for snapshots.
     - Value should be specified in minutes.
     - Minimum value is 10 minutes.
-    type: int
+    type: str
   local_retention:
     description:
     - Retention Duration for periodic snapshots.
@@ -112,10 +112,11 @@ def create_pp(module, fusion):
     """Create Protection Policy"""
 
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
+    local_rpo = parse_minutes(module, module.params["local_rpo"])
     local_retention = parse_minutes(module, module.params["local_retention"])
     if local_retention < 1:
         module.fail_json(msg="Local Retention must be a minimum of 1 minutes")
-    if module.params["local_rpo"] < 10:
+    if local_rpo < 10:
         module.fail_json(msg="Local RPO must be a minimum of 10 minutes")
     changed = True
     if not module.check_mode:
@@ -128,14 +129,12 @@ def create_pp(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
                 objectives=[
-                    {
-                        "type": "RPO",
-                        "rpo": "PT" + str(module.params["local_rpo"]) + "M",
-                    },
-                    {
-                        "type": "Retention",
-                        "after": "PT" + str(local_retention) + "M",
-                    },
+                    purefusion.RPO(
+                        type="RPO", rpo="PT" + str(module.params["local_rpo"]) + "M"
+                    ),
+                    purefusion.Retention(
+                        type="Retention", after="PT" + str(local_retention) + "M"
+                    ),
                 ],
             )
         )
@@ -164,7 +163,7 @@ def main():
         dict(
             name=dict(type="str", required=True),
             display_name=dict(type="str"),
-            local_rpo=dict(type="int"),
+            local_rpo=dict(type="str"),
             local_retention=dict(type="str"),
             state=dict(type="str", default="present", choices=["present", "absent"]),
         )

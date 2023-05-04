@@ -15,7 +15,14 @@ class OperationMock:
     Mock Operation object. This object should be returned by mocked api.
     """
 
-    id: int
+    def __init__(self, id=None, success=None):
+        if success is None:
+            self.status = "Pending"
+        elif success:
+            self.status = "Succeeded"
+        else:
+            self.status = "Failed"
+        self.id = id
 
 
 class SuccessfulOperationMock:
@@ -50,7 +57,13 @@ class AnsibleExitJson(Exception):
     Docs: https://docs.ansible.com/ansible/latest/dev_guide/testing_units_modules.html
     """
 
-    pass
+    def __init__(self, args, kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    @property
+    def changed(self):
+        return self.kwargs["changed"]
 
 
 class AnsibleFailJson(Exception):
@@ -59,7 +72,9 @@ class AnsibleFailJson(Exception):
     Docs: https://docs.ansible.com/ansible/latest/dev_guide/testing_units_modules.html
     """
 
-    pass
+    def __init__(self, args, kwargs):
+        self.args = args
+        self.kwargs = kwargs
 
 
 def exit_json(*args, **kwargs):
@@ -70,7 +85,7 @@ def exit_json(*args, **kwargs):
 
     if "changed" not in kwargs:
         kwargs["changed"] = False
-    raise AnsibleExitJson(kwargs)
+    raise AnsibleExitJson(args, kwargs)
 
 
 def fail_json(*args, **kwargs):
@@ -80,4 +95,4 @@ def fail_json(*args, **kwargs):
     """
 
     kwargs["failed"] = True
-    raise AnsibleFailJson(kwargs)
+    raise AnsibleFailJson(args, kwargs)

@@ -1,0 +1,4 @@
+minor_changes:
+  - fusion_ra - 'name' deprecated and aliased to 'role'
+  - fusion_pp - 'local_rpo' changed to accept same input as 'local_retention'
+  - fusion_pg - freshly created placement group is now moved to correct array

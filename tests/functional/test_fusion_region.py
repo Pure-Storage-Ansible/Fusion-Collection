@@ -125,7 +125,7 @@ def test_region_create(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -167,7 +167,7 @@ def test_region_create_without_display_name(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -353,7 +353,7 @@ def test_region_update(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -561,7 +561,7 @@ def test_region_present_not_changed(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -600,7 +600,7 @@ def test_region_absent_not_changed(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -645,7 +645,7 @@ def test_region_delete(m_region_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_region.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])

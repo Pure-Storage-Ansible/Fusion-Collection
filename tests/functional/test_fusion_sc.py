@@ -166,7 +166,7 @@ def test_sc_create(
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -223,7 +223,7 @@ def test_sc_create_without_display_name(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -607,7 +607,7 @@ def test_sc_update(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -871,7 +871,7 @@ def test_sc_present_not_changed(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -917,7 +917,7 @@ def test_sc_absent_not_changed(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -975,7 +975,7 @@ def test_sc_update_limits_not_changed(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
@@ -1033,7 +1033,7 @@ def test_sc_delete(m_sc_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_sc.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
