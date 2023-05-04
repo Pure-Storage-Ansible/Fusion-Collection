@@ -155,7 +155,7 @@ def test_api_client_create(m_im_api, current_clients):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_api_client.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed is True
 
     # check api was called correctly
     api_obj.list_api_clients.assert_called_once_with()
@@ -239,7 +239,7 @@ def test_api_client_present_not_changed(m_im_api, current_clients):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_api_client.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert exc.value.changed is False
 
     # check api was called correctly
     api_obj.list_api_clients.assert_called_once_with()
@@ -271,7 +271,7 @@ def test_api_client_absent_not_changed(m_im_api, current_clients):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_api_client.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert exc.value.changed is False
 
     # check api was called correctly
     api_obj.list_api_clients.assert_called_once_with()
@@ -306,7 +306,7 @@ def test_api_client_delete(m_im_api, current_clients):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_api_client.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed is True
 
     # check api was called correctly
     api_obj.list_api_clients.assert_called_once_with()
