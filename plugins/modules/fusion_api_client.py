@@ -67,29 +67,29 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
 )
 
 
-def get_client(module, fusion):
-    """Get API Client - True or False"""
+def get_client_id(module, fusion):
+    """Get API Client ID, or None if not available"""
     id_api_instance = purefusion.IdentityManagerApi(fusion)
     try:
         clients = id_api_instance.list_api_clients()
-        for client in range(0, len(clients)):
+        for client in clients:
             if (
-                clients[client].public_key == module.params["public_key"]
-                and clients[client].display_name == module.params["name"]
+                client.public_key == module.params["public_key"]
+                and client.display_name == module.params["name"]
             ):
-                return clients[client].id
-        return False
+                return client.id
+        return None
     except purefusion.rest.ApiException:
-        return False
+        return None
 
 
-def delete_client(module, fusion):
+def delete_client(module, fusion, client_id):
     """Delete API Client"""
     id_api_instance = purefusion.IdentityManagerApi(fusion)
 
     changed = True
     if not module.check_mode:
-        id_api_instance.delete_api_client(api_client_id=get_client(module, fusion))
+        id_api_instance.delete_api_client(api_client_id=client_id)
     module.exit_json(changed=changed)
 
 
@@ -124,11 +124,11 @@ def main():
     fusion = setup_fusion(module)
 
     state = module.params["state"]
-    client = get_client(module, fusion)
-    if not client and state == "present":
+    client_id = get_client_id(module, fusion)
+    if client_id is None and state == "present":
         create_client(module, fusion)
-    elif client and state == "absent":
-        delete_client(module, fusion)
+    elif client_id is not None and state == "absent":
+        delete_client(module, fusion, client_id)
     else:
         module.exit_json(changed=False)
 
