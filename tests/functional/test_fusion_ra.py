@@ -35,6 +35,30 @@ basic.AnsibleModule.exit_json = exit_json
 basic.AnsibleModule.fail_json = fail_json
 
 
+@pytest.fixture
+def module_args_present():
+    return {
+        "state": "present",
+        "role": "az-admin",
+        "user": "user1",
+        "scope": "organization",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
+    }
+
+
+@pytest.fixture
+def module_args_absent():
+    return {
+        "state": "absent",
+        "role": "az-admin",
+        "user": "user1",
+        "scope": "organization",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
+    }
+
+
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
@@ -153,15 +177,10 @@ def test_module_args_wrong(ra_api_init, im_api_init, op_api_init, module_args):
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
-def test_ra_user_does_not_exist(ra_api_init, im_api_init, op_api_init):
-    module_args = {
-        "state": "present",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_ra_user_does_not_exist(
+    ra_api_init, im_api_init, op_api_init, module_args_present
+):
+    module_args = module_args_present
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -286,16 +305,14 @@ def test_ra_create_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
     ],
 )
 def test_ra_create_exception(
-    ra_api_init, im_api_init, op_api_init, raised_exception, expected_exception
+    ra_api_init,
+    im_api_init,
+    op_api_init,
+    raised_exception,
+    expected_exception,
+    module_args_present,
 ):
-    module_args = {
-        "state": "present",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+    module_args = module_args_present
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -336,15 +353,8 @@ def test_ra_create_exception(
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
-def test_ra_create_op_fails(ra_api_init, im_api_init, op_api_init):
-    module_args = {
-        "state": "present",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_ra_create_op_fails(ra_api_init, im_api_init, op_api_init, module_args_present):
+    module_args = module_args_present
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -510,16 +520,14 @@ def test_ra_delete_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
     ],
 )
 def test_ra_delete_exception(
-    ra_api_init, im_api_init, op_api_init, raised_exception, expected_exception
+    ra_api_init,
+    im_api_init,
+    op_api_init,
+    raised_exception,
+    expected_exception,
+    module_args_absent,
 ):
-    module_args = {
-        "state": "absent",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+    module_args = module_args_absent
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -579,15 +587,8 @@ def test_ra_delete_exception(
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
-def test_ra_delete_op_fails(ra_api_init, im_api_init, op_api_init):
-    module_args = {
-        "state": "absent",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_ra_delete_op_fails(ra_api_init, im_api_init, op_api_init, module_args_absent):
+    module_args = module_args_absent
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -649,15 +650,10 @@ def test_ra_delete_op_fails(ra_api_init, im_api_init, op_api_init):
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
-def test_ra_present_not_changed(ra_api_init, im_api_init, op_api_init):
-    module_args = {
-        "state": "present",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_ra_present_not_changed(
+    ra_api_init, im_api_init, op_api_init, module_args_present
+):
+    module_args = module_args_present
     set_module_args(module_args)
 
     ra_mock = MagicMock()
@@ -716,15 +712,10 @@ def test_ra_present_not_changed(ra_api_init, im_api_init, op_api_init):
 @patch("fusion.OperationsApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.RoleAssignmentsApi")
-def test_ra_absent_not_changed(ra_api_init, im_api_init, op_api_init):
-    module_args = {
-        "state": "absent",
-        "role": "az-admin",
-        "user": "user1",
-        "scope": "organization",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_ra_absent_not_changed(
+    ra_api_init, im_api_init, op_api_init, module_args_absent
+):
+    module_args = module_args_absent
     set_module_args(module_args)
 
     ra_mock = MagicMock()

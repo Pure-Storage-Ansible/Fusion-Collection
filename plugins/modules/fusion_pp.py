@@ -129,9 +129,7 @@ def create_pp(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
                 objectives=[
-                    purefusion.RPO(
-                        type="RPO", rpo="PT" + str(module.params["local_rpo"]) + "M"
-                    ),
+                    purefusion.RPO(type="RPO", rpo="PT" + str(local_rpo) + "M"),
                     purefusion.Retention(
                         type="Retention", after="PT" + str(local_retention) + "M"
                     ),

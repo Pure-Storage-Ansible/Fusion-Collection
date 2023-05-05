@@ -96,3 +96,19 @@ def fail_json(*args, **kwargs):
 
     kwargs["failed"] = True
     raise AnsibleFailJson(args, kwargs)
+
+
+def side_effects_with_exceptions(side_effects):
+    """
+    Works similarly to `MagicMock(side_effect=side_effects)` as if side_effects was a list,
+    but if item in the list is instance of an exception, it raises it instead of returning it.
+    """
+    side_effects = side_effects.copy()
+
+    def _exec_side_effect(*args, **kwargs):
+        i = side_effects.pop(0)
+        if isinstance(i, Exception):
+            raise i
+        return i
+
+    return _exec_side_effect

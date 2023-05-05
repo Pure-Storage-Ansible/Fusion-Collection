@@ -23,6 +23,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     exit_json,
     fail_json,
     set_module_args,
+    side_effects_with_exceptions,
 )
 from urllib3.exceptions import HTTPError
 
@@ -35,92 +36,140 @@ basic.AnsibleModule.exit_json = exit_json
 basic.AnsibleModule.fail_json = fail_json
 
 
+@pytest.fixture
+def module_args_present():
+    return {
+        "name": "placement_group1",
+        "tenant": "tenant1",
+        "tenant_space": "tenant_space1",
+        "region": "region1",
+        "availability_zone": "availability_zone1",
+        "storage_service": "storage_service1",
+        "state": "present",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
+    }
+
+
+@pytest.fixture
+def module_args_absent():
+    return {
+        "name": "placement_group1",
+        "tenant": "tenant1",
+        "tenant_space": "tenant_space1",
+        "state": "absent",
+        "issuer_id": "ABCD1234",
+        "private_key_file": "private-key.pem",
+    }
+
+
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
 @pytest.mark.parametrize(
-    "module_args",
+    ("module_args", "get_not_called"),
     [
         # 'name` is missing
-        {
-            "tenant": "tenant1",
-            "tenant_space": "tenant_space1",
-            "region": "region1",
-            "availability_zone": "availability_zone1",
-            "storage_service": "storage_service1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "tenant": "tenant1",
+                "tenant_space": "tenant_space1",
+                "region": "region1",
+                "availability_zone": "availability_zone1",
+                "storage_service": "storage_service1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            True,
+        ),
         # 'tenant` is missing
-        {
-            "name": "placement_group1",
-            "tenant_space": "tenant_space1",
-            "region": "region1",
-            "availability_zone": "availability_zone1",
-            "storage_service": "storage_service1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant_space": "tenant_space1",
+                "region": "region1",
+                "availability_zone": "availability_zone1",
+                "storage_service": "storage_service1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            True,
+        ),
         # 'tenant space` is missing
-        {
-            "name": "placement_group1",
-            "tenant": "tenant1",
-            "region": "region1",
-            "availability_zone": "availability_zone1",
-            "storage_service": "storage_service1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant": "tenant1",
+                "region": "region1",
+                "availability_zone": "availability_zone1",
+                "storage_service": "storage_service1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            True,
+        ),
         # 'region` is missing
-        {
-            "name": "placement_group1",
-            "tenant": "tenant1",
-            "tenant_space": "tenant_space1",
-            "availability_zone": "availability_zone1",
-            "storage_service": "storage_service1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant": "tenant1",
+                "tenant_space": "tenant_space1",
+                "availability_zone": "availability_zone1",
+                "storage_service": "storage_service1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            False,
+        ),
         # 'availability_zone` is missing
-        {
-            "name": "placement_group1",
-            "tenant": "tenant1",
-            "tenant_space": "tenant_space1",
-            "region": "region1",
-            "storage_service": "storage_service1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant": "tenant1",
+                "tenant_space": "tenant_space1",
+                "region": "region1",
+                "storage_service": "storage_service1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            False,
+        ),
         # 'storage_service` is missing
-        {
-            "name": "placement_group1",
-            "tenant": "tenant1",
-            "tenant_space": "tenant_space1",
-            "region": "region1",
-            "availability_zone": "availability_zone1",
-            "state": "present",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant": "tenant1",
+                "tenant_space": "tenant_space1",
+                "region": "region1",
+                "availability_zone": "availability_zone1",
+                "state": "present",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            False,
+        ),
         # 'state` is invalid
-        {
-            "name": "placement_group1",
-            "tenant": "tenant1",
-            "tenant_space": "tenant_space1",
-            "region": "region1",
-            "availability_zone": "availability_zone1",
-            "storage_service": "storage_service1",
-            "state": "past",
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
+        (
+            {
+                "name": "placement_group1",
+                "tenant": "tenant1",
+                "tenant_space": "tenant_space1",
+                "region": "region1",
+                "availability_zone": "availability_zone1",
+                "storage_service": "storage_service1",
+                "state": "past",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            False,
+        ),
     ],
 )
-def test_module_args_wrong(pg_api_init, op_api_init, module_args):
+def test_module_args_wrong(pg_api_init, op_api_init, module_args, get_not_called):
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -137,7 +186,9 @@ def test_module_args_wrong(pg_api_init, op_api_init, module_args):
     with pytest.raises(AnsibleFailJson):
         fusion_pg.main()
 
-    if pg_mock.get_placement_group.called:
+    if get_not_called:
+        pg_mock.get_placement_group.assert_not_called()
+    elif pg_mock.get_placement_group.called:
         pg_mock.get_placement_group.assert_called_with(
             tenant_name="tenant1",
             tenant_space_name="tenant_space1",
@@ -151,19 +202,9 @@ def test_module_args_wrong(pg_api_init, op_api_init, module_args):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_create_ok(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "display_name": "some_display_name",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "region": "region1",
-        "availability_zone": "availability_zone1",
-        "storage_service": "storage_service1",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_create_ok(pg_api_init, op_api_init, module_args_present):
+    module_args = module_args_present
+    module_args["display_name"] = "some_display_name"
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -204,18 +245,10 @@ def test_pg_create_ok(pg_api_init, op_api_init):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_create_without_display_name_ok(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "region": "region1",
-        "availability_zone": "availability_zone1",
-        "storage_service": "storage_service1",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_create_without_display_name_ok(
+    pg_api_init, op_api_init, module_args_present
+):
+    module_args = module_args_present
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -264,20 +297,9 @@ def test_pg_create_without_display_name_ok(pg_api_init, op_api_init):
     ],
 )
 def test_pg_create_exception(
-    pg_api_init, op_api_init, raised_exception, expected_exception
+    pg_api_init, op_api_init, raised_exception, expected_exception, module_args_present
 ):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "region": "region1",
-        "availability_zone": "availability_zone1",
-        "storage_service": "storage_service1",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
-    set_module_args(module_args)
+    set_module_args(module_args_present)
 
     pg_mock = MagicMock()
     pg_mock.get_placement_group = MagicMock(side_effect=purefusion.rest.ApiException)
@@ -316,18 +338,8 @@ def test_pg_create_exception(
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_create_op_fails(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "region": "region1",
-        "availability_zone": "availability_zone1",
-        "storage_service": "storage_service1",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_create_op_fails(pg_api_init, op_api_init, module_args_present):
+    module_args = module_args_present
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -384,7 +396,7 @@ def test_pg_create_triggers_update_ok(pg_api_init, op_api_init):
     set_module_args(module_args)
 
     get_placement_group_effects = [
-        None,
+        purefusion.rest.ApiException(),
         purefusion.PlacementGroup(
             id="placement_group1_id",
             name="placement_group1",
@@ -422,16 +434,10 @@ def test_pg_create_triggers_update_ok(pg_api_init, op_api_init):
         ),
     ]
 
-    def get_placement_group_effect(
-        tenant_name, tenant_space_name, placement_group_name
-    ):
-        i = get_placement_group_effects.pop(0)
-        if i is None:
-            raise purefusion.rest.ApiException()
-        return i
-
     pg_mock = MagicMock()
-    pg_mock.get_placement_group = MagicMock(side_effect=get_placement_group_effect)
+    pg_mock.get_placement_group = MagicMock(
+        side_effect=side_effects_with_exceptions(get_placement_group_effects)
+    )
     pg_mock.create_placement_group = MagicMock(return_value=OperationMock("op1"))
     pg_mock.update_placement_group = MagicMock(return_value=OperationMock("op2"))
     pg_mock.delete_placement_group = MagicMock(side_effect=NotImplementedError())
@@ -509,7 +515,7 @@ def test_pg_create_triggers_update_exception(
     set_module_args(module_args)
 
     get_placement_group_effects = [
-        None,
+        purefusion.rest.ApiException(),
         purefusion.PlacementGroup(
             id="placement_group1_id",
             name="placement_group1",
@@ -547,16 +553,10 @@ def test_pg_create_triggers_update_exception(
         ),
     ]
 
-    def get_placement_group_effect(
-        tenant_name, tenant_space_name, placement_group_name
-    ):
-        i = get_placement_group_effects.pop(0)
-        if i is None:
-            raise purefusion.rest.ApiException()
-        return i
-
     pg_mock = MagicMock()
-    pg_mock.get_placement_group = MagicMock(side_effect=get_placement_group_effect)
+    pg_mock.get_placement_group = MagicMock(
+        side_effect=side_effects_with_exceptions(get_placement_group_effects)
+    )
     pg_mock.create_placement_group = MagicMock(return_value=OperationMock("op1"))
     pg_mock.update_placement_group = MagicMock(side_effect=raised_exception)
     pg_mock.delete_placement_group = MagicMock(side_effect=NotImplementedError())
@@ -624,7 +624,7 @@ def test_pg_create_triggers_update_op_fails(pg_api_init, op_api_init):
     set_module_args(module_args)
 
     get_placement_group_effects = [
-        None,
+        purefusion.rest.ApiException(),
         purefusion.PlacementGroup(
             id="placement_group1_id",
             name="placement_group1",
@@ -662,16 +662,10 @@ def test_pg_create_triggers_update_op_fails(pg_api_init, op_api_init):
         ),
     ]
 
-    def get_placement_group_effect(
-        tenant_name, tenant_space_name, placement_group_name
-    ):
-        i = get_placement_group_effects.pop(0)
-        if i is None:
-            raise purefusion.rest.ApiException()
-        return i
-
     pg_mock = MagicMock()
-    pg_mock.get_placement_group = MagicMock(side_effect=get_placement_group_effect)
+    pg_mock.get_placement_group = MagicMock(
+        side_effect=side_effects_with_exceptions(get_placement_group_effects)
+    )
     pg_mock.create_placement_group = MagicMock(return_value=OperationMock("op1"))
     pg_mock.update_placement_group = MagicMock(return_value=OperationMock("op2"))
     pg_mock.delete_placement_group = MagicMock(side_effect=NotImplementedError())
@@ -1003,14 +997,6 @@ def test_pg_update_exception(
         ),
     ]
 
-    def test_update_return_value(
-        patch, tenant_name, tenant_space_name, placement_group_name
-    ):
-        idx = patches.index(patch)
-        if idx == failing_patch:
-            raise raised_exception()
-        return OperationMock(id="op{0}".format(idx))
-
     pg_mock = MagicMock()
     pg_mock.get_placement_group = MagicMock(
         return_value=purefusion.PlacementGroup(
@@ -1050,7 +1036,9 @@ def test_pg_update_exception(
         )
     )
     pg_mock.create_placement_group = MagicMock(side_effect=NotImplementedError())
-    pg_mock.update_placement_group = MagicMock(side_effect=test_update_return_value)
+    pg_mock.update_placement_group = MagicMock(
+        side_effect=throw_on_specific_patch(patches, failing_patch, raised_exception, 0)
+    )
     pg_mock.delete_placement_group = MagicMock(side_effect=NotImplementedError())
     pg_api_init.return_value = pg_mock
 
@@ -1109,14 +1097,6 @@ def test_pg_update_exception(
         ),
     ]
 
-    def test_update_return_value(
-        patch, tenant_name, tenant_space_name, placement_group_name
-    ):
-        idx = patches.index(patch)
-        if idx == failing_patch:
-            raise raised_exception()
-        return OperationMock(id="op{0}".format(idx))
-
     pg_mock = MagicMock()
     pg_mock.get_placement_group = MagicMock(
         return_value=purefusion.PlacementGroup(
@@ -1156,7 +1136,9 @@ def test_pg_update_exception(
         )
     )
     pg_mock.create_placement_group = MagicMock(side_effect=NotImplementedError())
-    pg_mock.update_placement_group = MagicMock(side_effect=test_update_return_value)
+    pg_mock.update_placement_group = MagicMock(
+        side_effect=throw_on_specific_patch(patches, failing_patch, raised_exception, 0)
+    )
     pg_mock.delete_placement_group = MagicMock(side_effect=NotImplementedError())
     pg_api_init.return_value = pg_mock
 
@@ -1276,15 +1258,8 @@ def test_pg_update_op_fails(pg_api_init, op_api_init, failing_patch):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_delete_ok(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "state": "absent",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_delete_ok(pg_api_init, op_api_init, module_args_absent):
+    module_args = module_args_absent
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -1365,16 +1340,9 @@ def test_pg_delete_ok(pg_api_init, op_api_init):
     ],
 )
 def test_pg_delete_exception(
-    pg_api_init, op_api_init, raised_exception, expected_exception
+    pg_api_init, op_api_init, raised_exception, expected_exception, module_args_absent
 ):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "state": "absent",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+    module_args = module_args_absent
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -1444,15 +1412,8 @@ def test_pg_delete_exception(
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_delete_op_fails(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "state": "absent",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_delete_op_fails(pg_api_init, op_api_init, module_args_absent):
+    module_args = module_args_absent
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -1524,18 +1485,8 @@ def test_pg_delete_op_fails(pg_api_init, op_api_init):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_present_not_changed(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "region": "region1",
-        "availability_zone": "availability_zone1",
-        "storage_service": "storage_service1",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_present_not_changed(pg_api_init, op_api_init, module_args_present):
+    module_args = module_args_present
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -1602,15 +1553,8 @@ def test_pg_present_not_changed(pg_api_init, op_api_init):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.PlacementGroupsApi")
-def test_pg_absent_not_changed(pg_api_init, op_api_init):
-    module_args = {
-        "name": "placement_group1",
-        "tenant": "tenant1",
-        "tenant_space": "tenant_space1",
-        "state": "absent",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pg_absent_not_changed(pg_api_init, op_api_init, module_args_absent):
+    module_args = module_args_absent
     set_module_args(module_args)
 
     pg_mock = MagicMock()
@@ -1637,3 +1581,15 @@ def test_pg_absent_not_changed(pg_api_init, op_api_init):
     pg_mock.update_placement_group.assert_not_called()
     pg_mock.delete_placement_group.assert_not_called()
     op_mock.get_operation.assert_not_called()
+
+
+def throw_on_specific_patch(patches, failing_patch_idx, raised_exception, op_offset):
+    patches = patches.copy()
+
+    def _update_side_effect(patch, **kwargs):
+        idx = patches.index(patch)
+        if idx == failing_patch_idx:
+            raise raised_exception()
+        return OperationMock(id="op{0}".format(op_offset + idx))
+
+    return _update_side_effect
