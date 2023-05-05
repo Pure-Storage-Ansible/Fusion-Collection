@@ -162,16 +162,10 @@ def test_module_args_wrong(pp_api_init, op_api_init, module_args, get_not_called
 
 @patch("fusion.OperationsApi")
 @patch("fusion.ProtectionPoliciesApi")
-def test_pp_create_ok(pp_api_init, op_api_init):
-    module_args = {
-        "name": "protection_policy1",
-        "display_name": "some_display_name",
-        "local_rpo": 43,
-        "local_retention": "2H",
-        "state": "present",
-        "issuer_id": "ABCD1234",
-        "private_key_file": "private-key.pem",
-    }
+def test_pp_create_ok(pp_api_init, op_api_init, module_args_present):
+    module_args = module_args_present
+    module_args["display_name"] = "some_display_name"
+
     set_module_args(module_args)
 
     pp_mock = MagicMock()
