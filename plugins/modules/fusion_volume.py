@@ -5,20 +5,19 @@
 # GNU General Public License v3.0+ (see COPYING.GPLv3 or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
-    await_operation,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
-    setup_fusion,
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
+    fusion_argument_spec,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    fusion_argument_spec,
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
 )
-from ansible.module_utils.basic import AnsibleModule
-from typing import List
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
 
 __metaclass__ = type
 
@@ -273,7 +272,7 @@ def update_protection_policy(module, current, patches):
         patches.append(patch)
 
 
-def apply_patches(module, fusion, patches: List[purefusion.VolumePatch]):
+def apply_patches(module, fusion, patches):
     volume_api_instance = purefusion.VolumesApi(fusion)
     for patch in patches:
         op = volume_api_instance.update_volume(

@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import fusion as purefusion
 import pytest
@@ -21,7 +21,6 @@ from ansible_collections.purestorage.fusion.plugins.modules import (
 from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
-    FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
     exit_json,
@@ -160,7 +159,7 @@ def destroyed_volume(volume):
         ),
         (
             "storage_class",
-            "missing parameter\(s\) required by 'placement_group': storage_class",
+            "missing parameter\\(s\\) required by 'placement_group': storage_class",
         ),
         (
             "placement_group",
