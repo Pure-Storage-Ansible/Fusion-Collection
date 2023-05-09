@@ -28,6 +28,10 @@ options:
       - Path to the private key file
       - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
+  private_key_password:
+    description:
+      - Password of the encrypted private key file
+    type: str
   issuer_id:
     aliases: [ app_id ]
     description:
@@ -35,10 +39,17 @@ options:
       - eg. pure1:apikey:dssf2331sd
       - Defaults to the set environment variable under FUSION_ISSUER_ID
     type: str
+  access_token:
+    description:
+      - Access token for Fusion Service
+      - Defaults to the set environment variable under FUSION_ACCESS_TOKEN
+    type: str
 notes:
   - This module requires the I(purefusion) Python library
   - You must set C(FUSION_ISSUER_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
     if I(issuer_id) and I(private_key_file) arguments are not passed to the module directly
+  - If you want to use access token for authentication, you must use C(FUSION_ACCESS_TOKEN) environment variable
+    if I(access_token) argument is not passed to the module directly
 requirements:
   - python >= 3.8
   - purefusion

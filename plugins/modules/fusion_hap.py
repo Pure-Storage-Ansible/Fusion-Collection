@@ -196,13 +196,40 @@ def main():
         dict(
             name=dict(type="str", required=True),
             state=dict(type="str", default="present", choices=["absent", "present"]),
-            nqn=dict(type="str"),
+            nqn=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
             iqn=dict(type="str"),
-            wwns=dict(type="list", elements="str"),
-            host_password=dict(type="str", no_log=True),
-            host_user=dict(type="str"),
-            target_password=dict(type="str", no_log=True),
-            target_user=dict(type="str"),
+            wwns=dict(
+                type="list",
+                elements="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
+            host_password=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+                no_log=True,
+            ),
+            host_user=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
+            target_password=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+                no_log=True,
+            ),
+            target_user=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
             display_name=dict(type="str"),
             personality=dict(
                 type="str",
@@ -223,18 +250,38 @@ def main():
     )
 
     required_if = [["state", "present", ["personality", "iqn"]]]
-    required_together = [
-        ["host_password", "host_user"],
-        ["target_password", "target_user"],
-    ]
 
     module = AnsibleModule(
         argument_spec,
         supports_check_mode=True,
-        required_together=required_together,
         required_if=required_if,
     )
     fusion = setup_fusion(module)
+
+    if module.params["nqn"]:
+        module.warn(
+            "`nqn` parameter is deprecated and will be removed in version 2.0.0"
+        )
+    if module.params["wwns"]:
+        module.warn(
+            "`wwns` parameter is deprecated and will be removed in version 2.0.0"
+        )
+    if module.params["host_password"]:
+        module.warn(
+            "`host_password` parameter is deprecated and will be removed in version 2.0.0"
+        )
+    if module.params["host_user"]:
+        module.warn(
+            "`host_user` parameter is deprecated and will be removed in version 2.0.0"
+        )
+    if module.params["target_password"]:
+        module.warn(
+            "`target_password` parameter is deprecated and will be removed in version 2.0.0"
+        )
+    if module.params["target_user"]:
+        module.warn(
+            "`target_user` parameter is deprecated and will be removed in version 2.0.0"
+        )
 
     hap_pattern = re.compile("^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?$")
     iqn_pattern = re.compile(
