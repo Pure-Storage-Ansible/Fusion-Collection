@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import fusion as purefusion
 import pytest
@@ -259,7 +259,6 @@ def test_volume_create_without_display_name_successfully(
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
-    volumes_api.create_volume.assert_called_once()
     volumes_api.create_volume.assert_called_with(
         purefusion.VolumePost(
             size=1048576,
@@ -303,8 +302,7 @@ def test_volume_create_throws_exception(
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
-    volumes_api.create_volume.assert_called_once()
-    volumes_api.create_volume.assert_called_with(
+    volumes_api.create_volume.assert_called_once_with(
         purefusion.VolumePost(
             size=1048576,
             storage_class=module_args["storage_class"],
@@ -580,7 +578,12 @@ def test_volume_delete_throws_validation_error(
         tenant_name=absent_module_args["tenant"],
         tenant_space_name=absent_module_args["tenant_space"],
     )
-    volumes_api.update_volume.assert_called_once()
+    volumes_api.update_volume.assert_called_once_with(
+        purefusion.VolumePatch(destroyed=purefusion.NullableBoolean(True)),
+        volume_name=absent_module_args["name"],
+        tenant_name=absent_module_args["tenant"],
+        tenant_space_name=absent_module_args["tenant_space"],
+    )
     volumes_api.delete_volume.assert_not_called()
     operations_api.get_operation.assert_called_once_with(1)
 
