@@ -237,7 +237,7 @@ def test_se_create(m_se_api, m_op_api, module_args):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(
@@ -288,7 +288,7 @@ def test_se_create_without_display_name(m_se_api, m_op_api, module_args):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(
@@ -503,7 +503,7 @@ def test_se_update(m_se_api, m_op_api, module_args, current_se):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(
@@ -698,7 +698,7 @@ def test_se_present_not_changed(m_se_api, m_op_api, module_args, current_se):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(
@@ -735,7 +735,7 @@ def test_se_absent_not_changed(m_se_api, m_op_api, module_args, current_se):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(
@@ -774,7 +774,7 @@ def test_se_delete(m_se_api, m_op_api, module_args, current_se):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_se.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(

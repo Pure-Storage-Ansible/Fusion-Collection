@@ -125,7 +125,7 @@ def test_tenant_create(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])
@@ -168,7 +168,7 @@ def test_tenant_create_without_display_name(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])
@@ -358,7 +358,7 @@ def test_tenant_update(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])
@@ -566,7 +566,7 @@ def test_tenant_present_not_changed(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])
@@ -605,7 +605,7 @@ def test_tenant_absent_not_changed(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])
@@ -650,7 +650,7 @@ def test_tenant_delete(m_tenant_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_tenant.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])

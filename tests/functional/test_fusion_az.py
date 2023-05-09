@@ -138,7 +138,7 @@ def test_az_create(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -185,7 +185,7 @@ def test_az_create_without_display_name(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -392,7 +392,7 @@ def test_az_update(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -475,7 +475,7 @@ def test_az_present_not_changed(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -517,7 +517,7 @@ def test_az_absent_not_changed(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -567,7 +567,7 @@ def test_az_delete(m_az_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_az.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
