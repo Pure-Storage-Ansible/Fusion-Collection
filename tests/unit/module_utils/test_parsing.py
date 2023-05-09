@@ -9,7 +9,6 @@ __metaclass__ = type
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
-    print_number_with_metric_suffix,
     parse_minutes,
 )
 
@@ -80,15 +79,6 @@ def test_parsing_invalid_number():
         assert parse_number_with_metric_suffix(module, "M")
     with pytest.raises(MockException):
         assert parse_number_with_metric_suffix(module, "hello world")
-
-
-def test_printing():
-    assert print_number_with_metric_suffix(0) == "0 "
-    assert print_number_with_metric_suffix(1) == "1 "
-    assert print_number_with_metric_suffix(124) == "124 "
-    assert print_number_with_metric_suffix(1024) == "1 K"
-    assert print_number_with_metric_suffix(1024, factor=1000) == "1.02 K"
-    assert print_number_with_metric_suffix(2048) == "2 K"
 
 
 def test_parsing_valid_time_period():

@@ -73,20 +73,3 @@ def parse_minutes(module, period):
                 "e.g. 4W3D5H, 5D8H5M, 3D, 5W, 1Y5W..."
             ).format(period)
         )
-
-
-def print_number_with_metric_suffix(number, factor=1024):
-    """Returns string with the number, suffixed space and
-    potentially metric symbol, e.g. 400 -> '400 ', 1000 -> '1 K'
-    etc.
-    Will call `module.fail_json()` for invalid inputs."""
-    factor_count = 0
-    float_rem = number
-    int_rem = number
-    while factor_count < len(METRIC_SUFFIXES) and int_rem >= int(factor):
-        float_rem = int_rem / float(factor)
-        int_rem = int_rem / int(factor)
-        factor_count += 1
-    if factor_count == 0:
-        return "{0} ".format(number)
-    return "{0:.5g} {1}".format(round(float_rem, 2), METRIC_SUFFIXES[factor_count - 1])
