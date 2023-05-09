@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import fusion as purefusion
 import pytest
@@ -66,67 +66,26 @@ def absent_module_args(module_args):
 
 
 @pytest.fixture
-def storage_class():
-    return {
-        "name": "sc1",
-        "display_name": "Storage Class 1",
-        "storage_service": "storage_service_1",
-        "size_limit": 4096,
-        "iops_limit": 100,
-        "bandwidth_limit": 1024,
-        "self_link": "self_link",
-        "id": "id_1",
-    }
-
-
-@pytest.fixture
-def placement_group():
-    return {
-        "name": "pg1",
-        "display_name": "pg1",
-        "tenant": "t1",
-        "tenant_space": "ts1",
-        "availability_zone": "az1",
-        "storage_service": "ss1",
-        "self_link": "self_link",
-        "id": "id_1",
-    }
-
-
-@pytest.fixture
-def protection_policy():
-    return {
-        "name": "pp1",
-        "display_name": "pp1",
-        "self_link": "self_link",
-        "id": "id_1",
-        "objectives": "objectives",
-    }
-
-
-@pytest.fixture
-def host_access_policies():
-    return {
-        "name": "hap1",
-        "display_name": "hap1",
-        "iqn": "iqn1",
-        "personality": "linux",
-        "self_link": "self_link",
-        "id": "id_1",
-    }
-
-
-@pytest.fixture
-def volume(storage_class, placement_group, protection_policy, host_access_policies):
+def volume():
     return {
         "name": "volume_1",
         "display_name": "Volume 1",
         "tenant": "t1",
         "tenant_space": "ts1",
-        "storage_class": purefusion.StorageClass(**storage_class),
-        "placement_group": purefusion.PlacementGroup(**placement_group),
-        "protection_policy": purefusion.ProtectionPolicy(**protection_policy),
-        "host_access_policies": [purefusion.HostAccessPolicy(**host_access_policies)],
+        "storage_class": purefusion.StorageClassRef(
+            name="sc1", id="id_1", kind="storage_class", self_link="self_link"
+        ),
+        "placement_group": purefusion.PlacementGroupRef(
+            name="pg1", id="id_1", kind="placement_group", self_link="self_link"
+        ),
+        "protection_policy": purefusion.ProtectionPolicyRef(
+            name="pp1", id="id_1", kind="protection_policy", self_link="self_link"
+        ),
+        "host_access_policies": [
+            purefusion.HostAccessPolicyRef(
+                name="hap1", id="id_1", kind="host_access_policy", self_link="self_link"
+            )
+        ],
         "serial_number": "sn1",
         "destroyed": False,
         "size": 1048576,
@@ -172,10 +131,11 @@ def destroyed_volume(volume):
     ],
 )
 def test_module_fails_on_missing_parameters(
-    volumes_api, field, expected_exception_regex, module_args
+    mock_volumes_api, field, expected_exception_regex, module_args
 ):
     volumes_api = purefusion.VolumesApi()
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
+    mock_volumes_api.return_value = volumes_api
     del module_args[field]
     set_module_args(module_args)
     # run module
@@ -207,10 +167,11 @@ def test_module_fails_on_missing_parameters(
     ],
 )
 def test_module_fails_on_incorrect_parameters(
-    volumes_api, dict_update, expected_exception_regex, module_args
+    mock_volumes_api, dict_update, expected_exception_regex, module_args
 ):
     volumes_api = purefusion.VolumesApi()
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
+    mock_volumes_api.return_value = volumes_api
     module_args.update(dict_update)
     set_module_args(module_args)
     # run module
@@ -221,10 +182,11 @@ def test_module_fails_on_incorrect_parameters(
 
 @patch("fusion.VolumesApi")
 def test_module_not_existent_volume_with_state_absent_not_changed(
-    volumes_api, module_args
+    mock_volumes_api, module_args
 ):
     volumes_api = purefusion.VolumesApi()
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
+    mock_volumes_api.return_value = volumes_api
     del module_args["host_access_policies"]
     module_args["state"] = "absent"
     set_module_args(module_args)
@@ -232,23 +194,34 @@ def test_module_not_existent_volume_with_state_absent_not_changed(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.args[0]["changed"] is False
+    volumes_api.get_volume.assert_called_once_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
 
 
 @patch("fusion.OperationsApi")
 @patch("fusion.VolumesApi")
-def test_volume_create_successfully(volumes_api, operations_api, module_args):
+def test_volume_create_successfully(mock_volumes_api, mock_operations_api, module_args):
     operations_api = purefusion.OperationsApi()
     volumes_api = purefusion.VolumesApi()
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
     volumes_api.create_volume = MagicMock(return_value=OperationMock(1))
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.args[0]["changed"] is True
-    volumes_api.create_volume.assert_called_once()
-    volumes_api.create_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.create_volume.assert_called_once_with(
         purefusion.VolumePost(
             size=1048576,
             storage_class=module_args["storage_class"],
@@ -260,12 +233,13 @@ def test_volume_create_successfully(volumes_api, operations_api, module_args):
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
 @patch("fusion.VolumesApi")
 def test_volume_create_without_display_name_successfully(
-    volumes_api, operations_api, module_args
+    mock_volumes_api, mock_operations_api, module_args
 ):
     del module_args["display_name"]
     operations_api = purefusion.OperationsApi()
@@ -273,11 +247,18 @@ def test_volume_create_without_display_name_successfully(
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
     volumes_api.create_volume = MagicMock(return_value=OperationMock(1))
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.args[0]["changed"] is True
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
     volumes_api.create_volume.assert_called_once()
     volumes_api.create_volume.assert_called_with(
         purefusion.VolumePost(
@@ -291,6 +272,7 @@ def test_volume_create_without_display_name_successfully(
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
@@ -303,17 +285,24 @@ def test_volume_create_without_display_name_successfully(
     ],
 )
 def test_volume_create_throws_exception(
-    volumes_api, operations_api, exec_original, exec_catch, module_args
+    mock_volumes_api, mock_operations_api, exec_original, exec_catch, module_args
 ):
     operations_api = purefusion.OperationsApi()
     volumes_api = purefusion.VolumesApi()
     volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
     volumes_api.create_volume = MagicMock(side_effect=exec_original)
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(exec_catch):
         fusion_volume.main()
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
     volumes_api.create_volume.assert_called_once()
     volumes_api.create_volume.assert_called_with(
         purefusion.VolumePost(
@@ -345,14 +334,11 @@ def test_volume_create_throws_exception(
         ),
         (
             {
-                "protection_policy": purefusion.ProtectionPolicy(
-                    **{
-                        "name": "pp2",
-                        "display_name": "pp2",
-                        "self_link": "self_link",
-                        "id": "id_1",
-                        "objectives": "objectives",
-                    }
+                "protection_policy": purefusion.ProtectionPolicyRef(
+                    name="pp2",
+                    id="id_1",
+                    kind="protection_policy",
+                    self_link="self_link",
                 )
             },
             purefusion.VolumePatch(protection_policy=purefusion.NullableString("pp1")),
@@ -363,34 +349,16 @@ def test_volume_create_throws_exception(
         ),
         (
             {
-                "storage_class": purefusion.StorageClass(
-                    **{
-                        "name": "sc2",
-                        "display_name": "Storage Class 1",
-                        "storage_service": "storage_service_1",
-                        "size_limit": 4096,
-                        "iops_limit": 100,
-                        "bandwidth_limit": 1024,
-                        "self_link": "self_link",
-                        "id": "id_1",
-                    }
+                "storage_class": purefusion.StorageClassRef(
+                    name="sc2", id="id_1", kind="storage_class", self_link="self_link"
                 )
             },
             purefusion.VolumePatch(storage_class=purefusion.NullableString("sc1")),
         ),
         (
             {
-                "placement_group": purefusion.PlacementGroup(
-                    **{
-                        "name": "pg2",
-                        "display_name": "pg1",
-                        "tenant": "t1",
-                        "tenant_space": "ts1",
-                        "availability_zone": "az1",
-                        "storage_service": "ss1",
-                        "self_link": "self_link",
-                        "id": "id_1",
-                    }
+                "placement_group": purefusion.PlacementGroupRef(
+                    name="pg2", id="id_1", kind="placement_group", self_link="self_link"
                 )
             },
             purefusion.VolumePatch(placement_group=purefusion.NullableString("pg1")),
@@ -398,15 +366,11 @@ def test_volume_create_throws_exception(
         (
             {
                 "host_access_policies": [
-                    purefusion.HostAccessPolicy(
-                        **{
-                            "name": "hap2",
-                            "display_name": "hap2",
-                            "iqn": "iqn1",
-                            "personality": "linux",
-                            "self_link": "self_link",
-                            "id": "id_1",
-                        }
+                    purefusion.HostAccessPolicyRef(
+                        name="hap2",
+                        id="id_1",
+                        kind="host_access_policy",
+                        self_link="self_link",
                     )
                 ]
             },
@@ -417,7 +381,12 @@ def test_volume_create_throws_exception(
     ],
 )
 def test_volume_update_with_state_present_executed_correctly(
-    volumes_api, operations_api, updated_volume, called_with, module_args, volume
+    mock_volumes_api,
+    mock_operations_api,
+    updated_volume,
+    called_with,
+    module_args,
+    volume,
 ):
     volume.update(updated_volume)
     operations_api = purefusion.OperationsApi()
@@ -425,21 +394,25 @@ def test_volume_update_with_state_present_executed_correctly(
     volumes_api.get_volume = MagicMock(return_value=purefusion.Volume(**volume))
     volumes_api.update_volume = MagicMock(return_value=OperationMock(1))
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.args[0]["changed"] is True
-
-    volumes_api.update_volume.assert_called_once()
-    volumes_api.update_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_called_once_with(
         called_with,
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
-    operations_api.get_operation.assert_called_once()
-    operations_api.get_operation.assert_called_with(1)
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
@@ -454,7 +427,12 @@ def test_volume_update_with_state_present_executed_correctly(
     ],
 )
 def test_volume_update_with_state_absent_executed_correctly(
-    volumes_api, operations_api, updated_volume, called_with, module_args, volume
+    mock_volumes_api,
+    mock_operations_api,
+    updated_volume,
+    called_with,
+    module_args,
+    volume,
 ):
     module_args["state"] = "absent"
     del module_args["host_access_policies"]
@@ -464,21 +442,25 @@ def test_volume_update_with_state_absent_executed_correctly(
     volumes_api.get_volume = MagicMock(return_value=purefusion.Volume(**volume))
     volumes_api.update_volume = MagicMock(return_value=OperationMock(1))
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.args[0]["changed"] is True
-
-    volumes_api.update_volume.assert_called_once()
-    volumes_api.update_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_called_once_with(
         called_with,
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
-    operations_api.get_operation.assert_called_once()
-    operations_api.get_operation.assert_called_with(1)
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
@@ -491,7 +473,12 @@ def test_volume_update_with_state_absent_executed_correctly(
     ],
 )
 def test_volume_update_throws_exception(
-    volumes_api, operations_api, exec_original, exec_catch, module_args, volume
+    mock_volumes_api,
+    mock_operations_api,
+    exec_original,
+    exec_catch,
+    module_args,
+    volume,
 ):
     module_args["display_name"] = "volume"
     operations_api = purefusion.OperationsApi()
@@ -499,14 +486,22 @@ def test_volume_update_throws_exception(
     volumes_api.get_volume = MagicMock(return_value=purefusion.Volume(**volume))
     volumes_api.update_volume = MagicMock(side_effect=exec_original)
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(exec_catch):
         fusion_volume.main()
 
-    volumes_api.update_volume.assert_called_once()
-    volumes_api.update_volume.assert_called_with(
-        purefusion.VolumePatch(display_name=purefusion.NullableString("volume")),
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_called_once_with(
+        purefusion.VolumePatch(
+            display_name=purefusion.NullableString(module_args["display_name"])
+        ),
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
@@ -524,7 +519,12 @@ def test_volume_update_throws_exception(
     ],
 )
 def test_volume_update_operation_throws_exception(
-    volumes_api, operations_api, exec_original, exec_catch, module_args, volume
+    mock_volumes_api,
+    mock_operations_api,
+    exec_original,
+    exec_catch,
+    module_args,
+    volume,
 ):
     module_args["display_name"] = "volume"
     operations_api = purefusion.OperationsApi()
@@ -532,25 +532,33 @@ def test_volume_update_operation_throws_exception(
     volumes_api.get_volume = MagicMock(return_value=purefusion.Volume(**volume))
     volumes_api.update_volume = MagicMock(return_value=OperationMock(1))
     operations_api.get_operation = MagicMock(side_effect=exec_original)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(module_args)
     # run module
     with pytest.raises(exec_catch):
         fusion_volume.main()
 
-    volumes_api.update_volume.assert_called_once()
-    volumes_api.update_volume.assert_called_with(
-        purefusion.VolumePatch(display_name=purefusion.NullableString("volume")),
+    volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
         tenant_space_name=module_args["tenant_space"],
     )
-    operations_api.get_operation.assert_called_once()
+    volumes_api.update_volume.assert_called_once_with(
+        purefusion.VolumePatch(
+            display_name=purefusion.NullableString(module_args["display_name"])
+        ),
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
 @patch("fusion.VolumesApi")
 def test_volume_delete_throws_validation_error(
-    volumes_api, operations_api, absent_module_args, volume
+    mock_volumes_api, mock_operations_api, absent_module_args, volume
 ):
     volume["host_access_policies"] = []
     operations_api = purefusion.OperationsApi()
@@ -560,18 +568,27 @@ def test_volume_delete_throws_validation_error(
     volumes_api.delete_volume = MagicMock(return_value=OperationMock(2))
 
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(absent_module_args)
     # run module
     with pytest.raises(AnsibleFailJson) as ansible_fail:
         fusion_volume.main()
     assert ansible_fail.match(regexp="BUG: inconsistent state, eradicate_volume")
+    volumes_api.get_volume.assert_called_with(
+        volume_name=absent_module_args["name"],
+        tenant_name=absent_module_args["tenant"],
+        tenant_space_name=absent_module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_called_once()
     volumes_api.delete_volume.assert_not_called()
+    operations_api.get_operation.assert_called_once_with(1)
 
 
 @patch("fusion.OperationsApi")
 @patch("fusion.VolumesApi")
 def test_volume_delete_executed_correctly(
-    volumes_api, operations_api, absent_module_args, destroyed_volume
+    mock_volumes_api, mock_operations_api, absent_module_args, destroyed_volume
 ):
     operations_api = purefusion.OperationsApi()
     volumes_api = purefusion.VolumesApi()
@@ -582,18 +599,24 @@ def test_volume_delete_executed_correctly(
     volumes_api.delete_volume = MagicMock(return_value=OperationMock(2))
 
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(absent_module_args)
     # run module
     with pytest.raises(AnsibleExitJson):
         fusion_volume.main()
-    volumes_api.delete_volume.assert_called_once()
-    volumes_api.delete_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
         volume_name=absent_module_args["name"],
         tenant_name=absent_module_args["tenant"],
         tenant_space_name=absent_module_args["tenant_space"],
     )
-
-    operations_api.get_operation.assert_called_once()
+    volumes_api.update_volume.assert_not_called()
+    volumes_api.delete_volume.assert_called_once_with(
+        volume_name=absent_module_args["name"],
+        tenant_name=absent_module_args["tenant"],
+        tenant_space_name=absent_module_args["tenant_space"],
+    )
+    operations_api.get_operation.assert_called_once_with(2)
 
 
 @patch("fusion.OperationsApi")
@@ -606,8 +629,8 @@ def test_volume_delete_executed_correctly(
     ],
 )
 def test_volume_delete_throws_exception(
-    volumes_api,
-    operations_api,
+    mock_volumes_api,
+    mock_operations_api,
     exec_original,
     exec_catch,
     absent_module_args,
@@ -622,12 +645,19 @@ def test_volume_delete_throws_exception(
     volumes_api.delete_volume = MagicMock(side_effect=exec_original)
 
     operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(absent_module_args)
     # run module
     with pytest.raises(exec_catch):
         fusion_volume.main()
-    volumes_api.delete_volume.assert_called_once()
-    volumes_api.delete_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
+        volume_name=absent_module_args["name"],
+        tenant_name=absent_module_args["tenant"],
+        tenant_space_name=absent_module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_not_called()
+    volumes_api.delete_volume.assert_called_once_with(
         volume_name=absent_module_args["name"],
         tenant_name=absent_module_args["tenant"],
         tenant_space_name=absent_module_args["tenant_space"],
@@ -646,8 +676,8 @@ def test_volume_delete_throws_exception(
     ],
 )
 def test_volume_delete_operation_throws_exception(
-    volumes_api,
-    operations_api,
+    mock_volumes_api,
+    mock_operations_api,
     exec_original,
     exec_catch,
     absent_module_args,
@@ -662,15 +692,21 @@ def test_volume_delete_operation_throws_exception(
     volumes_api.delete_volume = MagicMock(return_value=OperationMock(2))
 
     operations_api.get_operation = MagicMock(side_effect=exec_original)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
     set_module_args(absent_module_args)
     # run module
     with pytest.raises(exec_catch):
         fusion_volume.main()
-    volumes_api.delete_volume.assert_called_once()
-    volumes_api.delete_volume.assert_called_with(
+    volumes_api.get_volume.assert_called_with(
         volume_name=absent_module_args["name"],
         tenant_name=absent_module_args["tenant"],
         tenant_space_name=absent_module_args["tenant_space"],
     )
-
-    operations_api.get_operation.assert_called_once()
+    volumes_api.update_volume.assert_not_called()
+    volumes_api.delete_volume.assert_called_once_with(
+        volume_name=absent_module_args["name"],
+        tenant_name=absent_module_args["tenant"],
+        tenant_space_name=absent_module_args["tenant_space"],
+    )
+    operations_api.get_operation.assert_called_once_with(2)

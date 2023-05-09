@@ -378,11 +378,11 @@ def validate_arguments(module, volume):
             msg="'eradicate: true' cannot be used together with 'state: present'"
         )
 
-    if module.params["size"] is not None:
+    if module.params["size"]:
         size = parse_number_with_metric_suffix(module, module.params["size"])
         if size < 1048576 or size > 4503599627370496:  # 1MB to 4PB
             module.fail_json(
-                msg="Size is not within the required range, size must be between 1MiB and 4PiB"
+                msg="Size is not within the required range, size must be between 1MB and 4PB"
             )
 
 
