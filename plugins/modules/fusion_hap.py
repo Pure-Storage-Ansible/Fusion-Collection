@@ -138,7 +138,7 @@ def _check_iqn(module, fusion):
     for host in hosts:
         if host.iqn == module.params["iqn"] and host.name != module.params["name"]:
             module.fail_json(
-                msg="Supplied IQN {0} already used by host access polivy {1}".format(
+                msg="Supplied IQN {0} already used by host access policy {1}".format(
                     module.params["iqn"], host.name
                 )
             )
