@@ -363,7 +363,7 @@ def test_array_create(m_array_api, m_op_api, hw_type, main_m, unav_m, module_arg
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -456,7 +456,7 @@ def test_array_create_without_display_name(m_array_api, m_op_api, module_args):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -898,7 +898,7 @@ def test_array_update(m_array_api, m_op_api, module_args, current_array):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -1104,7 +1104,7 @@ def test_array_present_not_changed(m_array_api, m_op_api, module_args, current_a
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -1141,7 +1141,7 @@ def test_array_absent_not_changed(m_array_api, m_op_api, module_args):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -1178,7 +1178,7 @@ def test_array_delete(m_array_api, m_op_api, module_args, current_array):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_array.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_array.assert_called_once_with(

@@ -47,12 +47,14 @@ USER_AGENT_BASE = "Ansible"
 
 PARAM_ISSUER_ID = "issuer_id"
 PARAM_PRIVATE_KEY_FILE = "private_key_file"
+PARAM_PRIVATE_KEY_PASSWORD = "private_key_password"
 PARAM_ACCESS_TOKEN = "access_token"
 ENV_ISSUER_ID = "FUSION_ISSUER_ID"
 ENV_API_HOST = "FUSION_API_HOST"
 ENV_PRIVATE_KEY_FILE = "FUSION_PRIVATE_KEY_FILE"
 ENV_TOKEN_ENDPOINT = "FUSION_TOKEN_ENDPOINT"
 ENV_ACCESS_TOKEN = "FUSION_ACCESS_TOKEN"
+
 # will be deprecated in 2.0.0
 PARAM_APP_ID = "app_id"  # replaced by PARAM_ISSUER_ID
 PARAM_KEY_FILE = "key_file"  # replaced by PARAM_PRIVATE_KEY_FILE
@@ -102,8 +104,12 @@ def get_fusion(module):
     }
 
     issuer_id = module.params[PARAM_ISSUER_ID]
-    key_file = module.params[PARAM_PRIVATE_KEY_FILE]
     access_token = module.params[PARAM_ACCESS_TOKEN]
+    private_key_file = module.params[PARAM_PRIVATE_KEY_FILE]
+    private_key_password = module.params[PARAM_PRIVATE_KEY_PASSWORD]
+
+    if private_key_password is not None:
+        module.fail_on_missing_params([PARAM_PRIVATE_KEY_FILE])
 
     config = fusion.Configuration()
     if ENV_API_HOST in environ or ENV_HOST in environ:
@@ -113,9 +119,11 @@ def get_fusion(module):
 
     if access_token is not None:
         config.access_token = access_token
-    elif issuer_id is not None and key_file is not None:
+    elif issuer_id is not None and private_key_file is not None:
         config.issuer_id = issuer_id
-        config.private_key_file = key_file
+        config.private_key_file = private_key_file
+        if private_key_password is not None:
+            config.private_key_password = private_key_password
     elif ENV_ACCESS_TOKEN in environ:
         config.access_token = environ.get(ENV_ACCESS_TOKEN)
     elif (
@@ -165,6 +173,9 @@ def fusion_argument_spec():
                     "collection_name": "purefusion.fusion",
                 }
             ],
+        },
+        PARAM_PRIVATE_KEY_PASSWORD: {
+            "no_log": True,
         },
         PARAM_ACCESS_TOKEN: {
             "no_log": True,

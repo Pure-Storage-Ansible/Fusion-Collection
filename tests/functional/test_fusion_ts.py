@@ -137,7 +137,7 @@ def test_ts_create(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -185,7 +185,7 @@ def test_ts_create_without_display_name(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -398,7 +398,7 @@ def test_ts_update(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -638,7 +638,7 @@ def test_ts_present_not_changed(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -681,7 +681,7 @@ def test_ts_absent_not_changed(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -733,7 +733,7 @@ def test_ts_delete(m_ts_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ts.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(

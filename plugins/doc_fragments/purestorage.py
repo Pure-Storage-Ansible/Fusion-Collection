@@ -28,6 +28,10 @@ options:
       - Path to the private key file
       - Defaults to the set environment variable under FUSION_PRIVATE_KEY_FILE.
     type: str
+  private_key_password:
+    description:
+      - Password of the encrypted private key file
+    type: str
   issuer_id:
     aliases: [ app_id ]
     description:

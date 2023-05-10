@@ -20,7 +20,7 @@ author:
 notes:
 - Supports C(check mode).
 options:
-  name:
+  role:
     description:
     - The name of the role to be assigned/unassigned.
     type: str
@@ -96,10 +96,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_tenant,
-    get_ts,
-)
 
 
 def human_to_principal(fusion, user_id):
@@ -131,21 +127,12 @@ def human_to_scope(params):
     return scope_link
 
 
-def get_role(module, fusion):
-    """Return Role or None"""
-    role_api_instance = purefusion.RolesApi(fusion)
-    try:
-        return role_api_instance.get_role(role_name=module.params["name"])
-    except purefusion.rest.ApiException:
-        return None
-
-
 def get_ra(module, fusion):
     """Return Role Assignment or None"""
     ra_api_instance = purefusion.RoleAssignmentsApi(fusion)
     try:
         assignments = ra_api_instance.list_role_assignments(
-            role_name=module.params["name"]
+            role_name=module.params["role"]
         )
         for assign in range(0, len(assignments)):
             principal = human_to_principal(fusion, module.params["user"])
@@ -171,7 +158,7 @@ def create_ra(module, fusion):
         principal = human_to_principal(fusion, module.params["user"])
         assignment = purefusion.RoleAssignmentPost(scope=scope, principal=principal)
         op = ra_api_instance.create_role_assignment(
-            assignment, role_name=module.params["name"]
+            assignment, role_name=module.params["role"]
         )
         await_operation(fusion, op)
     module.exit_json(changed=changed)
@@ -184,7 +171,7 @@ def delete_ra(module, fusion):
     if not module.check_mode:
         ra_name = get_ra(module, fusion).name
         op = ra_api_instance.delete_role_assignment(
-            role_name=module.params["name"], role_assignment_name=ra_name
+            role_name=module.params["role"], role_assignment_name=ra_name
         )
         await_operation(fusion, op)
 
@@ -196,7 +183,17 @@ def main():
     argument_spec = fusion_argument_spec()
     argument_spec.update(
         dict(
-            name=dict(type="str", required=True),
+            role=dict(
+                type="str",
+                required=True,
+                deprecated_aliases=[
+                    dict(
+                        name="name",
+                        date="2023-07-26",
+                        collection_name="purefusion.fusion",
+                    )
+                ],
+            ),
             tenant=dict(type="str"),
             tenant_space=dict(type="str"),
             user=dict(type="str", required=True),
@@ -222,14 +219,6 @@ def main():
     state = module.params["state"]
     if not human_to_principal(fusion, module.params["user"]):
         module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
-    if module.params["tenant"] and not get_tenant(module, fusion):
-        module.fail_json(
-            msg="Tenant {0} does not exist".format(module.params["tenant"])
-        )
-    if module.params["tenant_space"] and not get_ts(module, fusion):
-        module.fail_json(
-            msg="Tenant Space {0} does not exist".format(module.params["tenant_space"])
-        )
     role_assignment = get_ra(module, fusion)
 
     if not role_assignment and state == "present":

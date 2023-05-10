@@ -138,7 +138,7 @@ def test_ss_create(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
@@ -185,7 +185,7 @@ def test_ss_create_without_display_name(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
@@ -433,7 +433,7 @@ def test_ss_update(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
@@ -661,7 +661,7 @@ def test_ss_present_not_changed(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
@@ -702,7 +702,7 @@ def test_ss_absent_not_changed(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is False
+    assert not exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
@@ -752,7 +752,7 @@ def test_ss_delete(m_ss_api, m_op_api):
     with pytest.raises(AnsibleExitJson) as exc:
         fusion_ss.main()
 
-    assert exc.value.args[0]["changed"] is True
+    assert exc.value.changed
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(
