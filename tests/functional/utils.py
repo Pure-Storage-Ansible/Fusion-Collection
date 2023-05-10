@@ -58,7 +58,6 @@ class AnsibleExitJson(Exception):
     """
 
     def __init__(self, kwargs):
-        super().__init__(kwargs)
         self.kwargs = kwargs
 
     @property
@@ -72,12 +71,12 @@ class AnsibleFailJson(Exception):
     Docs: https://docs.ansible.com/ansible/latest/dev_guide/testing_units_modules.html
     """
 
-    def __init__(self, kwargs):
-        super().__init__(kwargs)
+    def __init__(self, msg, kwargs):
+        super().__init__(msg)
         self.kwargs = kwargs
 
 
-def exit_json(*args, **kwargs):
+def exit_json(self, **kwargs):
     """
     Function to patch over exit_json; package return data into an exception
     Docs: https://docs.ansible.com/ansible/latest/dev_guide/testing_units_modules.html
@@ -88,14 +87,13 @@ def exit_json(*args, **kwargs):
     raise AnsibleExitJson(kwargs)
 
 
-def fail_json(*args, **kwargs):
+def fail_json(self, msg, **kwargs):
     """
     Function to patch over fail_json; package return data into an exception
     Docs: https://docs.ansible.com/ansible/latest/dev_guide/testing_units_modules.html
     """
-
     kwargs["failed"] = True
-    raise AnsibleFailJson(kwargs)
+    raise AnsibleFailJson(msg, kwargs)
 
 
 def side_effects_with_exceptions(side_effects):
