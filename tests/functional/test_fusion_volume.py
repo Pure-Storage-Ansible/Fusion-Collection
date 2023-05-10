@@ -193,7 +193,7 @@ def test_module_not_existent_volume_with_state_absent_not_changed(
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
-    assert exception.value.args[0]["changed"] is False
+    assert exception.value.changed is False
     volumes_api.get_volume.assert_called_once_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -215,7 +215,7 @@ def test_volume_create_successfully(mock_volumes_api, mock_operations_api, modul
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
-    assert exception.value.args[0]["changed"] is True
+    assert exception.value.changed is True
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -253,7 +253,7 @@ def test_volume_create_without_display_name_successfully(
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
-    assert exception.value.args[0]["changed"] is True
+    assert exception.value.changed is True
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -398,7 +398,7 @@ def test_volume_update_with_state_present_executed_correctly(
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
-    assert exception.value.args[0]["changed"] is True
+    assert exception.value.changed is True
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -446,7 +446,7 @@ def test_volume_update_with_state_absent_executed_correctly(
     # run module
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
-    assert exception.value.args[0]["changed"] is True
+    assert exception.value.changed is True
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
