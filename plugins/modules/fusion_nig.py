@@ -117,9 +117,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.networking impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.getters import (
-    get_az,
-)
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
@@ -143,17 +140,14 @@ def create_nig(module, fusion):
 
     nig_api_instance = purefusion.NetworkInterfaceGroupsApi(fusion)
 
-    changed = True
+    changed = False
     if module.params["gateway"] and not is_address_in_network(
         module.params["gateway"], module.params["prefix"]
     ):
         module.fail_json(msg="`gateway` must be an address in subnet `prefix`")
 
     if not module.check_mode:
-        if not module.params["display_name"]:
-            display_name = module.params["name"]
-        else:
-            display_name = module.params["display_name"]
+        display_name = module.params["display_name"] or module.params["name"]
         if module.params["group_type"] == "eth":
             if module.params["gateway"]:
                 eth = purefusion.NetworkInterfaceGroupEthPost(
@@ -172,12 +166,16 @@ def create_nig(module, fusion):
                 name=module.params["name"],
                 display_name=display_name,
             )
-        op = nig_api_instance.create_network_interface_group(
-            nig,
-            availability_zone_name=module.params["availability_zone"],
-            region_name=module.params["region"],
-        )
-        await_operation(fusion, op)
+            op = nig_api_instance.create_network_interface_group(
+                nig,
+                availability_zone_name=module.params["availability_zone"],
+                region_name=module.params["region"],
+            )
+            await_operation(fusion, op)
+            changed = True
+        else:
+            # to prevent future unintended error
+            module.warn(f"group_type={module.params['group_type']} is not implemented")
 
     module.exit_json(changed=changed)
 
@@ -256,13 +254,6 @@ def main():
         module.fail_json(
             msg="`gateway` '{0}' is not a valid address".format(
                 module.params["gateway"]
-            )
-        )
-
-    if not get_az(module, fusion):
-        module.fail_json(
-            msg="Availability Zone {0} does not exist".format(
-                module.params["availability_zone"]
             )
         )
 
