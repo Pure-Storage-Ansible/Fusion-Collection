@@ -185,6 +185,103 @@ def current_se(module_args):
             "issuer_id": "ABCD1234",
             "private_key_file": "private-key.pem",
         },
+        # parameter 'iscsi` and 'cbs_azure_iscsi' are used at the same time
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "cbs-azure-iscsi",
+            "iscsi": [
+                {
+                    "address": "10.21.200.124/24",
+                    "gateway": "10.21.200.1",
+                    "network_interface_groups": ["subnet-0", "subnet-1"],
+                }
+            ],
+            "cbs_azure_iscsi": {
+                "storage_endpoint_collection_identity": "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId",
+                "load_balancer": "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb",
+                "load_balancer_addresses": [],
+            },
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
+        # parameter 'cbs_azure_iscsi' has invalid address
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "cbs-azure-iscsi",
+            "cbs_azure_iscsi": {
+                "storage_endpoint_collection_identity": "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId",
+                "load_balancer": "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb",
+                "load_balancer_addresses": ["not an address"],
+            },
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
+        # parameter 'iscsi' has invalid 'gateway' address
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "iscsi",
+            "iscsi": [
+                {
+                    "address": "10.21.200.124/24",
+                    "gateway": "not an address",
+                    "network_interface_groups": ["subnet-0", "subnet-1"],
+                }
+            ],
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
+        # parameter 'iscsi' has invalid 'address' address
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "iscsi",
+            "iscsi": [
+                {
+                    "address": "not an address",
+                    "gateway": "10.21.200.1",
+                    "network_interface_groups": ["subnet-0", "subnet-1"],
+                }
+            ],
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
+        # parameter 'endpoint_type` is set to `iscsi` but `iscsi` parameter is not defined
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "iscsi",
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
+        # parameter 'endpoint_type` is set to `cbs-azure-iscsi` but `cbs_azure_iscsi` parameter is not defined
+        {
+            "state": "present",
+            "name": "se1",
+            "display_name": "Storage Endpoint 1",
+            "region": "region1",
+            "availability_zone": "az1",
+            "endpoint_type": "cbs-azure-iscsi",
+            "app_id": "ABCD1234",
+            "key_file": "private-key.pem",
+        },
     ],
 )
 def test_module_fails_on_wrong_parameters(m_se_api, m_op_api, module_args):
@@ -217,7 +314,7 @@ def test_module_fails_on_wrong_parameters(m_se_api, m_op_api, module_args):
 
 @patch("fusion.OperationsApi")
 @patch("fusion.StorageEndpointsApi")
-def test_se_create(m_se_api, m_op_api, module_args):
+def test_se_create_iscsi(m_se_api, m_op_api, module_args):
     set_module_args(module_args)
 
     # mock api responses
@@ -255,6 +352,66 @@ def test_se_create(m_se_api, m_op_api, module_args):
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
                     for endpoint in module_args["iscsi"]
                 ]
+            ),
+        ),
+        region_name=module_args["region"],
+        availability_zone_name=module_args["availability_zone"],
+    )
+    api_obj.update_storage_endpoint.assert_not_called()
+    api_obj.delete_storage_endpoint.assert_not_called()
+    op_obj.get_operation.assert_called_once_with(1)
+
+
+@patch("fusion.OperationsApi")
+@patch("fusion.StorageEndpointsApi")
+def test_se_create_cbs_azure_iscsi(m_se_api, m_op_api, module_args):
+    del module_args["iscsi"]
+    module_args["endpoint_type"] = "cbs-azure-iscsi"
+    module_args["cbs_azure_iscsi"] = {
+        "storage_endpoint_collection_identity": "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId",
+        "load_balancer": "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb",
+        "load_balancer_addresses": ["234.1.2.3"],
+    }
+    set_module_args(module_args)
+
+    # mock api responses
+    api_obj = MagicMock()
+    api_obj.get_storage_endpoint = MagicMock(side_effect=purefusion.rest.ApiException)
+    api_obj.create_storage_endpoint = MagicMock(return_value=OperationMock(1))
+    api_obj.update_storage_endpoint = MagicMock(return_value=OperationMock(2))
+    api_obj.delete_storage_endpoint = MagicMock(return_value=OperationMock(3))
+    m_se_api.return_value = api_obj
+
+    # mock operation results
+    op_obj = MagicMock()
+    op_obj.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    m_op_api.return_value = op_obj
+
+    # run module
+    with pytest.raises(AnsibleExitJson) as exc:
+        fusion_se.main()
+
+    assert exc.value.changed is True
+
+    # check api was called correctly
+    api_obj.get_storage_endpoint.assert_called_once_with(
+        region_name=module_args["region"],
+        storage_endpoint_name=module_args["name"],
+        availability_zone_name=module_args["availability_zone"],
+    )
+    api_obj.create_storage_endpoint.assert_called_once_with(
+        purefusion.StorageEndpointPost(
+            name=module_args["name"],
+            display_name=module_args["display_name"],
+            endpoint_type=module_args["endpoint_type"],
+            cbs_azure_iscsi=purefusion.StorageEndpointCbsAzureIscsiPost(
+                storage_endpoint_collection_identity=module_args["cbs_azure_iscsi"][
+                    "storage_endpoint_collection_identity"
+                ],
+                load_balancer=module_args["cbs_azure_iscsi"]["load_balancer"],
+                load_balancer_addresses=module_args["cbs_azure_iscsi"][
+                    "load_balancer_addresses"
+                ],
             ),
         ),
         region_name=module_args["region"],
