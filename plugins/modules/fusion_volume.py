@@ -127,7 +127,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
     parse_number_with_metric_suffix,
-    print_number_with_metric_suffix,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
@@ -148,55 +147,6 @@ def get_volume(module, fusion):
         )
     except purefusion.rest.ApiException:
         return None
-
-
-def get_storage_class(module, fusion):
-    """Return Storage Class or None"""
-    pg_api_instance = purefusion.PlacementGroupsApi(fusion)
-    pg = pg_api_instance.get_placement_group(
-        tenant_name=module.params["tenant"],
-        tenant_space_name=module.params["tenant_space"],
-        placement_group_name=module.params["placement_group"],
-    )
-    sc_api_instance = purefusion.StorageClassesApi(fusion)
-    try:
-        return sc_api_instance.get_storage_class(
-            storage_service_name=pg.storage_service.name,
-            storage_class_name=module.params["storage_class"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_protection_group(module, fusion):
-    """Return Placement Group or None"""
-    pg_api_instance = purefusion.PlacementGroupsApi(fusion)
-    try:
-        return pg_api_instance.get_placement_group(
-            tenant_name=module.params["tenant"],
-            tenant_space_name=module.params["tenant_space"],
-            placement_group_name=module.params["placement_group"],
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_protection_policy(module, fusion):
-    """Return Protection Policy or None"""
-    pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
-    try:
-        return pp_api_instance.get_protection_policy(
-            protection_policy_name=module.params["protection_policy"]
-        )
-    except purefusion.rest.ApiException:
-        return None
-
-
-def get_all_haps(fusion):
-    """Return set of all existing host access policies or None"""
-    hap_api_instance = purefusion.HostAccessPoliciesApi(fusion)
-    all_haps = hap_api_instance.list_host_access_policies()
-    return set([hap.name for hap in all_haps.items])
 
 
 def get_wanted_haps(module):
@@ -220,10 +170,7 @@ def create_volume(module, fusion):
     size = parse_number_with_metric_suffix(module, module.params["size"])
 
     if not module.check_mode:
-        if not module.params["display_name"]:
-            display_name = module.params["name"]
-        else:
-            display_name = module.params["display_name"]
+        display_name = module.params["display_name"] or module.params["name"]
         volume_api_instance = purefusion.VolumesApi(fusion)
         volume = purefusion.VolumePost(
             size=size,
@@ -243,7 +190,7 @@ def create_volume(module, fusion):
     return True
 
 
-def update_host_access_policies(module, fusion, current, patches):
+def update_host_access_policies(module, current, patches):
     wanted = module.params
     # 'wanted[...] is not None' to differentiate between empty list and no list
     if wanted["host_access_policies"] is not None:
@@ -256,7 +203,7 @@ def update_host_access_policies(module, fusion, current, patches):
             patches.append(patch)
 
 
-def update_destroyed(module, fusion, current, patches):
+def update_destroyed(module, current, patches):
     wanted = module.params
     destroyed = wanted["state"] != "present"
     if destroyed != current.destroyed:
@@ -271,7 +218,7 @@ def update_destroyed(module, fusion, current, patches):
             )
 
 
-def update_display_name(module, fusion, current, patches):
+def update_display_name(module, current, patches):
     wanted = module.params
     if wanted["display_name"] and wanted["display_name"] != current.display_name:
         patch = purefusion.VolumePatch(
@@ -280,7 +227,7 @@ def update_display_name(module, fusion, current, patches):
         patches.append(patch)
 
 
-def update_storage_class(module, fusion, current, patches):
+def update_storage_class(module, current, patches):
     wanted = module.params
     if (
         wanted["storage_class"]
@@ -292,7 +239,7 @@ def update_storage_class(module, fusion, current, patches):
         patches.append(patch)
 
 
-def update_placement_group(module, fusion, current, patches):
+def update_placement_group(module, current, patches):
     wanted = module.params
     if (
         wanted["placement_group"]
@@ -304,7 +251,7 @@ def update_placement_group(module, fusion, current, patches):
         patches.append(patch)
 
 
-def update_size(module, fusion, current, patches):
+def update_size(module, current, patches):
     wanted = module.params
     if wanted["size"]:
         wanted_size = parse_number_with_metric_suffix(module, wanted["size"])
@@ -313,7 +260,7 @@ def update_size(module, fusion, current, patches):
             patches.append(patch)
 
 
-def update_protection_policy(module, fusion, current, patches):
+def update_protection_policy(module, current, patches):
     wanted = module.params
     current_policy = current.protection_policy.name if current.protection_policy else ""
     if (
@@ -359,21 +306,21 @@ def update_volume(module, fusion):
     # most of their properties while in this state, so we need to set it last
     # and unset it first if changed, respectively
     if module.params["state"] == "present":
-        update_destroyed(module, fusion, current, patches)
-        update_size(module, fusion, current, patches)
-        update_protection_policy(module, fusion, current, patches)
-        update_display_name(module, fusion, current, patches)
-        update_storage_class(module, fusion, current, patches)
-        update_placement_group(module, fusion, current, patches)
-        update_host_access_policies(module, fusion, current, patches)
+        update_destroyed(module, current, patches)
+        update_size(module, current, patches)
+        update_protection_policy(module, current, patches)
+        update_display_name(module, current, patches)
+        update_storage_class(module, current, patches)
+        update_placement_group(module, current, patches)
+        update_host_access_policies(module, current, patches)
     elif module.params["state"] == "absent" and not current.destroyed:
-        update_size(module, fusion, current, patches)
-        update_protection_policy(module, fusion, current, patches)
-        update_display_name(module, fusion, current, patches)
-        update_storage_class(module, fusion, current, patches)
-        update_placement_group(module, fusion, current, patches)
-        update_host_access_policies(module, fusion, current, patches)
-        update_destroyed(module, fusion, current, patches)
+        update_size(module, current, patches)
+        update_protection_policy(module, current, patches)
+        update_display_name(module, current, patches)
+        update_storage_class(module, current, patches)
+        update_placement_group(module, current, patches)
+        update_host_access_policies(module, current, patches)
+        update_destroyed(module, current, patches)
 
     if not module.check_mode:
         apply_patches(module, fusion, patches)
@@ -408,50 +355,16 @@ def eradicate_volume(module, fusion):
     return True
 
 
-def validate_arguments(module, fusion):
+def validate_arguments(module, volume):
     """Validates most argument conditions and possible unacceptable argument combinations"""
-    volume = get_volume(module, fusion)
     state = module.params["state"]
 
     if state == "present" and not volume:
         module.fail_on_missing_params(["placement_group", "storage_class", "size"])
 
-    if module.params["placement_group"] and not get_protection_group(module, fusion):
-        module.fail_json(
-            msg="Placement Group '{0}' does not exist in the provided "
-            "tenant and tenant name space".format(module.params["placement_group"])
-        )
-
-    if module.params["storage_class"] and not get_storage_class(module, fusion):
-        module.fail_json(
-            msg="Storage Class '{0}' does not exist".format(
-                module.params["storage_class"]
-            )
-        )
-
-    if module.params["protection_policy"] and not get_protection_policy(module, fusion):
-        module.fail_json(
-            msg="Protection Policy '{0}' does not exist".format(
-                module.params["protection_policy"]
-            )
-        )
-
-    if module.params["host_access_policies"] is not None:
-        existing_haps = get_all_haps(fusion)
-        wanted_haps = get_wanted_haps(module)
-        if not (wanted_haps <= existing_haps):
-            module.fail_json(
-                msg="To-be-assigned host access policies '{0}' don't exist".format(
-                    wanted_haps - existing_haps
-                )
-            )
-
     if module.params["state"] == "absent" and (
         module.params["host_access_policies"]
-        or (
-            module.params["host_access_policies"] is None
-            and volume.host_access_policies
-        )
+        or (volume and volume.host_access_policies)
     ):
         module.fail_json(
             msg=(
@@ -465,17 +378,11 @@ def validate_arguments(module, fusion):
             msg="'eradicate: true' cannot be used together with 'state: present'"
         )
 
-    if state == "present" and not volume:
-        # would create a volume; check size is lower than storage class limit
-        # (let resize checks be handled by the server since they are more complicated)
+    if module.params["size"]:
         size = parse_number_with_metric_suffix(module, module.params["size"])
-        size_limit = get_storage_class(module, fusion).size_limit
-        if size > size_limit:
+        if size < 1048576 or size > 4503599627370496:  # 1MB to 4PB
             module.fail_json(
-                msg="Requested volume size {0} exceeds the storage class limit of {1}".format(
-                    module.params["size"],
-                    print_number_with_metric_suffix(size_limit),
-                )
+                msg="Size is not within the required range, size must be between 1MB and 4PB"
             )
 
 
@@ -523,7 +430,7 @@ def main():
 
     volume = get_volume(module, fusion)
 
-    validate_arguments(module, fusion)
+    validate_arguments(module, volume)
 
     if state == "absent" and not volume:
         module.exit_json(changed=False)
