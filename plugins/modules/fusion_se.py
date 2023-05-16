@@ -49,10 +49,9 @@ options:
     required: true
   endpoint_type:
     description:
-    - Type of the storage endpoint.
+    - "DEPRECATED: Will be removed in version 2.0.0"
+    - Type of the storage endpoint. Only iSCSI is available at the moment.
     type: str
-    default: iscsi
-    choices: [ iscsi, cbs-azure-iscsi ]
   iscsi:
     description:
     - List of discovery interfaces.
@@ -142,7 +141,6 @@ EXAMPLES = r"""
     name: foo
     availability_zone: bar
     region: us-west
-    endpoint_type: cbs-azure-iscsi
     cbs_azure_iscsi:
       storage_endpoint_collection_identity: "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId"
       load_balancer: "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb"
@@ -234,7 +232,7 @@ def create_se_old(module, fusion):
                 )
             ifaces.append(iface)
         op = purefusion.StorageEndpointPost(
-            endpoint_type=module.params["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=ifaces,
             ),
@@ -273,17 +271,20 @@ def create_se(module, fusion):
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
 
     if not module.check_mode:
+        endpoint_type = None
+
         iscsi = None
-        if module.params["endpoint_type"] == "iscsi":
+        if module.params["iscsi"] is not None:
             iscsi = purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
                     for endpoint in module.params["iscsi"]
                 ]
             )
+            endpoint_type = "iscsi"
 
         cbs_azure_iscsi = None
-        if module.params["endpoint_type"] == "cbs-azure-iscsi":
+        if module.params["cbs_azure_iscsi"] is not None:
             cbs_azure_iscsi = purefusion.StorageEndpointCbsAzureIscsiPost(
                 storage_endpoint_collection_identity=module.params["cbs_azure_iscsi"][
                     "storage_endpoint_collection_identity"
@@ -293,12 +294,13 @@ def create_se(module, fusion):
                     "load_balancer_addresses"
                 ],
             )
+            endpoint_type = "cbs-azure-iscsi"
 
         op = se_api_instance.create_storage_endpoint(
             purefusion.StorageEndpointPost(
                 name=module.params["name"],
                 display_name=module.params["display_name"] or module.params["name"],
-                endpoint_type=module.params["endpoint_type"],
+                endpoint_type=endpoint_type,
                 iscsi=iscsi,
                 cbs_azure_iscsi=cbs_azure_iscsi,
             ),
@@ -361,9 +363,6 @@ def main():
             display_name=dict(type="str"),
             region=dict(type="str", required=True),
             availability_zone=dict(type="str", required=True, aliases=["az"]),
-            endpoint_type=dict(
-                type="str", default="iscsi", choices=["iscsi", "cbs-azure-iscsi"]
-            ),
             iscsi=dict(
                 type="list",
                 elements="dict",
@@ -383,6 +382,11 @@ def main():
             ),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             # deprecated, will be removed in 2.0.0
+            endpoint_type=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
             addresses=dict(
                 type="list",
                 elements="str",
@@ -403,10 +407,6 @@ def main():
         )
     )
 
-    required_if = [
-        ("endpoint_type", "iscsi", ("iscsi",)),
-        ("endpoint_type", "cbs-azure-iscsi", ("cbs_azure_iscsi",)),
-    ]
     mutually_exclusive = [
         ("iscsi", "cbs_azure_iscsi"),
         # can not use both deprecated and new fields at the same time
@@ -418,12 +418,16 @@ def main():
     module = AnsibleModule(
         argument_spec,
         mutually_exclusive=mutually_exclusive,
-        required_if=required_if,
         supports_check_mode=True,
     )
     fusion = setup_fusion(module)
 
     state = module.params["state"]
+
+    if module.params["endpoint_type"] is not None:
+        module.warn(
+            "'endpoint_type' parameter is deprecated and will be removed in the version 2.0"
+        )
 
     deprecated_parameters = {"addresses", "gateway", "network_interface_groups"}
     used_deprecated_parameters = [
@@ -436,13 +440,7 @@ def main():
         # user uses deprecated module interface
         for param_name in used_deprecated_parameters:
             module.warn(
-                f"{param_name} is deprecated and will be removed in the version 2.0"
-            )
-
-        # only iscsi endpoint type is supported in the deprecated code
-        if module.params["endpoint_type"] != "iscsi":
-            module.fail_json(
-                msg=f"Endpoint type '{module.params['endpoint_type']}' is not supported in combination with deprecated parameters. Please use new parameters."
+                f"'{param_name}' parameter is deprecated and will be removed in the version 2.0"
             )
 
         if module.params["addresses"]:
@@ -489,6 +487,13 @@ def main():
         sendp = get_se(module, fusion)
 
         if state == "present" and not sendp:
+            if (
+                module.params["iscsi"] is None
+                and module.params["cbs_azure_iscsi"] is None
+            ):
+                module.fail_json(
+                    msg="either 'iscsi' or `cbs_azure_iscsi` parameter is required when creating storage endpoint"
+                )
             create_se(module, fusion)
         elif state == "present" and sendp:
             update_se(module, fusion, sendp)

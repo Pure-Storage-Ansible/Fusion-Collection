@@ -1,2 +1,5 @@
 minor_changes:
 - fusion_se - add support for CBS Storage Endpoint
+
+deprecated_features:
+- fusion_se - `endpoint_type` parameter is now deprecated and will be removed in version 2.0.0

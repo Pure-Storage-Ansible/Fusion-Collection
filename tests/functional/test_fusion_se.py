@@ -45,7 +45,6 @@ def module_args():
         "display_name": "Storage Endpoint 1",
         "region": "region1",
         "availability_zone": "az1",
-        "endpoint_type": "iscsi",
         "iscsi": [
             {
                 "address": "10.21.200.124/24",
@@ -67,7 +66,7 @@ def current_se(module_args):
         "display_name": module_args["display_name"],
         "region": module_args["region"],
         "availability_zone": module_args["availability_zone"],
-        "endpoint_type": module_args["endpoint_type"],
+        "endpoint_type": "iscsi",
         "iscsi": [
             dict(discovery_interface) for discovery_interface in module_args["iscsi"]
         ],
@@ -85,7 +84,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -102,7 +100,6 @@ def current_se(module_args):
             "name": "se1",
             "display_name": "Storage Endpoint 1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -119,7 +116,6 @@ def current_se(module_args):
             "name": "se1",
             "display_name": "Storage Endpoint 1",
             "region": "region1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -137,7 +133,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -156,25 +151,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
-            "iscsi": [
-                {
-                    "address": "10.21.200.124/24",
-                    "gateway": "10.21.200.1",
-                    "network_interface_groups": ["subnet-0", "subnet-1"],
-                }
-            ],
-            "issuer_id": "ABCD1234",
-            "private_key_file": "private-key.pem",
-        },
-        # parameter 'endpoint_type` has incorrect value
-        {
-            "state": "present",
-            "name": "se1",
-            "display_name": "Storage Endpoint 1",
-            "region": "region1",
-            "availability_zone": "az1",
-            "endpoint_type": "hole",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -192,7 +168,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "cbs-azure-iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -215,7 +190,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "cbs-azure-iscsi",
             "cbs_azure_iscsi": {
                 "storage_endpoint_collection_identity": "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId",
                 "load_balancer": "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb",
@@ -231,7 +205,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "10.21.200.124/24",
@@ -249,7 +222,6 @@ def current_se(module_args):
             "display_name": "Storage Endpoint 1",
             "region": "region1",
             "availability_zone": "az1",
-            "endpoint_type": "iscsi",
             "iscsi": [
                 {
                     "address": "not an address",
@@ -257,28 +229,6 @@ def current_se(module_args):
                     "network_interface_groups": ["subnet-0", "subnet-1"],
                 }
             ],
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
-        },
-        # parameter 'endpoint_type` is set to `iscsi` but `iscsi` parameter is not defined
-        {
-            "state": "present",
-            "name": "se1",
-            "display_name": "Storage Endpoint 1",
-            "region": "region1",
-            "availability_zone": "az1",
-            "endpoint_type": "iscsi",
-            "app_id": "ABCD1234",
-            "key_file": "private-key.pem",
-        },
-        # parameter 'endpoint_type` is set to `cbs-azure-iscsi` but `cbs_azure_iscsi` parameter is not defined
-        {
-            "state": "present",
-            "name": "se1",
-            "display_name": "Storage Endpoint 1",
-            "region": "region1",
-            "availability_zone": "az1",
-            "endpoint_type": "cbs-azure-iscsi",
             "app_id": "ABCD1234",
             "key_file": "private-key.pem",
         },
@@ -346,7 +296,7 @@ def test_se_create_iscsi(m_se_api, m_op_api, module_args):
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["display_name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
@@ -366,7 +316,6 @@ def test_se_create_iscsi(m_se_api, m_op_api, module_args):
 @patch("fusion.StorageEndpointsApi")
 def test_se_create_cbs_azure_iscsi(m_se_api, m_op_api, module_args):
     del module_args["iscsi"]
-    module_args["endpoint_type"] = "cbs-azure-iscsi"
     module_args["cbs_azure_iscsi"] = {
         "storage_endpoint_collection_identity": "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId",
         "load_balancer": "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb",
@@ -403,7 +352,7 @@ def test_se_create_cbs_azure_iscsi(m_se_api, m_op_api, module_args):
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["display_name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="cbs-azure-iscsi",
             cbs_azure_iscsi=purefusion.StorageEndpointCbsAzureIscsiPost(
                 storage_endpoint_collection_identity=module_args["cbs_azure_iscsi"][
                     "storage_endpoint_collection_identity"
@@ -457,7 +406,7 @@ def test_se_create_without_display_name(m_se_api, m_op_api, module_args):
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
@@ -514,7 +463,7 @@ def test_se_create_exception(
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["display_name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
@@ -562,7 +511,7 @@ def test_se_create_op_fails(m_se_api, m_op_api, module_args):
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["display_name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
@@ -619,7 +568,7 @@ def test_se_create_op_exception(
         purefusion.StorageEndpointPost(
             name=module_args["name"],
             display_name=module_args["display_name"],
-            endpoint_type=module_args["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=[
                     purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
