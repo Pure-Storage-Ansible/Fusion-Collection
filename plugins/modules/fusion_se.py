@@ -49,10 +49,9 @@ options:
     required: true
   endpoint_type:
     description:
+    - "DEPRECATED: Will be removed in version 2.0.0"
     - Type of the storage endpoint. Only iSCSI is available at the moment.
     type: str
-    default: iscsi
-    choices: [ iscsi ]
   iscsi:
     description:
     - List of discovery interfaces.
@@ -72,6 +71,24 @@ options:
       network_interface_groups:
         description:
         - List of network interface groups to assign to the address.
+        type: list
+        elements: str
+  cbs_azure_iscsi:
+    description:
+    - CBS Azure iSCSI
+    type: dict
+    suboptions:
+      storage_endpoint_collection_identity:
+        description:
+        - The Storage Endpoint Collection Identity which belongs to the Azure entities.
+        type: str
+      load_balancer:
+        description:
+        - The Load Balancer id which gives permissions to CBS array applications to modify the Load Balancer.
+        type: str
+      load_balancer_addresses:
+        description:
+        - The IPv4 addresses of the Load Balancer.
         type: list
         elements: str
   network_interface_groups:
@@ -119,6 +136,21 @@ EXAMPLES = r"""
     issuer_id: key_name
     private_key_file: "az-admin-private-key.pem"
 
+- name: Create new CBS storage endpoint foo in AZ bar
+  purestorage.fusion.fusion_se:
+    name: foo
+    availability_zone: bar
+    region: us-west
+    cbs_azure_iscsi:
+      storage_endpoint_collection_identity: "/subscriptions/sub/resourcegroups/sec/providers/ms/userAssignedIdentities/secId"
+      load_balancer: "/subscriptions/sub/resourcegroups/sec/providers/ms/loadBalancers/sec-lb"
+      load_balancer_addresses:
+        - 10.21.200.1
+        - 10.21.200.2
+    state: present
+    app_id: key_name
+    key_file: "az-admin-private-key.pem"
+
 - name: Delete storage endpoint foo in AZ bar
   purestorage.fusion.fusion_se:
     name: foo
@@ -159,6 +191,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
 
 from ansible_collections.purestorage.fusion.plugins.module_utils.networking import (
     is_valid_network,
+    is_valid_address,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
@@ -199,7 +232,7 @@ def create_se_old(module, fusion):
                 )
             ifaces.append(iface)
         op = purefusion.StorageEndpointPost(
-            endpoint_type=module.params["endpoint_type"],
+            endpoint_type="iscsi",
             iscsi=purefusion.StorageEndpointIscsiPost(
                 discovery_interfaces=ifaces,
             ),
@@ -238,20 +271,39 @@ def create_se(module, fusion):
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
 
     if not module.check_mode:
-        discovery_interfaces = [
-            purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
-            for endpoint in module.params["iscsi"]
-        ]
-        storage_endpoint = purefusion.StorageEndpointPost(
-            name=module.params["name"],
-            display_name=module.params["display_name"] or module.params["name"],
-            endpoint_type=module.params["endpoint_type"],
-            iscsi=purefusion.StorageEndpointIscsiPost(
-                discovery_interfaces=discovery_interfaces
-            ),
-        )
+        endpoint_type = None
+
+        iscsi = None
+        if module.params["iscsi"] is not None:
+            iscsi = purefusion.StorageEndpointIscsiPost(
+                discovery_interfaces=[
+                    purefusion.StorageEndpointIscsiDiscoveryInterfacePost(**endpoint)
+                    for endpoint in module.params["iscsi"]
+                ]
+            )
+            endpoint_type = "iscsi"
+
+        cbs_azure_iscsi = None
+        if module.params["cbs_azure_iscsi"] is not None:
+            cbs_azure_iscsi = purefusion.StorageEndpointCbsAzureIscsiPost(
+                storage_endpoint_collection_identity=module.params["cbs_azure_iscsi"][
+                    "storage_endpoint_collection_identity"
+                ],
+                load_balancer=module.params["cbs_azure_iscsi"]["load_balancer"],
+                load_balancer_addresses=module.params["cbs_azure_iscsi"][
+                    "load_balancer_addresses"
+                ],
+            )
+            endpoint_type = "cbs-azure-iscsi"
+
         op = se_api_instance.create_storage_endpoint(
-            storage_endpoint,
+            purefusion.StorageEndpointPost(
+                name=module.params["name"],
+                display_name=module.params["display_name"] or module.params["name"],
+                endpoint_type=endpoint_type,
+                iscsi=iscsi,
+                cbs_azure_iscsi=cbs_azure_iscsi,
+            ),
             region_name=module.params["region"],
             availability_zone_name=module.params["availability_zone"],
         )
@@ -311,7 +363,6 @@ def main():
             display_name=dict(type="str"),
             region=dict(type="str", required=True),
             availability_zone=dict(type="str", required=True, aliases=["az"]),
-            endpoint_type=dict(type="str", default="iscsi", choices=["iscsi"]),
             iscsi=dict(
                 type="list",
                 elements="dict",
@@ -321,8 +372,21 @@ def main():
                     network_interface_groups=dict(type="list", elements="str"),
                 ),
             ),
+            cbs_azure_iscsi=dict(
+                type="dict",
+                options=dict(
+                    storage_endpoint_collection_identity=dict(type="str"),
+                    load_balancer=dict(type="str"),
+                    load_balancer_addresses=dict(type="list", elements="str"),
+                ),
+            ),
             state=dict(type="str", default="present", choices=["absent", "present"]),
             # deprecated, will be removed in 2.0.0
+            endpoint_type=dict(
+                type="str",
+                removed_in_version="2.0.0",
+                removed_from_collection="purestorage.fusion",
+            ),
             addresses=dict(
                 type="list",
                 elements="str",
@@ -343,19 +407,27 @@ def main():
         )
     )
 
-    # can not use both deprecated and new fields at the same time
     mutually_exclusive = [
-        ("iscsi", "addresses"),
-        ("iscsi", "gateway"),
-        ("iscsi", "network_interface_groups"),
+        ("iscsi", "cbs_azure_iscsi"),
+        # can not use both deprecated and new fields at the same time
+        ("iscsi", "cbs_azure_iscsi", "addresses"),
+        ("iscsi", "cbs_azure_iscsi", "gateway"),
+        ("iscsi", "cbs_azure_iscsi", "network_interface_groups"),
     ]
 
     module = AnsibleModule(
-        argument_spec, mutually_exclusive=mutually_exclusive, supports_check_mode=True
+        argument_spec,
+        mutually_exclusive=mutually_exclusive,
+        supports_check_mode=True,
     )
     fusion = setup_fusion(module)
 
     state = module.params["state"]
+
+    if module.params["endpoint_type"] is not None:
+        module.warn(
+            "'endpoint_type' parameter is deprecated and will be removed in the version 2.0"
+        )
 
     deprecated_parameters = {"addresses", "gateway", "network_interface_groups"}
     used_deprecated_parameters = [
@@ -368,16 +440,14 @@ def main():
         # user uses deprecated module interface
         for param_name in used_deprecated_parameters:
             module.warn(
-                f"{param_name} is deprecated and will be removed in the version 2.0"
+                f"'{param_name}' parameter is deprecated and will be removed in the version 2.0"
             )
 
         if module.params["addresses"]:
             for address in module.params["addresses"]:
                 if not is_valid_network(address):
                     module.fail_json(
-                        msg="'{0}' is not a valid address in CIDR notation".format(
-                            address
-                        )
+                        msg=f"'{address}' is not a valid address in CIDR notation"
                     )
 
         sendp = get_se(module, fusion)
@@ -395,19 +465,35 @@ def main():
             delete_se(module, fusion)
     else:
         # user uses new module interface
-        if module.params["iscsi"]:
+        if module.params["iscsi"] is not None:
             for endpoint in module.params["iscsi"]:
                 address = endpoint["address"]
                 if not is_valid_network(address):
                     module.fail_json(
-                        msg="'{0}' is not a valid address in CIDR notation".format(
-                            address
-                        )
+                        msg=f"'{address}' is not a valid address in CIDR notation"
+                    )
+                gateway = endpoint["gateway"]
+                if not is_valid_address(gateway):
+                    module.fail_json(
+                        msg=f"'{gateway}' is not a valid IPv4 address notation"
+                    )
+        if module.params["cbs_azure_iscsi"] is not None:
+            for address in module.params["cbs_azure_iscsi"]["load_balancer_addresses"]:
+                if not is_valid_address(address):
+                    module.fail_json(
+                        msg=f"'{address}' is not a valid IPv4 address notation"
                     )
 
         sendp = get_se(module, fusion)
 
         if state == "present" and not sendp:
+            if (
+                module.params["iscsi"] is None
+                and module.params["cbs_azure_iscsi"] is None
+            ):
+                module.fail_json(
+                    msg="either 'iscsi' or `cbs_azure_iscsi` parameter is required when creating storage endpoint"
+                )
             create_se(module, fusion)
         elif state == "present" and sendp:
             update_se(module, fusion, sendp)
