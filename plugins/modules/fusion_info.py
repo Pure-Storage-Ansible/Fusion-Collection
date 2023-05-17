@@ -67,7 +67,7 @@ RETURN = r"""
 fusion_info:
   description: Returns the information collected from Fusion
   returned: always
-  type: complex
+  type: dict
 """
 
 try:
