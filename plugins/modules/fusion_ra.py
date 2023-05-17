@@ -36,7 +36,10 @@ options:
     - The username to assign the role to.
     - Currently this only supports the Pure1 App ID.
     - This should be provide in the same format as I(issuer_id).
-    required: true
+    type: str
+  principal:
+    description:
+    - The unique ID of the principal (User or API Client) to assign to the role.
     type: str
   scope:
     description:
@@ -98,7 +101,16 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
 )
 
 
-def human_to_principal(fusion, user_id):
+def get_principal(module, fusion):
+    if module.params["principal"]:
+        return module.params["principal"]
+    principal = user_to_principal(fusion, module.params["user"])
+    if not principal:
+        module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
+    return principal
+
+
+def user_to_principal(fusion, user_id):
     """Given a human readable Fusion user, such as a Pure 1 App ID
     return the associated principal
     """
@@ -111,7 +123,7 @@ def human_to_principal(fusion, user_id):
     return principal
 
 
-def human_to_scope(params):
+def get_scope(params):
     """Given a scope type and associated tenant
     and tenant_space, return the scope_link
     """
@@ -131,17 +143,15 @@ def get_ra(module, fusion):
     """Return Role Assignment or None"""
     ra_api_instance = purefusion.RoleAssignmentsApi(fusion)
     try:
+        principal = get_principal(module, fusion)
         assignments = ra_api_instance.list_role_assignments(
-            role_name=module.params["role"]
+            role_name=module.params["role"],
+            principal=principal,
         )
-        for assign in range(0, len(assignments)):
-            principal = human_to_principal(fusion, module.params["user"])
-            scope = human_to_scope(module.params)
-            if (
-                assignments[assign].principal == principal
-                and assignments[assign].scope.self_link == scope
-            ):
-                return assignments[assign]
+        for assign in assignments:
+            scope = get_scope(module.params)
+            if assign.scope.self_link == scope:
+                return assign
         return None
     except purefusion.rest.ApiException:
         return None
@@ -154,8 +164,8 @@ def create_ra(module, fusion):
 
     changed = True
     if not module.check_mode:
-        scope = human_to_scope(module.params)
-        principal = human_to_principal(fusion, module.params["user"])
+        principal = get_principal(module, fusion)
+        scope = get_scope(module.params)
         assignment = purefusion.RoleAssignmentPost(scope=scope, principal=principal)
         op = ra_api_instance.create_role_assignment(
             assignment, role_name=module.params["role"]
@@ -196,7 +206,8 @@ def main():
             ),
             tenant=dict(type="str"),
             tenant_space=dict(type="str"),
-            user=dict(type="str", required=True),
+            user=dict(type="str"),
+            principal=dict(type="str"),
             scope=dict(
                 type="str",
                 default="organization",
@@ -210,15 +221,23 @@ def main():
         ["scope", "tenant", ["tenant"]],
         ["scope", "tenant_space", ["tenant", "tenant_space"]],
     ]
+    mutually_exclusive = [
+        ("user", "principal"),
+    ]
+    required_one_of = [
+        ("user", "principal"),
+    ]
 
     module = AnsibleModule(
-        argument_spec, required_if=required_if, supports_check_mode=True
+        argument_spec,
+        required_if=required_if,
+        supports_check_mode=True,
+        mutually_exclusive=mutually_exclusive,
+        required_one_of=required_one_of,
     )
     fusion = setup_fusion(module)
 
     state = module.params["state"]
-    if not human_to_principal(fusion, module.params["user"]):
-        module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
     role_assignment = get_ra(module, fusion)
 
     if not role_assignment and state == "present":

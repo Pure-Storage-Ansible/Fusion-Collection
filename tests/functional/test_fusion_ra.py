@@ -137,6 +137,17 @@ def module_args_absent():
             "issuer_id": "ABCD1234",
             "private_key_file": "private-key.pem",
         },
+        # both 'principal` and `user` are specified
+        {
+            "state": "present",
+            "role": "tenant-space-admin",
+            "tenant": "tenant1",
+            "user": "user1",
+            "principal": "123456",
+            "scope": "tenant_space",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
+        },
     ],
 )
 def test_module_args_wrong(ra_api_init, im_api_init, op_api_init, module_args):
@@ -251,6 +262,18 @@ def test_ra_user_does_not_exist(
             },
             "/tenants/tenant1/tenant-spaces/tenant_space1",
         ),
+        # principal instead of user
+        (
+            {
+                "state": "present",
+                "role": "az-admin",
+                "principal": "principal1",
+                "scope": "organization",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            "/",
+        ),
     ],
 )
 def test_ra_create_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
@@ -285,7 +308,9 @@ def test_ra_create_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
         fusion_ra.main()
     assert excinfo.value.changed
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_called_with(
         purefusion.RoleAssignmentPost(scope=ra_scope, principal="principal1"),
         role_name=module_args["role"],
@@ -341,7 +366,9 @@ def test_ra_create_exception(
     with pytest.raises(expected_exception):
         fusion_ra.main()
 
-    ra_mock.list_role_assignments.assert_called_with(role_name="az-admin")
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name="az-admin", principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_called_with(
         purefusion.RoleAssignmentPost(scope="/", principal="principal1"),
         role_name="az-admin",
@@ -383,7 +410,9 @@ def test_ra_create_op_fails(ra_api_init, im_api_init, op_api_init, module_args_p
     with pytest.raises(OperationException):
         fusion_ra.main()
 
-    ra_mock.list_role_assignments.assert_called_with(role_name="az-admin")
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name="az-admin", principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_called_with(
         purefusion.RoleAssignmentPost(scope="/", principal="principal1"),
         role_name="az-admin",
@@ -501,7 +530,9 @@ def test_ra_delete_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
         fusion_ra.main()
     assert excinfo.value.changed
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_not_called()
     ra_mock.delete_role_assignment.assert_called_with(
         role_name=module_args["role"], role_assignment_name="ra1"
@@ -576,7 +607,9 @@ def test_ra_delete_exception(
     with pytest.raises(expected_exception):
         fusion_ra.main()
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_not_called()
     ra_mock.delete_role_assignment.assert_called_with(
         role_name=module_args["role"], role_assignment_name="ra1"
@@ -639,7 +672,9 @@ def test_ra_delete_op_fails(ra_api_init, im_api_init, op_api_init, module_args_a
     with pytest.raises(OperationException):
         fusion_ra.main()
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_not_called()
     ra_mock.delete_role_assignment.assert_called_with(
         role_name=module_args["role"], role_assignment_name="ra1"
@@ -703,7 +738,9 @@ def test_ra_present_not_changed(
         fusion_ra.main()
     assert not excinfo.value.changed
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_not_called()
     ra_mock.delete_role_assignment.assert_not_called()
     op_mock.get_operation.assert_not_called()
@@ -745,7 +782,9 @@ def test_ra_absent_not_changed(
         fusion_ra.main()
     assert not excinfo.value.changed
 
-    ra_mock.list_role_assignments.assert_called_with(role_name=module_args["role"])
+    ra_mock.list_role_assignments.assert_called_with(
+        role_name=module_args["role"], principal="principal1"
+    )
     ra_mock.create_role_assignment.assert_not_called()
     ra_mock.delete_role_assignment.assert_not_called()
     op_mock.get_operation.assert_not_called()
