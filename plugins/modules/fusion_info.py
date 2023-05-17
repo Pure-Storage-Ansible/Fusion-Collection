@@ -66,8 +66,8 @@ EXAMPLES = r"""
 RETURN = r"""
 fusion_info:
   description: Returns the information collected from Fusion
-  returned: always
-  type: complex
+  returned: success
+  type: dict
 """
 
 try:
