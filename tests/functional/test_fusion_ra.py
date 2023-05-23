@@ -287,15 +287,15 @@ def test_ra_user_does_not_exist(
         ),
         # api_client_key instead of user
         (
-                {
-                    "state": "present",
-                    "role": "az-admin",
-                    "api_client_key": "pure1:apikey:asdf123XYZ",
-                    "scope": "organization",
-                    "issuer_id": "ABCD1234",
-                    "private_key_file": "private-key.pem",
-                },
-                "/",
+            {
+                "state": "present",
+                "role": "az-admin",
+                "api_client_key": "pure1:apikey:asdf123XYZ",
+                "scope": "organization",
+                "issuer_id": "ABCD1234",
+                "private_key_file": "private-key.pem",
+            },
+            "/",
         ),
     ],
 )

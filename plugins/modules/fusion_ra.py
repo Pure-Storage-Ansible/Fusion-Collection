@@ -111,12 +111,20 @@ def get_principal(module, fusion):
     if module.params["user"]:
         principal = user_to_principal(fusion, module.params["user"])
         if not principal:
-            module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
+            module.fail_json(
+                msg="User {0} does not exist".format(module.params["user"])
+            )
         return principal
     if module.params["api_client_key"]:
-        principal = apiclient_to_principal(module, fusion, module.params["api_client_key"])
+        principal = apiclient_to_principal(
+            module, fusion, module.params["api_client_key"]
+        )
         if not principal:
-            module.fail_json(msg="API Client with key {0} does not exist".format(module.params["api_client_key"]))
+            module.fail_json(
+                msg="API Client with key {0} does not exist".format(
+                    module.params["api_client_key"]
+                )
+            )
         return principal
 
 
