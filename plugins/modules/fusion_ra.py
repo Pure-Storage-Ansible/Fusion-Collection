@@ -116,9 +116,7 @@ def get_principal(module, fusion):
             )
         return principal
     if module.params["api_client_key"]:
-        principal = apiclient_to_principal(
-            fusion, module.params["api_client_key"]
-        )
+        principal = apiclient_to_principal(fusion, module.params["api_client_key"])
         if not principal:
             module.fail_json(
                 msg="API Client with key {0} does not exist".format(
@@ -221,7 +219,7 @@ def main():
     argument_spec = fusion_argument_spec()
     argument_spec.update(
         dict(
-            api_client_key=dict(type="str"),
+            api_client_key=dict(type="str", no_log=True),
             principal=dict(type="str"),
             role=dict(
                 type="str",
