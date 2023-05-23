@@ -132,22 +132,23 @@ def user_to_principal(fusion, user_id):
     """Given a human readable Fusion user, such as a Pure 1 App ID
     return the associated principal
     """
-    principal = None
     id_api_instance = purefusion.IdentityManagerApi(fusion)
     users = id_api_instance.list_users()
     for user in users:
         if user.name == user_id:
-            principal = user.id
-    return principal
+            return user.id
+    return None
 
 
-def apiclient_to_principal(module, fusion, api_client_key):
+def apiclient_to_principal(fusion, api_client_key):
     """Given an API client key, such as "pure1:apikey:123xXxyYyzYzASDF" (also known as issuer_id),
     return the associated principal
     """
     id_api_instance = purefusion.IdentityManagerApi(fusion)
     api_clients = id_api_instance.list_users(name=api_client_key)
-    return api_clients[0].id
+    if len(api_clients) > 0:
+        return api_clients[0].id
+    return None
 
 
 def get_scope(params):
