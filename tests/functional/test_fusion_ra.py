@@ -148,6 +148,17 @@ def module_args_absent():
             "issuer_id": "ABCD1234",
             "private_key_file": "private-key.pem",
         },
+        # both 'principal` and `api_client_key` are specified
+        {
+            "state": "present",
+            "role": "tenant-space-admin",
+            "tenant": "tenant1",
+            "api_client_key": "pure1:apikey:asdf123XYZ",
+            "principal": "123456",
+            "scope": "tenant_space",
+            "issuer_id": "ABCD1234",
+            "private_key_file": "private-key.pem",
+        },
     ],
 )
 def test_module_args_wrong(ra_api_init, im_api_init, op_api_init, module_args):
@@ -273,6 +284,18 @@ def test_ra_user_does_not_exist(
                 "private_key_file": "private-key.pem",
             },
             "/",
+        ),
+        # api_client_key instead of user
+        (
+                {
+                    "state": "present",
+                    "role": "az-admin",
+                    "api_client_key": "pure1:apikey:asdf123XYZ",
+                    "scope": "organization",
+                    "issuer_id": "ABCD1234",
+                    "private_key_file": "private-key.pem",
+                },
+                "/",
         ),
     ],
 )
