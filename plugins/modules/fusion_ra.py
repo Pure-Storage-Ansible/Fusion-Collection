@@ -117,7 +117,7 @@ def get_principal(module, fusion):
         return principal
     if module.params["api_client_key"]:
         principal = apiclient_to_principal(
-            module, fusion, module.params["api_client_key"]
+            fusion, module.params["api_client_key"]
         )
         if not principal:
             module.fail_json(
