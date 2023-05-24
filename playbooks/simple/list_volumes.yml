@@ -1,6 +1,6 @@
 ---
 - name: Print volumes
-  osts: localhost
+  hosts: localhost
   tasks:
     - name: Collect volumes for Pure Storage
       purestorage.fusion.fusion_info:

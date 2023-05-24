@@ -48,6 +48,7 @@ PARAM_ISSUER_ID = "issuer_id"
 PARAM_PRIVATE_KEY_FILE = "private_key_file"
 PARAM_PRIVATE_KEY_PASSWORD = "private_key_password"
 PARAM_ACCESS_TOKEN = "access_token"
+PARAM_CONFIG_PROFILE = "config_profile"
 ENV_ISSUER_ID = "FUSION_ISSUER_ID"
 ENV_API_HOST = "FUSION_API_HOST"
 ENV_PRIVATE_KEY_FILE = "FUSION_PRIVATE_KEY_FILE"
@@ -106,11 +107,12 @@ def get_fusion(module):
     access_token = module.params[PARAM_ACCESS_TOKEN]
     private_key_file = module.params[PARAM_PRIVATE_KEY_FILE]
     private_key_password = module.params[PARAM_PRIVATE_KEY_PASSWORD]
+    config_profile = module.params[PARAM_CONFIG_PROFILE]
 
     if private_key_password is not None:
         module.fail_on_missing_params([PARAM_PRIVATE_KEY_FILE])
 
-    config = fusion.Configuration()
+    config = fusion.Configuration(fusion_config_profile=config_profile)
 
     if access_token is not None:
         config.access_token = access_token
@@ -135,6 +137,9 @@ def fusion_argument_spec():
     """Return standard base dictionary used for the argument_spec argument in AnsibleModule"""
 
     return {
+        PARAM_CONFIG_PROFILE: {
+            "no_log": False,
+        },
         PARAM_ISSUER_ID: {
             "no_log": True,
             "aliases": [PARAM_APP_ID],
