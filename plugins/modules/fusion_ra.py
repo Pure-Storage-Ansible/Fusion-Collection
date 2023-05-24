@@ -41,6 +41,10 @@ options:
     description:
     - The unique ID of the principal (User or API Client) to assign to the role.
     type: str
+  api_client_key:
+    description:
+    - The key of API client to assign the role to.
+    type: str
   scope:
     description:
     - The level to which the role is assigned.
@@ -104,23 +108,45 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
 def get_principal(module, fusion):
     if module.params["principal"]:
         return module.params["principal"]
-    principal = user_to_principal(fusion, module.params["user"])
-    if not principal:
-        module.fail_json(msg="User {0} does not exist".format(module.params["user"]))
-    return principal
+    if module.params["user"]:
+        principal = user_to_principal(fusion, module.params["user"])
+        if not principal:
+            module.fail_json(
+                msg="User {0} does not exist".format(module.params["user"])
+            )
+        return principal
+    if module.params["api_client_key"]:
+        principal = apiclient_to_principal(fusion, module.params["api_client_key"])
+        if not principal:
+            module.fail_json(
+                msg="API Client with key {0} does not exist".format(
+                    module.params["api_client_key"]
+                )
+            )
+        return principal
 
 
 def user_to_principal(fusion, user_id):
     """Given a human readable Fusion user, such as a Pure 1 App ID
     return the associated principal
     """
-    principal = None
     id_api_instance = purefusion.IdentityManagerApi(fusion)
     users = id_api_instance.list_users()
-    for user in range(0, len(users)):
-        if users[user].name == user_id:
-            principal = users[user].id
-    return principal
+    for user in users:
+        if user.name == user_id:
+            return user.id
+    return None
+
+
+def apiclient_to_principal(fusion, api_client_key):
+    """Given an API client key, such as "pure1:apikey:123xXxyYyzYzASDF" (also known as issuer_id),
+    return the associated principal
+    """
+    id_api_instance = purefusion.IdentityManagerApi(fusion)
+    api_clients = id_api_instance.list_users(name=api_client_key)
+    if len(api_clients) > 0:
+        return api_clients[0].id
+    return None
 
 
 def get_scope(params):
@@ -193,6 +219,8 @@ def main():
     argument_spec = fusion_argument_spec()
     argument_spec.update(
         dict(
+            api_client_key=dict(type="str", no_log=True),
+            principal=dict(type="str"),
             role=dict(
                 type="str",
                 required=True,
@@ -204,16 +232,15 @@ def main():
                     )
                 ],
             ),
-            tenant=dict(type="str"),
-            tenant_space=dict(type="str"),
-            user=dict(type="str"),
-            principal=dict(type="str"),
             scope=dict(
                 type="str",
                 default="organization",
                 choices=["organization", "tenant", "tenant_space"],
             ),
             state=dict(type="str", default="present", choices=["present", "absent"]),
+            tenant=dict(type="str"),
+            tenant_space=dict(type="str"),
+            user=dict(type="str"),
         )
     )
 
@@ -222,10 +249,10 @@ def main():
         ["scope", "tenant_space", ["tenant", "tenant_space"]],
     ]
     mutually_exclusive = [
-        ("user", "principal"),
+        ("user", "principal", "api_client_key"),
     ]
     required_one_of = [
-        ("user", "principal"),
+        ("user", "principal", "api_client_key"),
     ]
 
     module = AnsibleModule(
