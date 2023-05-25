@@ -1,0 +1,2 @@
+minor_changes:
+  - all modules - added `config_profile` argument, which can be used instead of `user` and `principal` argument

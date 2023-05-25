@@ -22,6 +22,10 @@ notes:
     # Documentation fragment for Fusion
     FUSION = r"""
 options:
+  config_profile:
+    description:
+      - Which configuration profile will be used from fusion.json config
+    type: str
   private_key_file:
     aliases: [ key_file ]
     description:
@@ -46,8 +50,11 @@ options:
     type: str
 notes:
   - This module requires the I(purefusion) Python library
-  - You must set C(FUSION_ISSUER_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
-    if I(issuer_id) and I(private_key_file) arguments are not passed to the module directly
+  - The issuer_id and private_key_file can be specified in either one of these ways
+    - In fusion.json config
+    - You can set C(FUSION_ISSUER_ID) and C(FUSION_PRIVATE_KEY_FILE) environment variables
+    - I(issuer_id) and I(private_key_file) arguments are not passed to the module directly
+  - The module arguments have highest precedence followed by environmental variables.
   - If you want to use access token for authentication, you must use C(FUSION_ACCESS_TOKEN) environment variable
     if I(access_token) argument is not passed to the module directly
 requirements:
