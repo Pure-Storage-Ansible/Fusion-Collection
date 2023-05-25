@@ -38,7 +38,6 @@ except ImportError:
     pass
 
 from os import environ
-from urllib.parse import urljoin
 import platform
 
 TOKEN_EXCHANGE_URL = "https://api.pure1.purestorage.com/oauth2/1.0/token"
