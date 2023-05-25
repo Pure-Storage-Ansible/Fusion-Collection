@@ -120,11 +120,6 @@ def get_fusion(module):
         config.private_key_file = private_key_file
         if private_key_password is not None:
             config.private_key_password = private_key_password
-    else:
-        module.fail_json(
-            msg=f"You must set either {ENV_ISSUER_ID} and {ENV_PRIVATE_KEY_FILE} or {ENV_ACCESS_TOKEN} environment variables. "
-            f"Or module arguments either {PARAM_ISSUER_ID} and {PARAM_PRIVATE_KEY_FILE} or {PARAM_ACCESS_TOKEN}"
-        )
 
     try:
         client = fusion.ApiClient(config)
