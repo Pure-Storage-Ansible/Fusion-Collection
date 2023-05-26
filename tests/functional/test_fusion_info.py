@@ -954,7 +954,7 @@ def test_info_gather_subset(
     m_default_api.return_value = api_obj
 
     time.tzset()
-    
+
     set_module_args(
         {
             "gather_subset": gather_subset,
@@ -1621,6 +1621,7 @@ def test_info_gather_subset(
             for ts in RESP_TS.items
             for tenant in RESP_TENANTS.items
         }
+
         assert exc.value.fusion_info["volume_snapshots"] == {
             tenant.name
             + "/"
@@ -1998,6 +1999,7 @@ def test_info_hidden_fields_storage_services(m_ss_api):
         "storage_services": {
             service.name: {
                 "display_name": service.display_name,
+                "hardware_types": None,
             }
             for service in response.items
         },
@@ -2078,6 +2080,7 @@ def test_info_hidden_fields_storage_endpoints(m_ss_api, m_az_api, m_region_api):
                         "address": iface.address,
                         "gateway": iface.gateway,
                         "mtu": iface.mtu,
+                        "network_interface_groups": None,
                     }
                     for iface in endpoint.iscsi.discovery_interfaces
                 ],
@@ -2215,6 +2218,7 @@ def test_info_hidden_fields_volumes(m_ss_api, m_az_api, m_region_api):
                         "wwns": None,
                     },
                 },
+                "array": None,
             }
             for volume in response.items
             for tenant_space in RESP_TS.items

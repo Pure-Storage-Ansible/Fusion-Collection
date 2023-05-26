@@ -812,6 +812,7 @@ def generate_storserv_dict(module, fusion):
     for service in services.items:
         ss_dict[service.name] = {
             "display_name": service.display_name,
+            "hardware_types": None,
         }
         # can be None if we don't have permission to see this
         if service.hardware_types is not None:
@@ -847,6 +848,7 @@ def generate_se_dict(module, fusion):
                         "address": iface.address,
                         "gateway": iface.gateway,
                         "mtu": iface.mtu,
+                        "network_interface_groups": None,
                     }
                     if iface.network_interface_groups is not None:
                         dct["network_interface_groups"] = [
@@ -979,10 +981,9 @@ def generate_volumes_dict(module, fusion):
                     "storage_class": volume.storage_class.name,
                     "serial_number": volume.serial_number,
                     "target": {},
+                    "array": getattr(volume.array, "name", None),
                 }
-                # can be None if we don't have permission to see this
-                if volume.array is not None:
-                    volume_info[vol_name]["array"] = volume.array.name
+
                 volume_info[vol_name]["target"] = {
                     "iscsi": {
                         "addresses": volume.target.iscsi.addresses,
