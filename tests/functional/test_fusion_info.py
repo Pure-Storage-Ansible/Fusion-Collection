@@ -25,6 +25,7 @@ from ansible_collections.purestorage.fusion.tests.helpers import (
     ApiExceptionsMockGenerator,
 )
 from urllib3.exceptions import HTTPError
+import time
 
 # GLOBAL MOCKS
 fusion_info.setup_fusion = MagicMock(return_value=purefusion.api_client.ApiClient())
@@ -952,6 +953,8 @@ def test_info_gather_subset(
     m_im_api.return_value = api_obj
     m_default_api.return_value = api_obj
 
+    time.tzset()
+    
     set_module_args(
         {
             "gather_subset": gather_subset,
