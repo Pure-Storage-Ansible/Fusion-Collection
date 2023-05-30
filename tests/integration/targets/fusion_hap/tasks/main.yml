@@ -13,12 +13,12 @@
 
 - name: Collect hosts and check the host exists
   purestorage.fusion.fusion_info:
-    gather_subset: hosts
+    gather_subset: host_access_policies
   register: fusion_info
   environment: "{{ test_env }}"
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'hap_foo' in fusion_info['fusion_info']['hosts']"
+    that: "'hap_foo' in fusion_info['fusion_info']['host_access_policies']"
 
 - name: Delete host access policy
   purestorage.fusion.fusion_hap:
@@ -34,9 +34,9 @@
 
 - name: Collect hosts and check the host does not exist
   purestorage.fusion.fusion_info:
-    gather_subset: hosts
+    gather_subset: host_access_policies
   register: fusion_info
   environment: "{{ test_env }}"
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'hap_foo' not in fusion_info['fusion_info']['hosts']"
+    that: "'hap_foo' not in fusion_info['fusion_info']['host_access_policies']"

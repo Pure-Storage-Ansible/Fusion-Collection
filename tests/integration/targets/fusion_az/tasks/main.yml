@@ -14,11 +14,11 @@
 - name: Collect Availability Zones and verify the zone exists
   environment: "{{ test_env }}"
   purestorage.fusion.fusion_info:
-    gather_subset: zones
+    gather_subset: availability_zones
   register: fusion_info
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'test_az' in fusion_info['fusion_info']['zones']"
+    that: "'test_az' in fusion_info['fusion_info']['availability_zones']"
 
 - name: Delete AZ
   purestorage.fusion.fusion_az:
@@ -36,8 +36,8 @@
 - name: Collect Availability Zones and verify the zone does not exist
   environment: "{{ test_env }}"
   purestorage.fusion.fusion_info:
-    gather_subset: zones
+    gather_subset: availability_zones
   register: fusion_info
 - name: Validate the task
   ansible.builtin.assert:
-    that: "'test_az' not in fusion_info['fusion_info']['zones']"
+    that: "'test_az' not in fusion_info['fusion_info']['availability_zones']"

@@ -43,12 +43,12 @@ VALID_SUBSETS = {
     "arrays",
     "hardware_types",
     "volumes",
-    "hosts",
+    "host_access_policies",
     "storage_classes",
     "protection_policies",
     "placement_groups",
-    "interfaces",
-    "zones",
+    "network_interfaces",
+    "availability_zones",
     "storage_endpoints",
     "snapshots",
     "storage_services",
@@ -56,6 +56,7 @@ VALID_SUBSETS = {
     "tenant_spaces",
     "network_interface_groups",
     "api_clients",
+    "regions",
 }
 
 EXPECTED_KEYS = {
@@ -63,7 +64,7 @@ EXPECTED_KEYS = {
         "default",
         "hardware_types",
         "users",
-        "zones",
+        "availability_zones",
         "roles",
         "role_assignments",
         "storage_services",
@@ -71,8 +72,8 @@ EXPECTED_KEYS = {
         "protection_policies",
         "placement_groups",
         "storage_classes",
-        "interfaces",
-        "hosts",
+        "network_interfaces",
+        "host_access_policies",
         "tenants",
         "tenant_spaces",
         "storage_endpoints",
@@ -81,26 +82,28 @@ EXPECTED_KEYS = {
         "volume_snapshots",
         "snapshots",
         "arrays",
+        "regions",
     },
     "minimum": {"default"},
     "arrays": {"arrays"},
     "hardware_types": {"hardware_types"},
     "users": {"users"},
-    "zones": {"zones"},
+    "availability_zones": {"availability_zones"},
     "roles": {"roles", "role_assignments"},
     "storage_services": {"storage_services"},
     "volumes": {"volumes"},
     "protection_policies": {"protection_policies"},
     "placement_groups": {"placement_groups"},
     "storage_classes": {"storage_classes"},
-    "interfaces": {"interfaces"},
-    "hosts": {"hosts"},
+    "network_interfaces": {"network_interfaces"},
+    "host_access_policies": {"host_access_policies"},
     "tenants": {"tenants"},
     "tenant_spaces": {"tenant_spaces"},
     "storage_endpoints": {"storage_endpoints"},
     "api_clients": {"api_clients"},
     "network_interface_groups": {"network_interface_groups"},
     "snapshots": {"snapshots", "volume_snapshots"},
+    "regions": {"regions"},
 }
 
 RESP_VERSION = purefusion.Version(version=1)
@@ -1012,14 +1015,14 @@ def test_info_gather_subset(
     else:
         api_obj.list_users.assert_not_called()
 
-    if "zones" in gather_subset or "all" in gather_subset:
+    if "availability_zones" in gather_subset or "all" in gather_subset:
         api_obj.list_regions.assert_called_with()
         api_obj.list_availability_zones.assert_has_calls(
             [call(region_name=region.name) for region in RESP_REGIONS.items],
             any_order=True,
         )
-        assert "zones" in exc.value.fusion_info
-        assert exc.value.fusion_info["zones"] == {
+        assert "availability_zones" in exc.value.fusion_info
+        assert exc.value.fusion_info["availability_zones"] == {
             zone.name: {
                 "display_name": zone.display_name,
                 "region": zone.region.name,
@@ -1228,7 +1231,7 @@ def test_info_gather_subset(
     else:
         api_obj.list_storage_classes.assert_not_called()
 
-    if "interfaces" in gather_subset or "all" in gather_subset:
+    if "network_interfaces" in gather_subset or "all" in gather_subset:
         api_obj.list_regions.assert_called_with()
         api_obj.list_availability_zones.assert_has_calls(
             [call(region_name=region.name) for region in RESP_REGIONS.items],
@@ -1258,8 +1261,8 @@ def test_info_gather_subset(
             ],
             any_order=True,
         )
-        assert "interfaces" in exc.value.fusion_info
-        assert exc.value.fusion_info["interfaces"] == {
+        assert "network_interfaces" in exc.value.fusion_info
+        assert exc.value.fusion_info["network_interfaces"] == {
             az.name
             + "/"
             + array.name: {
@@ -1321,10 +1324,10 @@ def test_info_gather_subset(
     else:
         api_obj.list_network_interfaces.assert_not_called()
 
-    if "hosts" in gather_subset or "all" in gather_subset:
+    if "host_access_policies" in gather_subset or "all" in gather_subset:
         api_obj.list_host_access_policies.assert_called_with()
-        assert "hosts" in exc.value.fusion_info
-        assert exc.value.fusion_info["hosts"] == {
+        assert "host_access_policies" in exc.value.fusion_info
+        assert exc.value.fusion_info["host_access_policies"] == {
             host.name: {
                 "personality": host.personality,
                 "display_name": host.display_name,
@@ -1433,8 +1436,8 @@ def test_info_gather_subset(
         api_obj.get_array_space.assert_not_called()
         api_obj.get_array_performance.assert_not_called()
         assert "default" in exc.value.fusion_info
-        assert "appliances" in exc.value.fusion_info["default"]
-        assert exc.value.fusion_info["default"]["appliances"] == len(
+        assert "arrays" in exc.value.fusion_info["default"]
+        assert exc.value.fusion_info["default"]["arrays"] == len(
             RESP_REGIONS.items
         ) * len(RESP_AZ.items) * len(RESP_ARRAYS.items)
     else:
@@ -1781,12 +1784,27 @@ def test_info_gather_subset(
             any_order=True,
         )
         assert "default" in exc.value.fusion_info
-        assert "placements_groups" in exc.value.fusion_info["default"]
-        assert exc.value.fusion_info["default"]["placements_groups"] == len(
+        assert "placement_groups" in exc.value.fusion_info["default"]
+        assert exc.value.fusion_info["default"]["placement_groups"] == len(
             RESP_PG.items
         ) * len(RESP_TENANTS.items) * len(RESP_TS.items)
     else:
         api_obj.list_placement_groups.assert_not_called()
+
+    if "regions" in gather_subset or "all" in gather_subset:
+        api_obj.list_regions.assert_called_with()
+        assert "regions" in exc.value.fusion_info
+        assert exc.value.fusion_info["regions"] == {
+            region.name: {
+                "display_name": region.display_name,
+            }
+            for region in RESP_REGIONS.items
+        }
+    elif "minimum" in gather_subset:
+        api_obj.list_regions.assert_called_with()
+        assert "default" in exc.value.fusion_info
+        assert "regions" in exc.value.fusion_info["default"]
+        assert exc.value.fusion_info["default"]["regions"] == len(RESP_REGIONS.items)
 
 
 @patch("fusion.DefaultApi")
@@ -2355,10 +2373,10 @@ def test_info_permission_denied_minimum(
         "role_assignments": None,
         "tenant_spaces": None,
         "volumes": None,
-        "placements_groups": None,
+        "placement_groups": None,
         "snapshots": None,
         "availability_zones": None,
-        "appliances": None,
+        "arrays": None,
         "network_interfaces": None,
         "network_interface_groups": None,
         "storage_endpoints": None,
