@@ -1,2 +1,0 @@
-minor_changes:
-  - FUSION_API_HOST && FUSION_HOST - changed logic, now this variables require host name without path
