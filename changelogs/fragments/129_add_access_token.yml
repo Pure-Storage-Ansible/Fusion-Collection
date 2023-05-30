@@ -1,2 +1,0 @@
-minor_changes:
-  - Fusion authentication - add 'access_token' module's parameter and 'FUSION_ACCESS_TOKEN' environment variable, as an alternative way of the authentication.

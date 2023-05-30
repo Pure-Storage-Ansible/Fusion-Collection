@@ -1,2 +1,0 @@
-minor_changes:
-  - fusion_ra - added `principal` argument, which is an ID of either API client or User and can be used instead of `user` argument

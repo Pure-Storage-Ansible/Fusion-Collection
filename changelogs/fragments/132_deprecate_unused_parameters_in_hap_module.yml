@@ -1,2 +1,0 @@
-deprecated_features:
-- fusion_hap - parameters `nqn`, `wwns`, `host_password`, `host_user`, `target_password` and `target_user` were deprecated

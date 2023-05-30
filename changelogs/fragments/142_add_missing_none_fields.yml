@@ -1,4 +1,0 @@
-minor_changes:
-  - fusion_info - `hardware_types` is None if missing in `storage_service`
-  - fusion_info - `network_interface_groups` is None if missing in `iscsi_interfaces` in `storage_endpoint`
-  - fusion_info - `array` is None if missing in `volume`
