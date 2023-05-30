@@ -1,0 +1,15 @@
+minor_changes:
+  - fusion_info - introduce 'regions' subset option
+  - fusion_info - introduce 'availability_zones' subset option
+  - fusion_info - introduce 'host_access_policies' subset option
+  - fusion_info - introduce 'network_interfaces' subset option
+  - fusion_info - rename 'zones' dict to 'availability_zones' for consistency
+  - fusion_info - rename 'hosts' dict to 'host_access_policies' for consistency
+  - fusion_info - rename 'interfaces' dict to 'network_interfaces' for consistency
+  - fusion_info - rename 'placements_groups' in default dict to 'placement_groups' for consistency
+  - fusion_info - rename 'appliances' in default dict to 'arrays' for consistency
+
+deprecated_features:
+  - fusion_info - 'zones' subset is deprecated in favor of 'availability_zones' and will be removed in the version 2.0.0
+  - fusion_info - 'hosts' subset is deprecated in favor of 'host_access_policies' and will be removed in the version 2.0.0
+  - fusion_info - 'interfaces' subset is deprecated in favor of 'network_interfaces' and will be removed in the version 2.0.0

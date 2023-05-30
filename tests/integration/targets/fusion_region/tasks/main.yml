@@ -10,6 +10,15 @@
       - result is success
       - result is changed
 
+- name: Collect Regions and verify the region exists
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: regions
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_region' in fusion_info['fusion_info']['regions']"
+
 - name: Update Region display_name
   purestorage.fusion.fusion_region:
     name: "foo_region"
@@ -33,3 +42,12 @@
     that:
       - result is success
       - result is changed
+
+- name: Collect Regions and verify the region does not exist
+  environment: "{{ test_env }}"
+  purestorage.fusion.fusion_info:
+    gather_subset: regions
+  register: fusion_info
+- name: Validate the task
+  ansible.builtin.assert:
+    that: "'foo_region' not in fusion_info['fusion_info']['regions']"
