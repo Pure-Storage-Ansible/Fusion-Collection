@@ -23,7 +23,7 @@ jobs:
           if [[ "$response" == *"$RELEASE_VERSION"* ]]; then
             trap "exit 1" EXIT
             echo "Error: Tag $RELEASE_VERSION already exists"
-            exit 1 
+            exit 1
           fi
 
       - name: Extract changelog
