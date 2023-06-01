@@ -7,12 +7,11 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
-    parse_number_with_metric_suffix,
-    parse_minutes,
-)
-
 import pytest
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_minutes,
+    parse_number_with_metric_suffix,
+)
 
 
 class MockException(Exception):
@@ -83,14 +82,34 @@ def test_parsing_invalid_number():
 
 def test_parsing_valid_time_period():
     module = MockModule()
+    assert parse_minutes(module, "0") == 0
+    assert parse_minutes(module, "00") == 0
+    assert parse_minutes(module, "00M") == 0
     assert parse_minutes(module, "10") == 10
-    assert parse_minutes(module, "2h") == 120
-    assert parse_minutes(module, "2H") == 120
+    assert parse_minutes(module, "015") == 15
+    assert parse_minutes(module, "0023") == 23
+    assert parse_minutes(module, "0H10M") == 10
+    assert parse_minutes(module, "2h") == 2 * 60
+    assert parse_minutes(module, "2H") == 2 * 60
+    assert parse_minutes(module, "02h") == 2 * 60
+    assert parse_minutes(module, "02H") == 2 * 60
+    assert parse_minutes(module, "002h") == 2 * 60
+    assert parse_minutes(module, "002H") == 2 * 60
+    assert parse_minutes(module, "0D10H10M") == 10 * 60 + 10
     assert parse_minutes(module, "14D") == 14 * 24 * 60
+    assert parse_minutes(module, "014D") == 14 * 24 * 60
+    assert parse_minutes(module, "0000014D") == 14 * 24 * 60
     assert parse_minutes(module, "1W") == 7 * 24 * 60
+    assert parse_minutes(module, "01W") == 7 * 24 * 60
+    assert parse_minutes(module, "01Y0H10M") == 365 * 24 * 60 + 10
     assert parse_minutes(module, "12Y") == 12 * 365 * 24 * 60
+    assert parse_minutes(module, "012Y") == 12 * 365 * 24 * 60
     assert (
         parse_minutes(module, "10Y20W30D40H50M")
+        == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60 + 30 * 24 * 60 + 40 * 60 + 50
+    )
+    assert (
+        parse_minutes(module, "010Y20W30D40H50M")
         == 10 * 365 * 24 * 60 + 20 * 7 * 24 * 60 + 30 * 24 * 60 + 40 * 60 + 50
     )
     assert (
@@ -110,6 +129,10 @@ def test_parsing_valid_time_period():
     assert parse_minutes(module, "40H50M") == 40 * 60 + 50
     assert parse_minutes(module, "30D50M") == 30 * 24 * 60 + 50
     assert parse_minutes(module, "20W40H") == 20 * 7 * 24 * 60 + 40 * 60
+    assert (
+        parse_minutes(module, "01W000010D10H10M")
+        == 7 * 24 * 60 + 10 * 24 * 60 + 10 * 60 + 10
+    )
 
 
 def test_parsing_invalid_time_period():
@@ -123,16 +146,8 @@ def test_parsing_invalid_time_period():
     with pytest.raises(MockException):
         assert parse_minutes(module, "1V")
     with pytest.raises(MockException):
-        assert parse_minutes(module, "0M")
+        assert parse_minutes(module, "1v")
     with pytest.raises(MockException):
-        assert parse_minutes(module, "0H10M")
+        assert parse_minutes(module, "10M2H")
     with pytest.raises(MockException):
-        assert parse_minutes(module, "0H10M")
-    with pytest.raises(MockException):
-        assert parse_minutes(module, "0D10H10M")
-    with pytest.raises(MockException):
-        assert parse_minutes(module, "01W10D10H10M")
-    with pytest.raises(MockException):
-        assert parse_minutes(module, "01Y0H10M")
-    with pytest.raises(MockException):
-        assert parse_minutes(module, "1V")
+        assert parse_minutes(module, "0H10M01Y")
