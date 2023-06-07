@@ -1,2 +1,2 @@
 minor_changes:
-- fusion_pp - 'rpo' duration parsing documented, 'local_retention' minimum value fixed
+- fusion_pp - 'local_rpo' duration parsing documented, 'local_retention' minimum value fixed
