@@ -126,7 +126,7 @@ def destroyed_volume(volume):
         ),
         (
             "size",
-            "missing required arguments: size",
+            "Either `size`, `source_volume` or `source_snapshot` parameter is required when creating a volume.",
         ),
     ],
 )
@@ -163,6 +163,18 @@ def test_module_fails_on_missing_parameters(
         (
             {"size": "1K"},
             "Size is not within the required range",
+        ),
+        (
+            {"source_volume": "vol_name"},
+            "parameters are mutually exclusive: source_volume|source_snapshot|size",
+        ),
+        (
+            {"source_snapshot": "snap_name"},
+            "parameters are mutually exclusive: source_volume|source_snapshot|size",
+        ),
+        (
+            {"source_volume_snapshot": "vol_snap_name"},
+            "parameters are required together: source_snapshot, source_volume_snapshot",
         ),
     ],
 )
@@ -224,6 +236,88 @@ def test_volume_create_successfully(mock_volumes_api, mock_operations_api, modul
     volumes_api.create_volume.assert_called_once_with(
         purefusion.VolumePost(
             size=1048576,
+            storage_class=module_args["storage_class"],
+            placement_group=module_args["placement_group"],
+            name=module_args["name"],
+            display_name=module_args["display_name"],
+            protection_policy=module_args["protection_policy"],
+        ),
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    operations_api.get_operation.assert_called_once_with(1)
+
+
+@patch("fusion.OperationsApi")
+@patch("fusion.VolumesApi")
+def test_volume_create_from_volume_successfully(
+    mock_volumes_api, mock_operations_api, module_args
+):
+    del module_args["size"]
+    module_args["source_volume"] = "source_volume_name"
+
+    operations_api = purefusion.OperationsApi()
+    volumes_api = purefusion.VolumesApi()
+    volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
+    volumes_api.create_volume = MagicMock(return_value=OperationMock(1))
+    operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
+    set_module_args(module_args)
+    # run module
+    with pytest.raises(AnsibleExitJson) as exception:
+        fusion_volume.main()
+    assert exception.value.changed is True
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.create_volume.assert_called_once_with(
+        purefusion.VolumePost(
+            source_link=f"/tenants/{module_args['tenant']}/tenant-spaces/{module_args['tenant_space']}/volumes/{module_args['source_volume']}",
+            storage_class=module_args["storage_class"],
+            placement_group=module_args["placement_group"],
+            name=module_args["name"],
+            display_name=module_args["display_name"],
+            protection_policy=module_args["protection_policy"],
+        ),
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    operations_api.get_operation.assert_called_once_with(1)
+
+
+@patch("fusion.OperationsApi")
+@patch("fusion.VolumesApi")
+def test_volume_create_from_volume_snapshot_successfully(
+    mock_volumes_api, mock_operations_api, module_args
+):
+    del module_args["size"]
+    module_args["source_snapshot"] = "source_snapshot_name"
+    module_args["source_volume_snapshot"] = "source_volume_snapshot_name"
+
+    operations_api = purefusion.OperationsApi()
+    volumes_api = purefusion.VolumesApi()
+    volumes_api.get_volume = MagicMock(side_effect=purefusion.rest.ApiException)
+    volumes_api.create_volume = MagicMock(return_value=OperationMock(1))
+    operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_volumes_api.return_value = volumes_api
+    mock_operations_api.return_value = operations_api
+    set_module_args(module_args)
+    # run module
+    with pytest.raises(AnsibleExitJson) as exception:
+        fusion_volume.main()
+    assert exception.value.changed is True
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.create_volume.assert_called_once_with(
+        purefusion.VolumePost(
+            source_link=f"/tenants/{module_args['tenant']}/tenant-spaces/{module_args['tenant_space']}/snapshots/"
+            f"{module_args['source_snapshot']}/volume-snapshots/{module_args['source_volume_snapshot']}",
             storage_class=module_args["storage_class"],
             placement_group=module_args["placement_group"],
             name=module_args["name"],
