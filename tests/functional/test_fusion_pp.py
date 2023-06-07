@@ -39,7 +39,7 @@ basic.AnsibleModule.fail_json = fail_json
 def module_args_present():
     return {
         "name": "protection_policy1",
-        "local_rpo": 43,
+        "local_rpo": "1H43M",
         "local_retention": "2H",
         "state": "present",
         "issuer_id": "ABCD1234",
@@ -190,7 +190,7 @@ def test_pp_create_ok(pp_api_init, op_api_init, module_args_present):
             name="protection_policy1",
             display_name="some_display_name",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -229,7 +229,7 @@ def test_pp_create_without_display_name_ok(
             name="protection_policy1",
             display_name="protection_policy1",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -274,7 +274,7 @@ def test_pp_create_exception(
             name="protection_policy1",
             display_name="protection_policy1",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -310,7 +310,7 @@ def test_pp_create_op_fails(pp_api_init, op_api_init, module_args_present):
             name="protection_policy1",
             display_name="protection_policy1",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -333,7 +333,7 @@ def test_pp_delete_ok(pp_api_init, op_api_init, module_args_absent):
             display_name="protection_policy1_display_name",
             self_link="test_self_link",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -385,7 +385,7 @@ def test_pp_delete_exception(
             display_name="protection_policy1_display_name",
             self_link="test_self_link",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -425,7 +425,7 @@ def test_pp_delete_op_fails(pp_api_init, op_api_init, module_args_absent):
             display_name="protection_policy1_display_name",
             self_link="test_self_link",
             objectives=[
-                purefusion.RPO(type="RPO", rpo="PT43M"),
+                purefusion.RPO(type="RPO", rpo="PT103M"),
                 purefusion.Retention(type="Retention", after="PT120M"),
             ],
         )
@@ -459,7 +459,7 @@ def test_pp_present_not_changed(pp_api_init, op_api_init):
     module_args = {
         "name": "protection_policy1",
         "display_name": "some_display_name",
-        "local_rpo": 43,
+        "local_rpo": "43M",
         "local_retention": "2H",
         "state": "present",
         "issuer_id": "ABCD1234",
