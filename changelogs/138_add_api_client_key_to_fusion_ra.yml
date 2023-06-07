@@ -1,2 +1,0 @@
-minor_changes:
-  - fusion_ra - added `api_client_key` argument, which can be used instead of `user` and `principal` argument

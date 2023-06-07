@@ -11,7 +11,7 @@ __metaclass__ = type
 METRIC_SUFFIXES = ["K", "M", "G", "T", "P"]
 
 duration_pattern = re.compile(
-    r"^((?P<Y>[1-9]\d*)Y)?((?P<W>[1-9]\d*)W)?((?P<D>[1-9]\d*)D)?(((?P<H>[1-9]\d*)H)?((?P<M>[1-9]\d*)M)?)?$"
+    r"^((?P<Y>\d+)Y)?((?P<W>\d+)W)?((?P<D>\d+)D)?(((?P<H>\d+)H)?((?P<M>\d+)M)?)?$"
 )
 duration_transformation = {
     "Y": 365 * 24 * 60,

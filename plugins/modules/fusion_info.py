@@ -27,11 +27,10 @@ options:
   gather_subset:
     description:
       - When supplied, this argument will define the information to be collected.
-        Possible values for this include all, minimum, roles, users, placements,
-        arrays, hardware_types, volumes, hosts, storage_classes, protection_policies,
-        placement_groups, interfaces, zones, nigs, storage_endpoints, snapshots,
-        storage_services, tenants, tenant_spaces, network_interface_groups and
-        api_clients.
+        Possible values for this include all, minimum, roles, users, arrays, hardware_types,
+        volumes, host_access_policies, storage_classes, protection_policies, placement_groups,
+        network_interfaces, availability_zones, network_interface_groups, storage_endpoints,
+        snapshots, regions, storage_services, tenants, tenant_spaces, network_interface_groups and api_clients.
     type: list
     elements: str
     required: false
@@ -141,10 +140,10 @@ def generate_default_dict(module, fusion):
     role_assignments_num = None
     tenant_spaces_num = None
     volumes_num = None
-    placements_groups_num = None
+    placement_groups_num = None
     snapshots_num = None
     availability_zones_num = None
-    appliances_num = None
+    arrays_num = None
     network_interfaces_num = None
     network_interface_groups_num = None
     storage_endpoints_num = None
@@ -318,7 +317,7 @@ def generate_default_dict(module, fusion):
 
         try:
             plgrp_api_instance = purefusion.PlacementGroupsApi(fusion)
-            placements_groups_num = sum(
+            placement_groups_num = sum(
                 len(
                     plgrp_api_instance.list_placement_groups(
                         tenant_name=tenant.name,
@@ -384,7 +383,7 @@ def generate_default_dict(module, fusion):
 
         try:
             arrays_api_instance = purefusion.ArraysApi(fusion)
-            appliances_num = sum(
+            arrays_num = sum(
                 len(
                     arrays_api_instance.list_arrays(
                         availability_zone_name=availability_zone.name,
@@ -398,7 +397,7 @@ def generate_default_dict(module, fusion):
             )
         except purefusion.rest.ApiException as exc:
             if exc.status == http.HTTPStatus.FORBIDDEN:
-                warning_api_exception("Appliances")
+                warning_api_exception("Arrays")
             else:
                 # other exceptions will be handled by our exception hook
                 raise exc
@@ -475,7 +474,7 @@ def generate_default_dict(module, fusion):
         warning_argument_none("Network Interfaces", "regions")
         warning_argument_none("Network Interface Groups", "regions")
         warning_argument_none("Storage Endpoints", "regions")
-        warning_argument_none("Appliances", "regions")
+        warning_argument_none("Arrays", "regions")
 
     return {
         "version": version,
@@ -491,17 +490,17 @@ def generate_default_dict(module, fusion):
         "role_assignments": role_assignments_num,
         "tenant_spaces": tenant_spaces_num,
         "volumes": volumes_num,
-        "placements_groups": placements_groups_num,
+        "placement_groups": placement_groups_num,
         "snapshots": snapshots_num,
         "availability_zones": availability_zones_num,
-        "appliances": appliances_num,
+        "arrays": arrays_num,
         "network_interfaces": network_interfaces_num,
         "network_interface_groups": network_interface_groups_num,
         "storage_endpoints": storage_endpoints_num,
     }
 
 
-@_api_permission_denied_handler("interfaces")
+@_api_permission_denied_handler("network_interfaces")
 def generate_nics_dict(module, fusion):
     nics_info = {}
     nic_api_instance = purefusion.NetworkInterfacesApi(fusion)
@@ -543,7 +542,7 @@ def generate_nics_dict(module, fusion):
     return nics_info
 
 
-@_api_permission_denied_handler("hosts")
+@_api_permission_denied_handler("host_access_policies")
 def generate_hap_dict(module, fusion):
     hap_info = {}
     api_instance = purefusion.HostAccessPoliciesApi(fusion)
@@ -672,18 +671,27 @@ def generate_pp_dict(module, fusion):
 
 @_api_permission_denied_handler("tenants")
 def generate_tenant_dict(module, fusion):
-    tenant_info = {}
-    api_instance = purefusion.TenantsApi(fusion)
-    tenants = api_instance.list_tenants()
-    for tenant in tenants.items:
-        name = tenant.name
-        tenant_info[name] = {
+    tenants_api_instance = purefusion.TenantsApi(fusion)
+    return {
+        tenant.name: {
             "display_name": tenant.display_name,
         }
-    return tenant_info
+        for tenant in tenants_api_instance.list_tenants().items
+    }
 
 
-@_api_permission_denied_handler("zones")
+@_api_permission_denied_handler("regions")
+def generate_regions_dict(module, fusion):
+    regions_api_instance = purefusion.RegionsApi(fusion)
+    return {
+        region.name: {
+            "display_name": region.display_name,
+        }
+        for region in regions_api_instance.list_regions().items
+    }
+
+
+@_api_permission_denied_handler("availability_zones")
 def generate_zones_dict(module, fusion):
     zones_info = {}
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
@@ -812,6 +820,7 @@ def generate_storserv_dict(module, fusion):
     for service in services.items:
         ss_dict[service.name] = {
             "display_name": service.display_name,
+            "hardware_types": None,
         }
         # can be None if we don't have permission to see this
         if service.hardware_types is not None:
@@ -847,6 +856,7 @@ def generate_se_dict(module, fusion):
                         "address": iface.address,
                         "gateway": iface.gateway,
                         "mtu": iface.mtu,
+                        "network_interface_groups": None,
                     }
                     if iface.network_interface_groups is not None:
                         dct["network_interface_groups"] = [
@@ -979,10 +989,9 @@ def generate_volumes_dict(module, fusion):
                     "storage_class": volume.storage_class.name,
                     "serial_number": volume.serial_number,
                     "target": {},
+                    "array": getattr(volume.array, "name", None),
                 }
-                # can be None if we don't have permission to see this
-                if volume.array is not None:
-                    volume_info[vol_name]["array"] = volume.array.name
+
                 volume_info[vol_name]["target"] = {
                     "iscsi": {
                         "addresses": volume.target.iscsi.addresses,
@@ -1035,6 +1044,10 @@ def main():
         "tenant_spaces",
         "network_interface_groups",
         "api_clients",
+        "availability_zones",
+        "host_access_policies",
+        "network_interfaces",
+        "regions",
     )
     for option in subset:
         if option not in valid_subsets:
@@ -1050,8 +1063,14 @@ def main():
         info["hardware_types"] = generate_hardware_types_dict(module, fusion)
     if "users" in subset or "all" in subset:
         info["users"] = generate_users_dict(module, fusion)
-    if "zones" in subset or "all" in subset:
-        info["zones"] = generate_zones_dict(module, fusion)
+    if "regions" in subset or "all" in subset:
+        info["regions"] = generate_regions_dict(module, fusion)
+    if "availability_zones" in subset or "all" in subset or "zones" in subset:
+        info["availability_zones"] = generate_zones_dict(module, fusion)
+        if "zones" in subset:
+            module.warn(
+                "The 'zones' subset is deprecated and will be removed in the version 2.0.0\nUse 'availability_zones' subset instead."
+            )
     if "roles" in subset or "all" in subset:
         info["roles"] = generate_roles_dict(module, fusion)
         info["role_assignments"] = generate_ras_dict(module, fusion)
@@ -1069,10 +1088,18 @@ def main():
             )
     if "storage_classes" in subset or "all" in subset:
         info["storage_classes"] = generate_sc_dict(module, fusion)
-    if "interfaces" in subset or "all" in subset:
-        info["interfaces"] = generate_nics_dict(module, fusion)
-    if "hosts" in subset or "all" in subset:
-        info["hosts"] = generate_hap_dict(module, fusion)
+    if "network_interfaces" in subset or "all" in subset or "interfaces" in subset:
+        info["network_interfaces"] = generate_nics_dict(module, fusion)
+        if "interfaces" in subset:
+            module.warn(
+                "The 'interfaces' subset is deprecated and will be removed in the version 2.0.0\nUse 'network_interfaces' subset instead."
+            )
+    if "host_access_policies" in subset or "all" in subset or "hosts" in subset:
+        info["host_access_policies"] = generate_hap_dict(module, fusion)
+        if "hosts" in subset:
+            module.warn(
+                "The 'hosts' subset is deprecated and will be removed in the version 2.0.0\nUse 'host_access_policies' subset instead."
+            )
     if "arrays" in subset or "all" in subset:
         info["arrays"] = generate_array_dict(module, fusion)
     if "tenants" in subset or "all" in subset:
