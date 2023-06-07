@@ -136,7 +136,7 @@ def _check_import(ansible_module, module, package=None, version_requirements=Non
     :param version_requirements: a string, version requirements for 'package'
     """
     try:
-        mod = importlib.import_module(module)
+        importlib.import_module(module)
     except ImportError:
         ansible_module.fail_json(
             msg="Error: Python package '{0}' required and missing".format(module)
