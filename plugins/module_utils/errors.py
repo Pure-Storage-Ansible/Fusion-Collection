@@ -162,7 +162,7 @@ def format_failed_fusion_operation_exception(exception):
             if not code:
                 code = error.http_code
         operation_name = op.request_type
-    except Exception as e:
+    except Exception:
         pass
 
     output = ""
