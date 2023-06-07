@@ -39,13 +39,15 @@ options:
   local_rpo:
     description:
     - Recovery Point Objective for snapshots.
-    - Value should be specified in minutes.
     - Minimum value is 10 minutes.
+    - Value can be provided as m(inutes), h(ours),
+      d(ays), w(eeks), or y(ears).
+    - If no unit is provided, minutes are assumed.
     type: str
   local_retention:
     description:
     - Retention Duration for periodic snapshots.
-    - Minimum value is 10 minutes.
+    - Minimum value is 1 minutes.
     - Value can be provided as m(inutes), h(ours),
       d(ays), w(eeks), or y(ears).
     - If no unit is provided, minutes are assumed.
