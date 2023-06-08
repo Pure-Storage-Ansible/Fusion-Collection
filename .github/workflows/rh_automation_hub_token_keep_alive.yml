@@ -1,0 +1,19 @@
+---
+name: "Red Hat Automation Hub - Keep token alive"
+# The SSO token to upload content to Automation Hub must be accessed once every 30 days or it will be turned off
+
+"on":
+  schedule:
+    - cron: '0 12 1,15 * *' # run 12pm on the 1st and 15th of the month
+
+jobs:
+  keep_rh_sso_token_alive:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Run curl command"
+        run: |
+          curl ${{ secrets.RH_SSO_URL }} \
+            -d grant_type=refresh_token \
+            -d client_id="cloud-services" \
+            -d refresh_token="${{ secrets.RH_AUTOMATION_HUB_TOKEN }}" \
+            --fail --silent --show-error --output /dev/null

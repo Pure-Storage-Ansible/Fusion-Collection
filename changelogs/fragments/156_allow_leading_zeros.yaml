@@ -1,0 +1,2 @@
+minor_changes:
+- fusion_pp - Allow leading zeros in duration strings
