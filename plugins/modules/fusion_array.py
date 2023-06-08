@@ -60,6 +60,10 @@ options:
     description:
     - Appliance ID of the array.
     type: str
+  apartment_id:
+    description:
+    - The Apartment ID of the Array.
+    type: str
   maintenance_mode:
     description:
     - "Switch the array into maintenance mode or back.
@@ -135,6 +139,7 @@ def create_array(module, fusion):
             host_name=module.params["host_name"],
             name=module.params["name"],
             appliance_id=module.params["appliance_id"],
+            apartment_id=module.params["apartment_id"],
         )
         res = array_api_instance.create_array(
             array,
@@ -222,6 +227,7 @@ def main():
             availability_zone=dict(type="str", required=True, aliases=["az"]),
             display_name=dict(type="str"),
             region=dict(type="str", required=True),
+            apartment_id=dict(type="str"),
             appliance_id=dict(type="str"),
             host_name=dict(type="str"),
             hardware_type=dict(

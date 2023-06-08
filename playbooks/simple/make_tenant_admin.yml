@@ -7,6 +7,6 @@
         issuer_id: "{{ ansible_env.FUSION_ISSUER_ID }}"
         private_key_file: "{{ ansible_env.FUSION_PRIVATE_KEY_FILE }}"
         state: present
-        name: "tenant-admin"
+        role: "tenant-admin"
         scope: "organization"  # "organization" "tenant_space"
         user: "{{ ansible_env.FUSION_ISSUER_ID }}"

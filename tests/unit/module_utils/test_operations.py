@@ -10,7 +10,7 @@ import time
 from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     OperationException,
 )
-from ansible_collections.purestorage.fusion.tests.unit.mocks.exceptions_mock import (
+from ansible_collections.purestorage.fusion.tests.helpers import (
     ApiExceptionsMockGenerator,
 )
 from ansible_collections.purestorage.fusion.tests.unit.mocks.operation_mock import (
@@ -150,8 +150,7 @@ class TestAwaitOperations:
         Should raise ApiException
         """
         # Mock exceptions
-        exceptions_factory = ApiExceptionsMockGenerator()
-        api_exception = exceptions_factory.create_conflict()
+        api_exception = ApiExceptionsMockGenerator.create_conflict()
 
         # Mock operation
         op = OperationMock("1", OperationStatus.FAILED)

@@ -61,7 +61,7 @@ PARAM_KEY_FILE = "key_file"  # replaced by PARAM_PRIVATE_KEY_FILE
 ENV_APP_ID = "FUSION_APP_ID"  # replaced by ENV_ISSUER_ID
 ENV_HOST = "FUSION_HOST"  # replaced by ENV_API_HOST
 DEP_VER = "2.0.0"
-BASE_PATH = "/api/v1"
+BASE_PATH = "/api/1.1"
 
 
 def _env_deprecation_warning(module, old_env, new_env, vers):

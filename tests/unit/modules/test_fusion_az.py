@@ -15,7 +15,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
     OperationException,
 )
 from ansible_collections.purestorage.fusion.plugins.modules import fusion_az
-from ansible_collections.purestorage.fusion.tests.unit.mocks.exceptions_mock import (
+from ansible_collections.purestorage.fusion.tests.helpers import (
     ApiExceptionsMockGenerator,
 )
 from ansible_collections.purestorage.fusion.tests.unit.mocks.module_mock import (
@@ -160,8 +160,7 @@ class TestCreateAZ:
         Should raise api exception
         """
         # Mock exceptions
-        exceptions_factory = ApiExceptionsMockGenerator()
-        api_exception = exceptions_factory.create_conflict()
+        api_exception = ApiExceptionsMockGenerator.create_conflict()
 
         # Mock operation
         op = OperationMock("1", OperationStatus.FAILED)
@@ -207,8 +206,7 @@ class TestCreateAZ:
         Should raise api exception
         """
         # Mock exceptions
-        exceptions_factory = ApiExceptionsMockGenerator()
-        api_exception = exceptions_factory.create_not_found()
+        api_exception = ApiExceptionsMockGenerator.create_not_found()
 
         # Mock operation
         op = OperationMock("1", OperationStatus.FAILED)
@@ -337,8 +335,7 @@ class TestDeleteAZ:
         Should raise api exception
         """
         # Mock exceptions
-        exceptions_factory = ApiExceptionsMockGenerator()
-        api_exception = exceptions_factory.create_conflict()
+        api_exception = ApiExceptionsMockGenerator.create_conflict()
 
         # Mock operation
         op = OperationMock("1", OperationStatus.FAILED)
