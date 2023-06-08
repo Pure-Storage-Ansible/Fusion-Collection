@@ -208,11 +208,36 @@ def update_pg(module, fusion, pg):
     changed = len(patches) != 0
     return changed
 
+def delete_snapshot(module: AnsibleModule, fusion: purefusion.ApiClient, snap: purefusion.Snapshot, snapshots_api: purefusion.SnapshotsApi):
+    patch = purefusion.SnapshotPatch(destroyed=True)
+    op = snapshots_api.update_snapshot(
+        body=patch,
+        tenant_name=module.params["tenant"],
+        tenant_space_name=module.params["tenant_space"],
+        snapshot_name=snap.name,
+    )
+    await_operation(fusion, op)
+    op = snapshots_api.delete_snapshot(
+        tenant_name=module.params["tenant"],
+        tenant_space_name=module.params["tenant_space"],
+        snapshot_name=snap.name,
+    )
+    await_operation(fusion, op)
 
 def delete_pg(module, fusion):
     """Delete Placement Group"""
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     if not module.check_mode:
+        if module.params["destroy_snapshots_on_delete"]:
+            snapshots_api = purefusion.SnapshotsApi(fusion)
+            snapshots = snapshots_api.list_snapshots(
+                placement_group_name=module.params["name"],
+                tenant_name=module.params["tenant"],
+                tenant_space_name=module.params["tenant_space"],
+            )
+            for snap in snapshots:
+                delete_snapshot(snap, snapshots_api)
+
         op = pg_api_instance.delete_placement_group(
             placement_group_name=module.params["name"],
             tenant_name=module.params["tenant"],
@@ -229,6 +254,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
+            destroy_snapshots_on_delete=dict(type="bool"),
             display_name=dict(type="str"),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),
