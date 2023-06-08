@@ -112,15 +112,13 @@ def get_fusion(module):
     if private_key_password is not None:
         module.fail_on_missing_params([PARAM_PRIVATE_KEY_FILE])
 
-    config = fusion.Configuration(fusion_config_profile=config_profile)
-
-    if access_token is not None:
-        config.access_token = access_token
-    elif issuer_id is not None and private_key_file is not None:
-        config.issuer_id = issuer_id
-        config.private_key_file = private_key_file
-        if private_key_password is not None:
-            config.private_key_password = private_key_password
+    config = fusion.Configuration(
+        fusion_config_profile=config_profile,
+        access_token=access_token,
+        issuer_id=issuer_id,
+        private_key_file=private_key_file,
+        private_key_password=private_key_password,
+    )
 
     try:
         client = fusion.ApiClient(config)
