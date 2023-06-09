@@ -229,7 +229,7 @@ def delete_pg(module, fusion):
                 tenant_space_name=module.params["tenant_space"],
             )
             for snap in snapshots.items:
-                delete_snapshot(module, fusion, snap, snapshots_api)
+                delete_snapshot(fusion, snap, snapshots_api)
 
         op = pg_api_instance.delete_placement_group(
             placement_group_name=module.params["name"],

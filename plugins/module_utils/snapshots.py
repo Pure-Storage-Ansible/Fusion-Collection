@@ -7,13 +7,12 @@ try:
 except ImportError:
     pass
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
 
 
-def delete_snapshot(module, fusion, snap, snapshots_api):
+def delete_snapshot(fusion, snap, snapshots_api):
     patch = purefusion.SnapshotPatch(destroyed=purefusion.NullableBoolean(True))
     op = snapshots_api.update_snapshot(
         body=patch,

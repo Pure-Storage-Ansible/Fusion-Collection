@@ -163,7 +163,7 @@ def delete_pp(module, fusion):
                 protection_policy_id=protection_policy.id
             )
             for snap in snapshots.items:
-                delete_snapshot(module, fusion, snap, snapshots_api)
+                delete_snapshot(fusion, snap, snapshots_api)
 
         op = pp_api_instance.delete_protection_policy(
             protection_policy_name=module.params["name"],
