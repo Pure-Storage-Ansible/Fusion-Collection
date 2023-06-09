@@ -39,7 +39,7 @@ options:
   destroy_snapshots_on_delete:
     description:
     - "Before deleting placement group, snapshots within the placement group will be deleted."
-	- "If `false` then any snapshots will need to be deleted as a separate step before removing the placement group."
+    - "If `false` then any snapshots will need to be deleted as a separate step before removing the placement group."
     type: bool
   tenant:
     description:
@@ -124,7 +124,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
 from ansible_collections.purestorage.fusion.plugins.module_utils.snapshots import (
     delete_snapshot,
 )
-
 
 
 def get_pg(module, fusion):

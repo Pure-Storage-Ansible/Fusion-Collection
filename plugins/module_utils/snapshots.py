@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 try:
     import fusion as purefusion
 except ImportError:
@@ -8,7 +12,8 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.operations impo
     await_operation,
 )
 
-def delete_snapshot(module: AnsibleModule, fusion: purefusion.ApiClient, snap: purefusion.Snapshot, snapshots_api: purefusion.SnapshotsApi):
+
+def delete_snapshot(module, fusion, snap, snapshots_api):
     patch = purefusion.SnapshotPatch(destroyed=purefusion.NullableBoolean(True))
     op = snapshots_api.update_snapshot(
         body=patch,

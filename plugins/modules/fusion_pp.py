@@ -34,7 +34,7 @@ options:
   destroy_snapshots_on_delete:
     description:
     - "Before deleting protection policy, snapshots within the protection policy will be deleted."
-	- "If `false` then any snapshots will need to be deleted as a separate step before removing the protection policy."
+    - "If `false` then any snapshots will need to be deleted as a separate step before removing the protection policy."
     type: bool
   display_name:
     description:
