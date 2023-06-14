@@ -36,6 +36,11 @@ options:
     type: str
     default: present
     choices: [ absent, present ]
+  destroy_snapshots_on_delete:
+    description:
+    - "Before deleting placement group, snapshots within the placement group will be deleted."
+    - "If `false` then any snapshots will need to be deleted as a separate step before removing the placement group."
+    type: bool
   tenant:
     description:
     - The name of the tenant.
@@ -115,6 +120,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.snapshots import (
+    delete_snapshot,
 )
 
 
@@ -213,6 +221,16 @@ def delete_pg(module, fusion):
     """Delete Placement Group"""
     pg_api_instance = purefusion.PlacementGroupsApi(fusion)
     if not module.check_mode:
+        if module.params["destroy_snapshots_on_delete"]:
+            snapshots_api = purefusion.SnapshotsApi(fusion)
+            snapshots = snapshots_api.list_snapshots(
+                placement_group=module.params["name"],
+                tenant_name=module.params["tenant"],
+                tenant_space_name=module.params["tenant_space"],
+            )
+            for snap in snapshots.items:
+                delete_snapshot(fusion, snap, snapshots_api)
+
         op = pg_api_instance.delete_placement_group(
             placement_group_name=module.params["name"],
             tenant_name=module.params["tenant"],
@@ -229,6 +247,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
+            destroy_snapshots_on_delete=dict(type="bool"),
             display_name=dict(type="str"),
             tenant=dict(type="str", required=True),
             tenant_space=dict(type="str", required=True),

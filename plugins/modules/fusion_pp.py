@@ -31,6 +31,11 @@ options:
     default: present
     choices: [ present, absent ]
     type: str
+  destroy_snapshots_on_delete:
+    description:
+    - "Before deleting protection policy, snapshots within the protection policy will be deleted."
+    - "If `false` then any snapshots will need to be deleted as a separate step before removing the protection policy."
+    type: bool
   display_name:
     description:
     - The human name of the protection policy.
@@ -97,6 +102,9 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.startup import 
 from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
     await_operation,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.snapshots import (
+    delete_snapshot,
+)
 
 
 def get_pp(module, fusion):
@@ -148,6 +156,15 @@ def delete_pp(module, fusion):
     pp_api_instance = purefusion.ProtectionPoliciesApi(fusion)
     changed = True
     if not module.check_mode:
+        if module.params["destroy_snapshots_on_delete"]:
+            protection_policy = get_pp(module, fusion)
+            snapshots_api = purefusion.SnapshotsApi(fusion)
+            snapshots = snapshots_api.query_snapshots(
+                protection_policy_id=protection_policy.id
+            )
+            for snap in snapshots.items:
+                delete_snapshot(fusion, snap, snapshots_api)
+
         op = pp_api_instance.delete_protection_policy(
             protection_policy_name=module.params["name"],
         )
@@ -162,6 +179,7 @@ def main():
     argument_spec.update(
         dict(
             name=dict(type="str", required=True),
+            destroy_snapshots_on_delete=dict(type="bool"),
             display_name=dict(type="str"),
             local_rpo=dict(type="str"),
             local_retention=dict(type="str"),
