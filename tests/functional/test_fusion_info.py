@@ -847,6 +847,7 @@ RESP_VS = purefusion.VolumeSnapshotList(
 
 
 @patch.dict(os.environ, {"TZ": "UTC"})
+@patch.dict(os.environ, {"LC_TIME": "en_US.utf8"})
 @patch("fusion.DefaultApi")
 @patch("fusion.IdentityManagerApi")
 @patch("fusion.ProtectionPoliciesApi")
