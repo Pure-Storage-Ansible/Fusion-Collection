@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: "Run curl command"
         run: |
-          curl ${{ secrets.RH_SSO_URL }} \
+          curl ${{ secrets.RH_AUTOMATION_TOKEN_URL }} \
             -d grant_type=refresh_token \
             -d client_id="cloud-services" \
             -d refresh_token="${{ secrets.RH_AUTOMATION_HUB_TOKEN }}" \
