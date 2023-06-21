@@ -43,7 +43,7 @@ options:
     type: str
   api_client_key:
     description:
-    - The key of API client to assign the role to.
+    - The issuer ID of the API client to assign the role to.
     type: str
   scope:
     description:
@@ -127,7 +127,7 @@ def get_principal(module, fusion):
 
 
 def user_to_principal(fusion, user_id):
-    """Given a human readable Fusion user, such as a Pure 1 App ID
+    """Given a human-readable Fusion user, such as a Pure 1 App ID
     return the associated principal
     """
     id_api_instance = purefusion.IdentityManagerApi(fusion)
@@ -139,7 +139,7 @@ def user_to_principal(fusion, user_id):
 
 
 def apiclient_to_principal(fusion, api_client_key):
-    """Given an API client key, such as "pure1:apikey:123xXxyYyzYzASDF" (also known as issuer_id),
+    """Given an API client issuer ID, such as "pure1:apikey:123xXxyYyzYzASDF",
     return the associated principal
     """
     id_api_instance = purefusion.IdentityManagerApi(fusion)
