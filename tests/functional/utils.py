@@ -25,11 +25,18 @@ class OperationMock:
         self.id = id
 
 
+class operationResultsDict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+
 class SuccessfulOperationMock:
     """
     Mock object for successful operation. This object is returned by mocked Operation API if the operation was successful.
     """
-
+    result = operationResultsDict({"resource": operationResultsDict({"id": "fake-id-12345"})})
     status = "Succeeded"
 
 
