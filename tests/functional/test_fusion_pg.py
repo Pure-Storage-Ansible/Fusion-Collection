@@ -20,6 +20,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
     OperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -221,6 +222,7 @@ def test_pg_create_ok(pg_api_init, op_api_init, module_args_present):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pg.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     pg_mock.get_placement_group.assert_called_with(
         tenant_name="tenant1",
@@ -265,6 +267,7 @@ def test_pg_create_without_display_name_ok(
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pg.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     pg_mock.get_placement_group.assert_called_with(
         tenant_name="tenant1",
@@ -450,6 +453,7 @@ def test_pg_create_triggers_update_ok(pg_api_init, op_api_init):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pg.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     pg_mock.get_placement_group.assert_has_calls(
         [
@@ -946,7 +950,8 @@ def test_pg_update_ok(pg_api_init, op_api_init, test_case):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pg.main()
     assert excinfo.value.changed
-
+    assert excinfo.value.id == FAKE_RESOURCE_ID
+    
     pg_mock.get_placement_group.assert_called_with(
         tenant_name="tenant1",
         tenant_space_name="tenant_space1",

@@ -161,9 +161,10 @@ def create_pg(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    return True
+    return True, id
 
 
 def update_display_name(module, fusion, patches, pg):
@@ -203,6 +204,7 @@ def update_pg(module, fusion, pg):
     update_display_name(module, fusion, patches, pg)
     update_array(module, fusion, patches, pg)
 
+    id = None
     if not module.check_mode:
         for patch in patches:
             op = pg_api_instance.update_placement_group(
@@ -211,10 +213,11 @@ def update_pg(module, fusion, pg):
                 tenant_space_name=module.params["tenant_space"],
                 placement_group_name=module.params["name"],
             )
-            await_operation(fusion, op)
+            res_op = await_operation(fusion, op)
+            id = res_op.result.resource.id
 
     changed = len(patches) != 0
-    return changed
+    return changed, id
 
 
 def delete_pg(module, fusion):
@@ -275,22 +278,24 @@ def main():
 
     state = module.params["state"]
     pgroup = get_pg(module, fusion)
-
+    
+    id = None
     if state == "present" and not pgroup:
         module.fail_on_missing_params(
             ["region", "availability_zone", "storage_service"]
         )
-        changed = create_pg(module, fusion) or changed
+        changed, id = create_pg(module, fusion) or changed
         if module.params["array"]:
             # changing placement requires additional update
             pgroup = get_pg(module, fusion)
-            changed = update_pg(module, fusion, pgroup) or changed
+            changedUpdate, id = update_pg(module, fusion, pgroup)
+            changed = changed | changedUpdate
     elif state == "present" and pgroup:
-        changed = update_pg(module, fusion, pgroup) or changed
+        changed, id = update_pg(module, fusion, pgroup) or changed
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed,id=id)
 
 
 if __name__ == "__main__":
