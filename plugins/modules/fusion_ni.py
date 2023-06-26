@@ -162,7 +162,7 @@ def update_ni(module, fusion, ni):
                 ),
             )
         patches.append(patch)
-
+    id = None
     if not module.check_mode:
         for patch in patches:
             op = ni_api_instance.update_network_interface(
@@ -172,11 +172,12 @@ def update_ni(module, fusion, ni):
                 array_name=module.params["array"],
                 net_intf_name=module.params["name"],
             )
-            await_operation(fusion, op)
+            res_op = await_operation(fusion, op)
+            id = res_op.result.resource.id
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def main():
