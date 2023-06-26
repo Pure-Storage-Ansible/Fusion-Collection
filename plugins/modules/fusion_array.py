@@ -127,6 +127,7 @@ def create_array(module, fusion):
     """Create Array"""
 
     array_api_instance = purefusion.ArraysApi(fusion)
+    id = None
 
     if not module.check_mode:
         if not module.params["display_name"]:
@@ -146,8 +147,10 @@ def create_array(module, fusion):
             availability_zone_name=module.params["availability_zone"],
             region_name=module.params["region"],
         )
-        await_operation(fusion, res)
-    return True
+        res_op = await_operation(fusion, res)
+        id = res_op.result.resource.id
+
+    return True, id
 
 
 def update_array(module, fusion):
@@ -189,7 +192,8 @@ def update_array(module, fusion):
             )
         )
         patches.append(patch)
-
+    
+    id = None
     if not module.check_mode:
         array_api_instance = purefusion.ArraysApi(fusion)
         for patch in patches:
@@ -199,10 +203,11 @@ def update_array(module, fusion):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            await_operation(fusion, op)
+            res_op = await_operation(fusion, op)
+            id = res_op.result.resource.id
 
     changed = len(patches) != 0
-    return changed
+    return changed, id
 
 
 def delete_array(module, fusion):
@@ -252,20 +257,23 @@ def main():
     array = get_array(module, fusion)
 
     changed = False
+    id = None
+    
     if not array and state == "present":
         module.fail_on_missing_params(["hardware_type", "host_name", "appliance_id"])
-        changed = create_array(module, fusion) | update_array(
-            module, fusion
-        )  # update is run to set properties which cannot be set on creation and instead use defaults
+        changed, id = create_array(module, fusion) 
+        update_array(module, fusion)  # update is run to set properties which cannot be set on creation and instead use defaults
     elif array and state == "present":
-        changed = changed | update_array(module, fusion)
+        changed, id = update_array(module, fusion)
     elif array and state == "absent":
         changed = changed | delete_array(module, fusion)
     else:
         module.exit_json(changed=False)
 
-    module.exit_json(changed=changed)
-
+    if id is None:
+        module.exit_json(changed=changed)
+    else:
+        module.exit_json(changed=changed, id=id)
 
 if __name__ == "__main__":
     main()
