@@ -189,6 +189,7 @@ def create_ra(module, fusion):
     ra_api_instance = purefusion.RoleAssignmentsApi(fusion)
 
     changed = True
+    id = None
     if not module.check_mode:
         principal = get_principal(module, fusion)
         scope = get_scope(module.params)
@@ -196,8 +197,10 @@ def create_ra(module, fusion):
         op = ra_api_instance.create_role_assignment(
             assignment, role_name=module.params["role"]
         )
-        await_operation(fusion, op)
-    module.exit_json(changed=changed)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
+    
+    module.exit_json(changed=changed, id=id)
 
 
 def delete_ra(module, fusion):
