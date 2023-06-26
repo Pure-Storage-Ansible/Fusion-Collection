@@ -23,6 +23,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -295,6 +296,7 @@ def test_hap_create(m_hap_api, m_op_api, module_args, current_hap_list):
         fusion_hap.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.list_host_access_policies.assert_called_once_with()
@@ -341,6 +343,7 @@ def test_hap_create_without_display_name(
         fusion_hap.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.list_host_access_policies.assert_called_once_with()
