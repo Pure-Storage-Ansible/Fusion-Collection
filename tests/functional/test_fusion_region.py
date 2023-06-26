@@ -22,6 +22,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -126,6 +127,7 @@ def test_region_create(m_region_api, m_op_api):
         fusion_region.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -168,6 +170,7 @@ def test_region_create_without_display_name(m_region_api, m_op_api):
         fusion_region.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
@@ -354,7 +357,8 @@ def test_region_update(m_region_api, m_op_api):
         fusion_region.main()
 
     assert exc.value.changed
-
+    assert exc.value.id == FAKE_RESOURCE_ID
+    
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
     api_obj.create_region.assert_not_called()

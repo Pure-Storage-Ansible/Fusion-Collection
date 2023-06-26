@@ -96,6 +96,7 @@ def create_region(module, fusion):
     reg_api_instance = purefusion.RegionsApi(fusion)
 
     changed = True
+    id = None
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -106,9 +107,10 @@ def create_region(module, fusion):
             display_name=display_name,
         )
         op = reg_api_instance.create_region(region)
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def delete_region(module, fusion):
@@ -129,6 +131,7 @@ def update_region(module, fusion, region):
     changed = False
     reg_api_instance = purefusion.RegionsApi(fusion)
 
+    id = None
     if (
         module.params["display_name"]
         and module.params["display_name"] != region.display_name
@@ -142,9 +145,10 @@ def update_region(module, fusion, region):
                 reg,
                 region_name=module.params["name"],
             )
-            await_operation(fusion, op)
+            res_op = await_operation(fusion, op)
+            id = res_op.result.resource.id
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def main():
