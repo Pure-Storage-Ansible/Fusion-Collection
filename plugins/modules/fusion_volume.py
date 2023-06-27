@@ -545,8 +545,10 @@ def main():
     if module.params["eradicate"]:
         changed = changed | eradicate_volume(module, fusion)
 
-    module.exit_json(changed=changed, id=id)
-
+    if id is not None:
+        module.exit_json(changed=changed, id=id)
+        
+    module.exit_json(changed=changed)
 
 if __name__ == "__main__":
     main()

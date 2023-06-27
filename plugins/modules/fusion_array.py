@@ -270,7 +270,10 @@ def main():
     elif array and state == "absent":
         changed = changed | delete_array(module, fusion)
 
-    module.exit_json(changed=changed, id=id)
+    if id is not None:
+        module.exit_json(changed=changed, id=id)
+        
+    module.exit_json(changed=changed)
 
 
 if __name__ == "__main__":
