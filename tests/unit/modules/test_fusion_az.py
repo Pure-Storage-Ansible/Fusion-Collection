@@ -17,7 +17,6 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 from ansible_collections.purestorage.fusion.plugins.modules import fusion_az
 from ansible_collections.purestorage.fusion.tests.helpers import (
     ApiExceptionsMockGenerator,
-    OperationResultsDict,
 )
 from ansible_collections.purestorage.fusion.tests.unit.mocks.module_mock import (
     ModuleMock,
