@@ -437,7 +437,7 @@ def test_ss_update(m_ss_api, m_op_api):
         fusion_ss.main()
 
     assert exc.value.changed
-    assert exc.value.id == FAKE_RESOURCE_ID
+    assert exc.value.id == current_ss["id"]
 
     # check api was called correctly
     api_obj.get_storage_service.assert_called_once_with(

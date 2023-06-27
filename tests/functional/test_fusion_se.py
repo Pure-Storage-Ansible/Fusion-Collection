@@ -614,7 +614,7 @@ def test_se_update(m_se_api, m_op_api, module_args, current_se):
         fusion_se.main()
 
     assert exc.value.changed
-    assert exc.value.id == FAKE_RESOURCE_ID
+    assert exc.value.id == current_se["id"]
 
     # check api was called correctly
     api_obj.get_storage_endpoint.assert_called_once_with(

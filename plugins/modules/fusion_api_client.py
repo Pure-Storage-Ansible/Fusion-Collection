@@ -130,10 +130,8 @@ def main():
         create_client(module, fusion)
     elif client_id is not None and state == "absent":
         delete_client(module, fusion, client_id)
-    else:
-        module.exit_json(changed=False)
 
-    module.exit_json(changed=False)
+    module.exit_json(changed=False, id=client_id)
 
 
 if __name__ == "__main__":

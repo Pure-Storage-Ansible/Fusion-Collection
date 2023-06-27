@@ -193,7 +193,6 @@ def update_array(module, fusion):
         )
         patches.append(patch)
     
-    id = None
     if not module.check_mode:
         array_api_instance = purefusion.ArraysApi(fusion)
         for patch in patches:
@@ -203,11 +202,10 @@ def update_array(module, fusion):
                 region_name=module.params["region"],
                 array_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
-    return changed, id
+    return changed
 
 
 def delete_array(module, fusion):
@@ -258,22 +256,20 @@ def main():
 
     changed = False
     id = None
+    if array is not None:
+        id = array.id
     
     if not array and state == "present":
         module.fail_on_missing_params(["hardware_type", "host_name", "appliance_id"])
         changed, id = create_array(module, fusion) 
         update_array(module, fusion)  # update is run to set properties which cannot be set on creation and instead use defaults
     elif array and state == "present":
-        changed, id = update_array(module, fusion)
+        changed = update_array(module, fusion)
     elif array and state == "absent":
         changed = changed | delete_array(module, fusion)
-    else:
-        module.exit_json(changed=False)
+    
+    module.exit_json(changed=changed, id=id)
 
-    if id is None:
-        module.exit_json(changed=changed)
-    else:
-        module.exit_json(changed=changed, id=id)
 
 if __name__ == "__main__":
     main()

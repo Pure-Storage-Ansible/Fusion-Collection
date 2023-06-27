@@ -402,7 +402,7 @@ def test_ts_update(m_ts_api, m_op_api):
         fusion_ts.main()
 
     assert exc.value.changed
-    assert exc.value.id == FAKE_RESOURCE_ID
+    assert exc.value.id == current_ts["id"]
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(

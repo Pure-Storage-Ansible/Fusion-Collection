@@ -204,7 +204,6 @@ def update_pg(module, fusion, pg):
     update_display_name(module, fusion, patches, pg)
     update_array(module, fusion, patches, pg)
 
-    id = None
     if not module.check_mode:
         for patch in patches:
             op = pg_api_instance.update_placement_group(
@@ -213,11 +212,10 @@ def update_pg(module, fusion, pg):
                 tenant_space_name=module.params["tenant_space"],
                 placement_group_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
-    return changed, id
+    return changed
 
 
 def delete_pg(module, fusion):
@@ -280,6 +278,9 @@ def main():
     pgroup = get_pg(module, fusion)
     
     id = None
+    if pgroup is not None:
+        id = pgroup.id
+
     if state == "present" and not pgroup:
         module.fail_on_missing_params(
             ["region", "availability_zone", "storage_service"]
@@ -288,10 +289,10 @@ def main():
         if module.params["array"]:
             # changing placement requires additional update
             pgroup = get_pg(module, fusion)
-            changedUpdate, id = update_pg(module, fusion, pgroup)
+            changedUpdate = update_pg(module, fusion, pgroup)
             changed = changed | changedUpdate
     elif state == "present" and pgroup:
-        changed, id = update_pg(module, fusion, pgroup) or changed
+        changed = update_pg(module, fusion, pgroup) or changed
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
 

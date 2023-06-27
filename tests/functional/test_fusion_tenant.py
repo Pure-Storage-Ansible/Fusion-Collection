@@ -362,7 +362,7 @@ def test_tenant_update(m_tenant_api, m_op_api):
         fusion_tenant.main()
 
     assert exc.value.changed
-    assert exc.value.id == FAKE_RESOURCE_ID
+    assert exc.value.id == current_tenant["id"]
 
     # check api was called correctly
     api_obj.get_tenant.assert_called_once_with(tenant_name=module_args["name"])

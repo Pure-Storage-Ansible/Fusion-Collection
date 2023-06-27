@@ -950,7 +950,7 @@ def test_pg_update_ok(pg_api_init, op_api_init, test_case):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pg.main()
     assert excinfo.value.changed
-    assert excinfo.value.id == FAKE_RESOURCE_ID
+    assert excinfo.value.id == test_case["current_state"].id
     
     pg_mock.get_placement_group.assert_called_with(
         tenant_name="tenant1",

@@ -186,7 +186,6 @@ def update_sc(module, fusion, s_class):
     """Update Storage Class settings"""
     changed = False
     sc_api_instance = purefusion.StorageClassesApi(fusion)
-    id = None
 
     if (
         module.params["display_name"]
@@ -202,10 +201,9 @@ def update_sc(module, fusion, s_class):
                 storage_service_name=module.params["storage_service"],
                 storage_class_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=s_class.id)
 
 
 def delete_sc(module, fusion):

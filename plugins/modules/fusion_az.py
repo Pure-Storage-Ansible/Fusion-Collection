@@ -154,8 +154,6 @@ def main():
         create_az(module, fusion)
     elif azone and state == "absent":
         delete_az(module, fusion)
-    else:
-        module.exit_json(changed=False)
 
     module.exit_json(changed=False)
 

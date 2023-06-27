@@ -131,7 +131,6 @@ def update_region(module, fusion, region):
     changed = False
     reg_api_instance = purefusion.RegionsApi(fusion)
 
-    id = None
     if (
         module.params["display_name"]
         and module.params["display_name"] != region.display_name
@@ -145,10 +144,9 @@ def update_region(module, fusion, region):
                 reg,
                 region_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=region.id)
 
 
 def main():

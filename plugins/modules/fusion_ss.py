@@ -160,12 +160,11 @@ def update_ss(module, fusion, ss):
                 patch,
                 storage_service_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=ss.id)
 
 
 def main():

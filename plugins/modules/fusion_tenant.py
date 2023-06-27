@@ -108,7 +108,6 @@ def update_tenant(module, fusion, tenant):
     """Update Tenant settings"""
     changed = False
     api_instance = purefusion.TenantsApi(fusion)
-    id = None
 
     if (
         module.params["display_name"]
@@ -123,10 +122,9 @@ def update_tenant(module, fusion, tenant):
                 new_tenant,
                 tenant_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=tenant.id)
 
 
 def delete_tenant(module, fusion):

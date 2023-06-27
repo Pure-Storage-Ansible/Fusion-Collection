@@ -210,7 +210,6 @@ def update_nig(module, fusion, nig):
         )
         patches.append(patch)
 
-    id = None
     if not module.check_mode:
         for patch in patches:
             op = nifg_api_instance.update_network_interface_group(
@@ -219,12 +218,11 @@ def update_nig(module, fusion, nig):
                 region_name=module.params["region"],
                 network_interface_group_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=nig.id)
 
 
 def main():

@@ -200,9 +200,7 @@ def main():
         create_pp(module, fusion)
     elif policy and state == "absent":
         delete_pp(module, fusion)
-    else:
-        module.exit_json(changed=False)
-
+        
     module.exit_json(changed=False)
 
 

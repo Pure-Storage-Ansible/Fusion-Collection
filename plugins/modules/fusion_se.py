@@ -331,7 +331,6 @@ def update_se(module, fusion, se):
 
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
     patches = []
-    id = None
     if (
         module.params["display_name"]
         and module.params["display_name"] != se.display_name
@@ -349,12 +348,11 @@ def update_se(module, fusion, se):
                 availability_zone_name=module.params["availability_zone"],
                 storage_endpoint_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=se.id)
 
 
 def main():

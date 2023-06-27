@@ -128,8 +128,7 @@ def update_ts(module, fusion, ts):
             display_name=purefusion.NullableString(module.params["display_name"]),
         )
         patches.append(patch)
-
-    id = None
+    
     if not module.check_mode:
         for patch in patches:
             op = ts_api_instance.update_tenant_space(
@@ -137,12 +136,11 @@ def update_ts(module, fusion, ts):
                 tenant_name=module.params["tenant"],
                 tenant_space_name=module.params["name"],
             )
-            res_op = await_operation(fusion, op)
-            id = res_op.result.resource.id
+            await_operation(fusion, op)
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed, id=id)
+    module.exit_json(changed=changed, id=ts.id)
 
 
 def delete_ts(module, fusion):
