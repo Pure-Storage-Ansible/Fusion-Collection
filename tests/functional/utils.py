@@ -7,6 +7,9 @@ from dataclasses import dataclass
 
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
+from ansible_collections.purestorage.fusion.tests.helpers import (
+    OperationResultsDict,
+)
 
 FAKE_RESOURCE_ID = "fake-id-12345"
 
@@ -22,20 +25,12 @@ class OperationMock:
             self.status = "Pending"
         elif success:
             self.status = "Succeeded"
-            self.result = operationResultsDict(
-                {"resource": operationResultsDict({"id": FAKE_RESOURCE_ID})}
+            self.result = OperationResultsDict(
+                {"resource": OperationResultsDict({"id": FAKE_RESOURCE_ID})}
             )
         else:
             self.status = "Failed"
         self.id = id
-
-
-class operationResultsDict(dict):
-    """dot.notation access to dictionary attributes"""
-
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
 
 
 class SuccessfulOperationMock:
@@ -43,8 +38,8 @@ class SuccessfulOperationMock:
     Mock object for successful operation. This object is returned by mocked Operation API if the operation was successful.
     """
 
-    result = operationResultsDict(
-        {"resource": operationResultsDict({"id": FAKE_RESOURCE_ID})}
+    result = OperationResultsDict(
+        {"resource": OperationResultsDict({"id": FAKE_RESOURCE_ID})}
     )
     status = "Succeeded"
 

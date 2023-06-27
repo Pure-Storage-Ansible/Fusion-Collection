@@ -17,6 +17,7 @@ from ansible_collections.purestorage.fusion.plugins.module_utils.errors import (
 from ansible_collections.purestorage.fusion.plugins.modules import fusion_az
 from ansible_collections.purestorage.fusion.tests.helpers import (
     ApiExceptionsMockGenerator,
+    OperationResultsDict,
 )
 from ansible_collections.purestorage.fusion.tests.unit.mocks.module_mock import (
     ModuleMock,
@@ -81,7 +82,9 @@ class TestCreateAZ:
             azone, region_name=module_params["region"]
         )
         await_operation_mock.assert_called_once_with(fusion_mock, op)
-        moduleMock.exit_json.assert_called_once_with(changed=True)
+        moduleMock.exit_json.assert_called_once_with(
+            changed=True, id=op.result.resource.id
+        )
 
     @patch(f"{current_module}.fusion_az.purefusion.AvailabilityZonesApi.__new__")
     @patch(f"{current_module}.fusion_az.await_operation")
@@ -113,7 +116,7 @@ class TestCreateAZ:
         # Assertions
         mock_az_api_obj.create_availability_zone.assert_not_called()
         await_operation_mock.assert_not_called()
-        moduleMock.exit_json.assert_called_once_with(changed=True)
+        moduleMock.exit_json.assert_called_once_with(changed=True, id=None)
 
     @patch(f"{current_module}.fusion_az.purefusion.AvailabilityZonesApi.__new__")
     @patch(f"{current_module}.fusion_az.await_operation")
@@ -151,7 +154,9 @@ class TestCreateAZ:
             azone, region_name=module_params["region"]
         )
         await_operation_mock.assert_called_once_with(fusion_mock, op)
-        moduleMock.exit_json.assert_called_once_with(changed=True)
+        moduleMock.exit_json.assert_called_once_with(
+            changed=True, id=op.result.resource.id
+        )
 
     @patch(f"{current_module}.fusion_az.purefusion.AvailabilityZonesApi.__new__")
     @patch(f"{current_module}.fusion_az.await_operation")

@@ -27,3 +27,11 @@ class ApiExceptionsMockGenerator:
     def create_not_found():
         status = HTTPStatus.NOT_FOUND
         return purefusion.rest.ApiException(status=status, reason=status.phrase)
+
+
+class OperationResultsDict(dict):
+    """dot.notation access to dictionary attributes"""
+
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__

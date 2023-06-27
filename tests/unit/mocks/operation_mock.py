@@ -8,6 +8,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from enum import Enum
+from ansible_collections.purestorage.fusion.tests.helpers import (
+    OperationResultsDict,
+)
 
 
 class OperationStatus(str, Enum):
@@ -18,7 +21,16 @@ class OperationStatus(str, Enum):
 
 
 class OperationMock:
-    def __init__(self, id, status, retry_in=1):
+    def __init__(
+        self,
+        id,
+        status,
+        result=OperationResultsDict(
+            {"resource": OperationResultsDict({"id": "fake-id"})}
+        ),
+        retry_in=1,
+    ):
         self.id = id
         self.status = status
         self.retry_in = retry_in
+        self.result = result
