@@ -132,7 +132,7 @@ def main():
         delete_client(module, fusion, client_id)
     if client_id is not None:
         module.exit_json(changed=False, id=client_id)
-    
+
     module.exit_json(changed=False)
 
 
