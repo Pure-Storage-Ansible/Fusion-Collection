@@ -128,7 +128,7 @@ def create_az(module, fusion):
         )
         res_op = await_operation(fusion, op)
         id = res_op.result.resource.id
-        
+
     module.exit_json(changed=changed, id=id)
 
 

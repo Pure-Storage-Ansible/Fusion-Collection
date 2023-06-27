@@ -358,7 +358,7 @@ def test_region_update(m_region_api, m_op_api):
 
     assert exc.value.changed
     assert exc.value.id == current_region["id"]
-    
+
     # check api was called correctly
     api_obj.get_region.assert_called_once_with(region_name=module_args["name"])
     api_obj.create_region.assert_not_called()

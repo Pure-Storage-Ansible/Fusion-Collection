@@ -612,7 +612,7 @@ def test_sc_update(m_sc_api, m_op_api):
 
     assert exc.value.changed
     assert exc.value.id == current_sc["id"]
-    
+
     # check api was called correctly
     api_obj.get_storage_class.assert_called_once_with(
         storage_class_name=module_args["name"],

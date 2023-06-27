@@ -367,7 +367,7 @@ def test_array_create(m_array_api, m_op_api, hw_type, main_m, unav_m, module_arg
 
     assert exc.value.changed
     assert exc.value.id == FAKE_RESOURCE_ID
-    
+
     # check api was called correctly
     api_obj.get_array.assert_called_with(
         array_name=module_args["name"],

@@ -107,7 +107,7 @@ def create_client(module, fusion):
         )
         res = id_api_instance.create_api_client(client)
         id = res.id
-    module.exit_json(changed=changed,id=id)
+    module.exit_json(changed=changed, id=id)
 
 
 def main():

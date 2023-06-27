@@ -276,7 +276,7 @@ def main():
 
     state = module.params["state"]
     pgroup = get_pg(module, fusion)
-    
+
     id = None
     if pgroup is not None:
         id = pgroup.id
@@ -296,7 +296,7 @@ def main():
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
 
-    module.exit_json(changed=changed,id=id)
+    module.exit_json(changed=changed, id=id)
 
 
 if __name__ == "__main__":

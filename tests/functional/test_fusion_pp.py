@@ -354,7 +354,7 @@ def test_pp_delete_ok(pp_api_init, op_api_init, module_args_absent):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pp.main()
     assert excinfo.value.changed
-    
+
     pp_mock.get_protection_policy.assert_called_with(
         protection_policy_name="protection_policy1"
     )

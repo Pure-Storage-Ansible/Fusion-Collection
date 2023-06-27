@@ -128,7 +128,7 @@ def update_ts(module, fusion, ts):
             display_name=purefusion.NullableString(module.params["display_name"]),
         )
         patches.append(patch)
-    
+
     if not module.check_mode:
         for patch in patches:
             op = ts_api_instance.update_tenant_space(
