@@ -17,7 +17,6 @@ from ansible_collections.purestorage.fusion.plugins.modules import fusion_api_cl
 from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
-    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
