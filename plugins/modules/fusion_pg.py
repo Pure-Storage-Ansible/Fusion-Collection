@@ -295,12 +295,11 @@ def main():
         changed = update_pg(module, fusion, pgroup) or changed
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
-    
+
     if id is not None:
         module.exit_json(changed=changed, id=id)
-    
+
     module.exit_json(changed=changed)
-        
 
 
 if __name__ == "__main__":
