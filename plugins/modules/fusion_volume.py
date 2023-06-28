@@ -538,8 +538,7 @@ def main():
     if volume is not None:
         id = volume.id
     if state == "present" and not volume:
-        changed, nid = create_volume(module, fusion)
-        id = nid
+        changed, id = create_volume(module, fusion)
     # volume might exist even if soft-deleted, so we still have to update it
     changed = changed | update_volume(module, fusion)
     if module.params["eradicate"]:
