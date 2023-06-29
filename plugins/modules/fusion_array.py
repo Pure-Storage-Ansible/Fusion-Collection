@@ -269,6 +269,7 @@ def main():
         changed = update_array(module, fusion)
     elif array and state == "absent":
         changed = changed | delete_array(module, fusion)
+        module.exit_json(changed=changed)
 
     if id is not None:
         module.exit_json(changed=changed, id=id)

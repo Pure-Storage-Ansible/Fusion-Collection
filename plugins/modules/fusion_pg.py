@@ -295,6 +295,7 @@ def main():
         changed = update_pg(module, fusion, pgroup) or changed
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
+        module.exit_json(changed=changed)
 
     if id is not None:
         module.exit_json(changed=changed, id=id)

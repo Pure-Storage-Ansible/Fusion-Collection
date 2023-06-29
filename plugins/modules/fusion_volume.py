@@ -543,6 +543,7 @@ def main():
     changed = changed | update_volume(module, fusion)
     if module.params["eradicate"]:
         changed = changed | eradicate_volume(module, fusion)
+        module.exit_json(changed=changed)
 
     if id is not None:
         module.exit_json(changed=changed, id=id)
