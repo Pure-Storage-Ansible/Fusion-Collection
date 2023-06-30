@@ -128,7 +128,9 @@ def create_pp(module, fusion):
         module.fail_json(msg="Local Retention must be a minimum of 10 minutes")
     if local_rpo < 10:
         module.fail_json(msg="Local RPO must be a minimum of 10 minutes")
+
     changed = True
+    id = None
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -146,9 +148,10 @@ def create_pp(module, fusion):
                 ],
             )
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def delete_pp(module, fusion):
@@ -197,8 +200,6 @@ def main():
         create_pp(module, fusion)
     elif policy and state == "absent":
         delete_pp(module, fusion)
-    else:
-        module.exit_json(changed=False)
 
     module.exit_json(changed=False)
 

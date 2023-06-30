@@ -147,7 +147,19 @@ def test_api_client_create(m_im_api, current_clients):
     api_obj = MagicMock()
     api_obj.list_api_clients = MagicMock(return_value=current_clients)
     api_obj.get_api_client = MagicMock(side_effect=purefusion.rest.ApiException)
-    api_obj.create_api_client = MagicMock()
+    api_obj.create_api_client = MagicMock(
+        return_value=FakeApiClient(
+            "321321",
+            "self_link_value",
+            "client_test",
+            "client_test",
+            "apikey:name:test",
+            "321321",
+            321321,
+            321321,
+            "321321",
+        )
+    )
     api_obj.delete_api_client = MagicMock()
     m_im_api.return_value = api_obj
 
@@ -156,6 +168,7 @@ def test_api_client_create(m_im_api, current_clients):
         fusion_api_client.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == "321321"
 
     # check api was called correctly
     api_obj.list_api_clients.assert_called_once_with()

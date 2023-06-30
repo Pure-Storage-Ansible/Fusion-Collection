@@ -170,8 +170,10 @@ def create_hap(module, fusion):
                 display_name=display_name,
             )
         )
-        await_operation(fusion, op)
-    module.exit_json(changed=changed)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
+
+    module.exit_json(changed=changed, id=id)
 
 
 def delete_hap(module, fusion):

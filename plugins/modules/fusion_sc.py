@@ -160,6 +160,7 @@ def create_sc(module, fusion):
         module.fail_json(msg="Size limit is not within the required range")
 
     changed = True
+    id = None
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -175,9 +176,10 @@ def create_sc(module, fusion):
         op = sc_api_instance.create_storage_class(
             s_class, storage_service_name=module.params["storage_service"]
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def update_sc(module, fusion, s_class):
@@ -201,7 +203,7 @@ def update_sc(module, fusion, s_class):
             )
             await_operation(fusion, op)
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=s_class.id)
 
 
 def delete_sc(module, fusion):

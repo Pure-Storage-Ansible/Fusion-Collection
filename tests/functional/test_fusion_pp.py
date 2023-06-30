@@ -20,6 +20,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
     OperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -181,6 +182,7 @@ def test_pp_create_ok(pp_api_init, op_api_init, module_args_present):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pp.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     pp_mock.get_protection_policy.assert_called_with(
         protection_policy_name="protection_policy1"
@@ -220,6 +222,7 @@ def test_pp_create_without_display_name_ok(
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_pp.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     pp_mock.get_protection_policy.assert_called_with(
         protection_policy_name="protection_policy1"

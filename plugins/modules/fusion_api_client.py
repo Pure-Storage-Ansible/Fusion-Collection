@@ -99,14 +99,15 @@ def create_client(module, fusion):
     id_api_instance = purefusion.IdentityManagerApi(fusion)
 
     changed = True
+    id = None
     if not module.check_mode:
         client = purefusion.APIClientPost(
             public_key=module.params["public_key"],
             display_name=module.params["name"],
         )
-        id_api_instance.create_api_client(client)
-
-    module.exit_json(changed=changed)
+        res = id_api_instance.create_api_client(client)
+        id = res.id
+    module.exit_json(changed=changed, id=id)
 
 
 def main():
@@ -129,8 +130,8 @@ def main():
         create_client(module, fusion)
     elif client_id is not None and state == "absent":
         delete_client(module, fusion, client_id)
-    else:
-        module.exit_json(changed=False)
+    if client_id is not None:
+        module.exit_json(changed=False, id=client_id)
 
     module.exit_json(changed=False)
 

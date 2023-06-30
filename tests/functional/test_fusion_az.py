@@ -22,6 +22,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -139,6 +140,7 @@ def test_az_create(m_az_api, m_op_api):
         fusion_az.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],
@@ -186,6 +188,7 @@ def test_az_create_without_display_name(m_az_api, m_op_api):
         fusion_az.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     api_obj.get_region.get_availability_zone(
         availability_zone_name=module_args["name"],

@@ -207,7 +207,7 @@ def extract_current_haps(volume):
 
 def create_volume(module, fusion):
     """Create Volume"""
-
+    id = None
     if not module.check_mode:
         display_name = module.params["display_name"] or module.params["name"]
         volume_api_instance = purefusion.VolumesApi(fusion)
@@ -228,9 +228,9 @@ def create_volume(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(fusion, op)
-
-    return True
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
+    return True, id
 
 
 def update_host_access_policies(module, current, patches):
@@ -534,12 +534,19 @@ def main():
         module.exit_json(changed=False)
 
     changed = False
+    id = None
+    if volume is not None:
+        id = volume.id
     if state == "present" and not volume:
-        changed = changed | create_volume(module, fusion)
+        changed, id = create_volume(module, fusion)
     # volume might exist even if soft-deleted, so we still have to update it
     changed = changed | update_volume(module, fusion)
     if module.params["eradicate"]:
         changed = changed | eradicate_volume(module, fusion)
+        module.exit_json(changed=changed)
+
+    if id is not None:
+        module.exit_json(changed=changed, id=id)
 
     module.exit_json(changed=changed)
 

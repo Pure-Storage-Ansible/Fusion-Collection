@@ -23,6 +23,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleFailJson,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -228,6 +229,8 @@ def test_volume_create_successfully(mock_volumes_api, mock_operations_api, modul
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
+
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -268,6 +271,7 @@ def test_volume_create_from_volume_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -309,6 +313,7 @@ def test_volume_create_from_volume_snapshot_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -348,6 +353,7 @@ def test_volume_create_without_display_name_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -493,6 +499,7 @@ def test_volume_update_with_state_present_executed_correctly(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == volume["id"]
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -541,6 +548,7 @@ def test_volume_update_with_state_absent_executed_correctly(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == volume["id"]
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
