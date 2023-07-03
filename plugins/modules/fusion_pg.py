@@ -161,9 +161,10 @@ def create_pg(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    return True
+    return True, id
 
 
 def update_display_name(module, fusion, patches, pg):
@@ -276,19 +277,28 @@ def main():
     state = module.params["state"]
     pgroup = get_pg(module, fusion)
 
+    id = None
+    if pgroup is not None:
+        id = pgroup.id
+
     if state == "present" and not pgroup:
         module.fail_on_missing_params(
             ["region", "availability_zone", "storage_service"]
         )
-        changed = create_pg(module, fusion) or changed
+        changed, id = create_pg(module, fusion) or changed
         if module.params["array"]:
             # changing placement requires additional update
             pgroup = get_pg(module, fusion)
-            changed = update_pg(module, fusion, pgroup) or changed
+            changedUpdate = update_pg(module, fusion, pgroup)
+            changed = changed | changedUpdate
     elif state == "present" and pgroup:
         changed = update_pg(module, fusion, pgroup) or changed
     elif state == "absent" and pgroup:
         changed = delete_pg(module, fusion) or changed
+        module.exit_json(changed=changed)
+
+    if id is not None:
+        module.exit_json(changed=changed, id=id)
 
     module.exit_json(changed=changed)
 

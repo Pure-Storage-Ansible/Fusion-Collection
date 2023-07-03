@@ -22,6 +22,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -138,6 +139,7 @@ def test_ts_create(m_ts_api, m_op_api):
         fusion_ts.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -186,6 +188,7 @@ def test_ts_create_without_display_name(m_ts_api, m_op_api):
         fusion_ts.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
@@ -399,6 +402,7 @@ def test_ts_update(m_ts_api, m_op_api):
         fusion_ts.main()
 
     assert exc.value.changed
+    assert exc.value.id == current_ts["id"]
 
     # check api was called correctly
     api_obj.get_tenant_space.assert_called_once_with(
