@@ -157,24 +157,24 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-try:
-    import fusion as purefusion
-except ImportError:
-    pass
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    fusion_argument_spec,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
-    parse_number_with_metric_suffix,
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
-    await_operation,
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_metric_suffix,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
+    fusion_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
+
+try:
+    import fusion as purefusion
+except ImportError:
+    pass
 
 
 def get_volume(module, fusion):
@@ -446,7 +446,11 @@ def validate_arguments(module, volume):
 
     if module.params["state"] == "absent" and (
         module.params["host_access_policies"]
-        or (volume and volume.host_access_policies)
+        or (
+            module.params["host_access_policies"] is None
+            and volume
+            and volume.host_access_policies
+        )
     ):
         module.fail_json(
             msg=(
