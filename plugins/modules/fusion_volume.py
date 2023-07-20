@@ -5,19 +5,6 @@
 # GNU General Public License v3.0+ (see COPYING.GPLv3 or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
-    await_operation,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
-    setup_fusion,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
-    parse_number_with_metric_suffix,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    fusion_argument_spec,
-)
-from ansible.module_utils.basic import AnsibleModule
 
 __metaclass__ = type
 
@@ -169,6 +156,20 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
+
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
+    setup_fusion,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_metric_suffix,
+)
+from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
+    fusion_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
 
 try:
     import fusion as purefusion
