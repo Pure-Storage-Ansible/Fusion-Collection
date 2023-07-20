@@ -4,7 +4,7 @@ name: "Red Hat Automation Hub - Keep token alive"
 
 "on":
   schedule:
-    - cron: '0 12 1,15 * *' # run 12pm on the 1st and 15th of the month
+    - cron: '0 12 1,15 * *'  # run 12pm on the 1st and 15th of the month
 
 jobs:
   keep_rh_sso_token_alive:
