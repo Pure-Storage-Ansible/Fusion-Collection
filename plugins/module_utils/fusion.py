@@ -38,7 +38,6 @@ except ImportError:
     pass
 
 from os import environ
-from urllib.parse import urljoin
 import platform
 
 TOKEN_EXCHANGE_URL = "https://api.pure1.purestorage.com/oauth2/1.0/token"
@@ -49,6 +48,7 @@ PARAM_ISSUER_ID = "issuer_id"
 PARAM_PRIVATE_KEY_FILE = "private_key_file"
 PARAM_PRIVATE_KEY_PASSWORD = "private_key_password"
 PARAM_ACCESS_TOKEN = "access_token"
+PARAM_CONFIG_PROFILE = "config_profile"
 ENV_ISSUER_ID = "FUSION_ISSUER_ID"
 ENV_API_HOST = "FUSION_API_HOST"
 ENV_PRIVATE_KEY_FILE = "FUSION_PRIVATE_KEY_FILE"
@@ -107,35 +107,18 @@ def get_fusion(module):
     access_token = module.params[PARAM_ACCESS_TOKEN]
     private_key_file = module.params[PARAM_PRIVATE_KEY_FILE]
     private_key_password = module.params[PARAM_PRIVATE_KEY_PASSWORD]
+    config_profile = module.params[PARAM_CONFIG_PROFILE]
 
     if private_key_password is not None:
         module.fail_on_missing_params([PARAM_PRIVATE_KEY_FILE])
 
-    config = fusion.Configuration()
-    if ENV_API_HOST in environ or ENV_HOST in environ:
-        host_url = environ.get(ENV_API_HOST, environ.get(ENV_HOST))
-        config.host = urljoin(host_url, BASE_PATH)
-    config.token_endpoint = environ.get(ENV_TOKEN_ENDPOINT, config.token_endpoint)
-
-    if access_token is not None:
-        config.access_token = access_token
-    elif issuer_id is not None and private_key_file is not None:
-        config.issuer_id = issuer_id
-        config.private_key_file = private_key_file
-        if private_key_password is not None:
-            config.private_key_password = private_key_password
-    elif ENV_ACCESS_TOKEN in environ:
-        config.access_token = environ.get(ENV_ACCESS_TOKEN)
-    elif (
-        ENV_ISSUER_ID in environ or ENV_APP_ID in environ
-    ) and ENV_PRIVATE_KEY_FILE in environ:
-        config.issuer_id = environ.get(ENV_ISSUER_ID, environ.get(ENV_APP_ID))
-        config.private_key_file = environ.get(ENV_PRIVATE_KEY_FILE)
-    else:
-        module.fail_json(
-            msg=f"You must set either {ENV_ISSUER_ID} and {ENV_PRIVATE_KEY_FILE} or {ENV_ACCESS_TOKEN} environment variables. "
-            f"Or module arguments either {PARAM_ISSUER_ID} and {PARAM_PRIVATE_KEY_FILE} or {PARAM_ACCESS_TOKEN}"
-        )
+    config = fusion.Configuration(
+        fusion_config_profile=config_profile,
+        access_token=access_token,
+        issuer_id=issuer_id,
+        private_key_file=private_key_file,
+        private_key_password=private_key_password,
+    )
 
     try:
         client = fusion.ApiClient(config)
@@ -152,6 +135,9 @@ def fusion_argument_spec():
     """Return standard base dictionary used for the argument_spec argument in AnsibleModule"""
 
     return {
+        PARAM_CONFIG_PROFILE: {
+            "no_log": False,
+        },
         PARAM_ISSUER_ID: {
             "no_log": True,
             "aliases": [PARAM_APP_ID],
