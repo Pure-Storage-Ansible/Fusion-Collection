@@ -1,2 +1,0 @@
-minor_changes:
-  - fusion_array - added `apartment_id` argument, which can be used when creating an array.

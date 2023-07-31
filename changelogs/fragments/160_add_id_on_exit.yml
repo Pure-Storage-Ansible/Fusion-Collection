@@ -1,2 +1,0 @@
-minor_changes:
-  - all modules - return resource's id parameter on update and create.
