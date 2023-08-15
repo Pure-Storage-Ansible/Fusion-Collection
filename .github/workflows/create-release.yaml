@@ -1,6 +1,6 @@
 name: Release Collection
 
-on: workflow_dispatch
+"on": workflow_dispatch
 jobs:
   create_github_release:
     runs-on: ubuntu-latest

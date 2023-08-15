@@ -157,24 +157,24 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-try:
-    import fusion as purefusion
-except ImportError:
-    pass
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
-    fusion_argument_spec,
-)
-from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
-    parse_number_with_metric_suffix,
+from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
+    await_operation,
 )
 from ansible_collections.purestorage.fusion.plugins.module_utils.startup import (
     setup_fusion,
 )
-from ansible_collections.purestorage.fusion.plugins.module_utils.operations import (
-    await_operation,
+from ansible_collections.purestorage.fusion.plugins.module_utils.parsing import (
+    parse_number_with_metric_suffix,
 )
+from ansible_collections.purestorage.fusion.plugins.module_utils.fusion import (
+    fusion_argument_spec,
+)
+from ansible.module_utils.basic import AnsibleModule
+
+try:
+    import fusion as purefusion
+except ImportError:
+    pass
 
 
 def get_volume(module, fusion):
@@ -207,7 +207,7 @@ def extract_current_haps(volume):
 
 def create_volume(module, fusion):
     """Create Volume"""
-
+    id = None
     if not module.check_mode:
         display_name = module.params["display_name"] or module.params["name"]
         volume_api_instance = purefusion.VolumesApi(fusion)
@@ -228,9 +228,9 @@ def create_volume(module, fusion):
             tenant_name=module.params["tenant"],
             tenant_space_name=module.params["tenant_space"],
         )
-        await_operation(fusion, op)
-
-    return True
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
+    return True, id
 
 
 def update_host_access_policies(module, current, patches):
@@ -446,7 +446,11 @@ def validate_arguments(module, volume):
 
     if module.params["state"] == "absent" and (
         module.params["host_access_policies"]
-        or (volume and volume.host_access_policies)
+        or (
+            module.params["host_access_policies"] is None
+            and volume
+            and volume.host_access_policies
+        )
     ):
         module.fail_json(
             msg=(
@@ -534,12 +538,19 @@ def main():
         module.exit_json(changed=False)
 
     changed = False
+    id = None
+    if volume is not None:
+        id = volume.id
     if state == "present" and not volume:
-        changed = changed | create_volume(module, fusion)
+        changed, id = create_volume(module, fusion)
     # volume might exist even if soft-deleted, so we still have to update it
     changed = changed | update_volume(module, fusion)
     if module.params["eradicate"]:
         changed = changed | eradicate_volume(module, fusion)
+        module.exit_json(changed=changed)
+
+    if id is not None:
+        module.exit_json(changed=changed, id=id)
 
     module.exit_json(changed=changed)
 

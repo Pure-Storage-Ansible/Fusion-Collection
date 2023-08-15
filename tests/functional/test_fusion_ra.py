@@ -20,6 +20,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
     OperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -330,6 +331,7 @@ def test_ra_create_ok(ra_api_init, im_api_init, op_api_init, args_and_scope):
     with pytest.raises(AnsibleExitJson) as excinfo:
         fusion_ra.main()
     assert excinfo.value.changed
+    assert excinfo.value.id == FAKE_RESOURCE_ID
 
     ra_mock.list_role_assignments.assert_called_with(
         role_name=module_args["role"], principal="principal1"

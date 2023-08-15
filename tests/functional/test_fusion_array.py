@@ -22,6 +22,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -365,6 +366,7 @@ def test_array_create(m_array_api, m_op_api, hw_type, main_m, unav_m, module_arg
         fusion_array.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -459,6 +461,7 @@ def test_array_create_without_display_name(m_array_api, m_op_api, module_args):
         fusion_array.main()
 
     assert exc.value.changed
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(
@@ -908,6 +911,7 @@ def test_array_update(m_array_api, m_op_api, module_args, current_array):
         fusion_array.main()
 
     assert exc.value.changed
+    assert exc.value.id == current_array["id"]
 
     # check api was called correctly
     api_obj.get_array.assert_called_with(

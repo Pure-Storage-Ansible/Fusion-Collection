@@ -5,6 +5,21 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.6.0
+======
+
+Minor Changes
+-------------
+
+- all modules - return resource's id parameter on update and create.
+- fusion_array - added `apartment_id` argument, which can be used when creating an array.
+- fusion_pg - introduced `destroy_snapshots_on_delete` which, if set to true, ensures that before deleting placement group, snapshots within the placement group will be deleted.
+- fusion_pp - 'local_rpo' duration parsing documented, 'local_retention' minimum value fixed
+- fusion_pp - Allow leading zeros in duration strings
+- fusion_pp - Change the minimum value of the protection policy local retention from 1 to 10
+- fusion_pp - introduced `destroy_snapshots_on_delete` which, if set to true, ensures that before deleting protection policy, snapshots within the protection policy will be deleted.
+- fusion_volume - Allow creating a new volume from already existing volume or volume snapshot
+
 v1.5.0
 ======
 

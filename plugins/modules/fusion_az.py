@@ -112,6 +112,7 @@ def create_az(module, fusion):
     az_api_instance = purefusion.AvailabilityZonesApi(fusion)
 
     changed = True
+    id = None
     if not module.check_mode:
         if not module.params["display_name"]:
             display_name = module.params["name"]
@@ -125,9 +126,10 @@ def create_az(module, fusion):
         op = az_api_instance.create_availability_zone(
             azone, region_name=module.params["region"]
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def main():
@@ -152,8 +154,6 @@ def main():
         create_az(module, fusion)
     elif azone and state == "absent":
         delete_az(module, fusion)
-    else:
-        module.exit_json(changed=False)
 
     module.exit_json(changed=False)
 

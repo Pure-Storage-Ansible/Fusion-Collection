@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import fusion as purefusion
 import pytest
@@ -23,6 +23,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     AnsibleFailJson,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -228,6 +229,8 @@ def test_volume_create_successfully(mock_volumes_api, mock_operations_api, modul
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
+
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -268,6 +271,7 @@ def test_volume_create_from_volume_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -309,6 +313,7 @@ def test_volume_create_from_volume_snapshot_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -348,6 +353,7 @@ def test_volume_create_without_display_name_successfully(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == FAKE_RESOURCE_ID
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -493,6 +499,7 @@ def test_volume_update_with_state_present_executed_correctly(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == volume["id"]
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -541,6 +548,7 @@ def test_volume_update_with_state_absent_executed_correctly(
     with pytest.raises(AnsibleExitJson) as exception:
         fusion_volume.main()
     assert exception.value.changed is True
+    assert exception.value.id == volume["id"]
     volumes_api.get_volume.assert_called_with(
         volume_name=module_args["name"],
         tenant_name=module_args["tenant"],
@@ -807,3 +815,47 @@ def test_volume_delete_operation_throws_exception(
         tenant_space_name=absent_module_args["tenant_space"],
     )
     operations_api.get_operation.assert_called_once_with(2)
+
+
+@patch("fusion.OperationsApi")
+@patch("fusion.VolumesApi")
+def test_module_updates_on_empty_array_of_haps(
+    mock_volumes_api, mock_operations_api, module_args, volume
+):
+    volumes_api = purefusion.VolumesApi()
+    operations_api = purefusion.OperationsApi()
+    volumes_api.get_volume = MagicMock(return_value=purefusion.Volume(**volume))
+    volumes_api.update_volume = MagicMock(return_value=OperationMock(1))
+    operations_api.get_operation = MagicMock(return_value=SuccessfulOperationMock)
+    mock_operations_api.return_value = operations_api
+    mock_volumes_api.return_value = volumes_api
+    module_args.update({"state": "absent", "host_access_policies": []})
+    set_module_args(module_args)
+    # run module
+    with pytest.raises(AnsibleExitJson) as exception:
+        fusion_volume.main()
+    assert exception.value.changed is True
+    assert exception.value.id == volume["id"]
+    volumes_api.get_volume.assert_called_with(
+        volume_name=module_args["name"],
+        tenant_name=module_args["tenant"],
+        tenant_space_name=module_args["tenant_space"],
+    )
+    volumes_api.update_volume.assert_has_calls(
+        [
+            call(
+                purefusion.VolumePatch(
+                    host_access_policies=purefusion.NullableString(",".join([]))
+                ),
+                volume_name=volume["name"],
+                tenant_name=volume["tenant"],
+                tenant_space_name=volume["tenant_space"],
+            ),
+            call(
+                purefusion.VolumePatch(destroyed=purefusion.NullableBoolean(True)),
+                volume_name=volume["name"],
+                tenant_name=volume["tenant"],
+                tenant_space_name=volume["tenant_space"],
+            ),
+        ]
+    )

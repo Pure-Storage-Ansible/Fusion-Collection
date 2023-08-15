@@ -269,7 +269,7 @@ def get_se(module, fusion):
 def create_se(module, fusion):
     """Create Storage Endpoint"""
     se_api_instance = purefusion.StorageEndpointsApi(fusion)
-
+    id = None
     if not module.check_mode:
         endpoint_type = None
 
@@ -307,9 +307,10 @@ def create_se(module, fusion):
             region_name=module.params["region"],
             availability_zone_name=module.params["availability_zone"],
         )
-        await_operation(fusion, op)
+        res_op = await_operation(fusion, op)
+        id = res_op.result.resource.id
 
-    module.exit_json(changed=True)
+    module.exit_json(changed=True, id=id)
 
 
 def delete_se(module, fusion):
@@ -351,7 +352,7 @@ def update_se(module, fusion, se):
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=se.id)
 
 
 def main():

@@ -146,6 +146,7 @@ def create_nig(module, fusion):
     ):
         module.fail_json(msg="`gateway` must be an address in subnet `prefix`")
 
+    id = None
     if not module.check_mode:
         display_name = module.params["display_name"] or module.params["name"]
         if module.params["group_type"] == "eth":
@@ -171,13 +172,14 @@ def create_nig(module, fusion):
                 availability_zone_name=module.params["availability_zone"],
                 region_name=module.params["region"],
             )
-            await_operation(fusion, op)
+            res_op = await_operation(fusion, op)
+            id = res_op.result.resource.id
             changed = True
         else:
             # to prevent future unintended error
             module.warn(f"group_type={module.params['group_type']} is not implemented")
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=id)
 
 
 def delete_nig(module, fusion):
@@ -220,7 +222,7 @@ def update_nig(module, fusion, nig):
 
     changed = len(patches) != 0
 
-    module.exit_json(changed=changed)
+    module.exit_json(changed=changed, id=nig.id)
 
 
 def main():

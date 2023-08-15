@@ -22,6 +22,7 @@ from ansible_collections.purestorage.fusion.tests.functional.utils import (
     FailedOperationMock,
     OperationMock,
     SuccessfulOperationMock,
+    FAKE_RESOURCE_ID,
     exit_json,
     fail_json,
     set_module_args,
@@ -236,6 +237,7 @@ def test_nig_create(m_nig_api, m_op_api):
         fusion_nig.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_network_interface_group.assert_called_once_with(
@@ -299,6 +301,7 @@ def test_nig_create_without_display_name(m_nig_api, m_op_api):
         fusion_nig.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_network_interface_group.assert_called_once_with(
@@ -362,6 +365,7 @@ def test_nig_create_without_gateway(m_nig_api, m_op_api):
         fusion_nig.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == FAKE_RESOURCE_ID
 
     # check api was called correctly
     api_obj.get_network_interface_group.assert_called_once_with(
@@ -631,6 +635,7 @@ def test_nig_update(m_nig_api, m_op_api):
         fusion_nig.main()
 
     assert exc.value.changed is True
+    assert exc.value.id == current_nig.id
 
     # check api was called correctly
     api_obj.get_network_interface_group.assert_called_once_with(

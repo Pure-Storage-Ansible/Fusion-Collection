@@ -4,7 +4,7 @@ name: "Red Hat Automation Hub - Keep token alive"
 
 "on":
   schedule:
-    - cron: '0 12 1,15 * *' # run 12pm on the 1st and 15th of the month
+    - cron: '0 12 1,15 * *'  # run 12pm on the 1st and 15th of the month
 
 jobs:
   keep_rh_sso_token_alive:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: "Run curl command"
         run: |
-          curl ${{ secrets.RH_AUTOMATION_TOKEN_URL }} \
+          curl ${{ secrets.RH_AUTOMATION_HUB_URL }} \
             -d grant_type=refresh_token \
             -d client_id="cloud-services" \
             -d refresh_token="${{ secrets.RH_AUTOMATION_HUB_TOKEN }}" \
