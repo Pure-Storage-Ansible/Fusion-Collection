@@ -10,7 +10,7 @@ The Pure Storage Fusion collection consists of the latest versions of the Fusion
 
 ## Requirements
 
-- ansible-core >= 2.11
+- ansible-core >= 2.14.0
 - Python >= 3.8
 - Authorized API Application ID for Pure Storage Pure1 and associated Private Key
   - Refer to Pure Storage documentation on how to create these. 
