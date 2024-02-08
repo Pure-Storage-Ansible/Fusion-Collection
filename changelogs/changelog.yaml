@@ -371,3 +371,11 @@ releases:
     - 159_fix_protection_policy_local_retention_validation.yaml
     - 160_add_id_on_exit.yml
     release_date: '2023-07-31'
+  1.6.1:
+    changes:
+      minor_changes:
+      - fusion_volume - Allow creating a new volume from already existing volume or
+        volume snapshot
+    fragments:
+    - 151_create_volume_using_existing_volume_or_snapshot.yaml
+    release_date: '2024-02-08'

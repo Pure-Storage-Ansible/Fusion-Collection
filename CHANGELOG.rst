@@ -5,6 +5,14 @@ Purestorage.Fusion Release Notes
 .. contents:: Topics
 
 
+v1.6.1
+======
+
+Minor Changes
+-------------
+
+- fusion_volume - Allow creating a new volume from already existing volume or volume snapshot
+
 v1.6.0
 ======
 

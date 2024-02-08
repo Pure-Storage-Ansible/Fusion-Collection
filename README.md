@@ -4,9 +4,15 @@
 <img src="https://github.com/Pure-Storage-Ansible/Fusion-Collection/workflows/Pure%20Storage%20Ansible%20CI/badge.svg">
 <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
+# DEPRECATION NOTICE
+
+The Pure Storage Fusion Ansible Collection is no longer being developed and is being deprecated.
+
+No further development work will be performed on this repo and the repo will be archived.
+
 # Pure Storage Fusion Collection
 
-The Pure Storage Fusion collection consists of the latest versions of the Fusion modules.
+The Pure Storage Fusion collection consists of the latest versions of the Fusion v1 modules.
 
 ## Requirements
 
